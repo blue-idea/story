@@ -122,8 +122,8 @@
   *需求: REQ-002, REQ-003
   *测试类型: Unit
 
-- [ ] **TASK-007R · 重构 validator：外置 phase4-suspense-check**
-  - [ ] 移除 `validator.ts` 内嵌 Prompt，改用 `prompts/instructions/phase4-suspense-check.md`
+- [x] **TASK-007R · 重构 validator：外置 phase4-suspense-check**
+  - [x] 移除 `validator.ts` 内嵌 Prompt，改用 `prompts/instructions/phase4-suspense-check.md`
 
   **验证方式：**
 
@@ -135,10 +135,10 @@
   *需求: REQ-005
   *测试类型: Unit
 
-- [ ] **TASK-008R · 重构 generator：对齐 Phase 3 写前上下文与重写 Prompt**
-  - [ ] 从 `novel_profiles.outline` 注入本章完整 7 列规划行 + 人物摘录 + 上一章上下文
-  - [ ] 校验失败使用 `phase3-chapter-rewrite.md` + `diagnosticLog`
-  - [ ] **禁止**在自动写作流中调用 `phase3-chapter-polish`
+- [x] **TASK-008R · 重构 generator：对齐 Phase 3 写前上下文与重写 Prompt**
+  - [x] 从 `novel_profiles` 注入人物摘录 + `chapters.outline_summary` 7 列规划行 + 上一章末尾上下文
+  - [x] 校验失败使用 `phase3-chapter-rewrite.md` + `diagnosticLog`
+  - [x] **禁止**在自动写作流中调用 `phase3-chapter-polish`
 
   **验证方式：**
 
@@ -446,9 +446,9 @@
 | TASK-006R   | 建立 prompts/ 目录与 lib/prompts 加载器                    |   Unit   |          ✅ 已完成          | `prompts-design.md` |
 | TASK-006R-b | 重构 planner 对齐 Phase 1 L3 + Phase 2                     |   Unit   |          ✅ 已完成          | REQ-002, REQ-003    |
 | TASK-007    | 编写字数与悬念质量校验模块 (lib/writer/validator.ts)       |   Unit   |  ✅ 已完成（待 007R 重构）  | REQ-005             |
-| TASK-007R   | 重构 validator 外置 phase4-suspense-check                  |   Unit   |          ⬜ 待开始          | REQ-005             |
+| TASK-007R   | 重构 validator 外置 phase4-suspense-check                  |   Unit   |          ✅ 已完成          | REQ-005             |
 | TASK-008    | 编写串行写作状态机 (lib/writer/generator.ts)               |   Unit   |  ✅ 已完成（待 008R 重构）  | REQ-004, REQ-005    |
-| TASK-008R   | 重构 generator 对齐 Phase 3 写前上下文                     |   Unit   |          ⬜ 待开始          | REQ-004, REQ-005    |
+| TASK-008R   | 重构 generator 对齐 Phase 3 写前上下文                     |   Unit   |          ✅ 已完成          | REQ-004, REQ-005    |
 | TASK-009    | 实现 /api/preferences (偏好与项目续写检测接口)             |   API    |          ✅ 已完成          | REQ-001             |
 | TASK-010    | 实现三层问答创建及大纲管理 API                             |   API    |          ⬜ 待开始          | REQ-002, REQ-003    |
 | TASK-011    | 实现流式写作启动及 SSE 接口                                |   API    |          ⬜ 待开始          | REQ-004, REQ-005    |

@@ -10,6 +10,7 @@ const { mockGenerateStream, mockValidateChapter, mockDb } = vi.hoisted(() => {
       from: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       orderBy: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockReturnThis(),
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       execute: vi.fn(),
@@ -33,11 +34,15 @@ vi.mock("../../db", () => ({
 
 vi.mock("../../db/schema", () => ({
   novels: { id: "novels" },
+  novelProfiles: { novelId: "novelId", characterProfiles: "characterProfiles" },
   chapters: {
     id: "chapters",
     novelId: "novelId",
     status: "status",
     chapterNumber: "chapterNumber",
+    title: "title",
+    outlineSummary: "outlineSummary",
+    retryCount: "retryCount",
   },
 }));
 
@@ -47,44 +52,40 @@ describe("Generator", () => {
   });
 
   it("模拟3次校验失败并重写，第4次校验失败抛出异常并挂起任务", async () => {
-    // 模拟数据库返回包含一个需要写的章节
     const mockChapters = [
       {
         id: "c1",
         chapterNumber: 1,
-        outlineSummary: "大纲1",
+        title: "家族惊变",
+        outlineSummary:
+          "章节: 第1章 | 标题: 家族惊变 | 核心事件: 灭门 | 悬念钩子: 突然揭示",
         status: "pending",
         retryCount: 0,
         content: "",
       },
     ];
 
-    // 我们在这个测试里简单提供一个自定义的 db 模拟用于测试
-    // 由于真实的 drizzle 链式调用比较难完全通过对象模拟，
-    // 在这里我们主要测试业务逻辑中 generator 对依赖(llm, validator)的调用与重试次数
-    // 所以可以把 db 调用抽象到一个 data access 方法中或者在 generator 里处理
+    const mockProfile = {
+      characterProfiles: [
+        { name: "林云", role: "主角", summary: "冷静果敢的少爷" },
+      ],
+    };
 
-    // 为了让测试简单且聚焦于重试逻辑，我们使用依赖注入或者直接 mock data access
-    // 假设 db.query.chapters.findMany 被使用：
-    mockDb.select.mockImplementation(() => {
-      return {
-        from: () => ({
-          where: () => ({
-            orderBy: () => Promise.resolve(mockChapters),
-          }),
+    mockDb.select.mockImplementation(() => ({
+      from: () => ({
+        where: () => ({
+          limit: () => Promise.resolve([mockProfile]),
+          orderBy: () => Promise.resolve(mockChapters),
         }),
-      };
-    });
+      }),
+    }));
 
-    mockDb.update.mockImplementation(() => {
-      return {
-        set: () => ({
-          where: () => Promise.resolve(),
-        }),
-      };
-    });
+    mockDb.update.mockImplementation(() => ({
+      set: () => ({
+        where: () => Promise.resolve(),
+      }),
+    }));
 
-    // 模拟 LLM stream
     async function* asyncGenerator() {
       yield "一";
       yield "段";
@@ -92,7 +93,6 @@ describe("Generator", () => {
     }
     mockGenerateStream.mockReturnValue(asyncGenerator());
 
-    // 模拟 Validator 始终失败
     mockValidateChapter.mockResolvedValue({
       passed: false,
       wordCountValid: false,
@@ -105,21 +105,25 @@ describe("Generator", () => {
       onValidationResult: vi.fn(),
     };
 
-    // 调用生成器
     await generateNovel("test-novel-id", callbacks);
 
-    // 应该调用 LLM 生成 4 次（初始1次 + 重试3次）
     expect(mockGenerateStream).toHaveBeenCalledTimes(4);
-
-    // Validator 应该被调用 4 次
     expect(mockValidateChapter).toHaveBeenCalledTimes(4);
 
-    // 回调应触发 onError
+    const firstCall = mockGenerateStream.mock.calls[0][0];
+    expect(firstCall.prompt).toContain("3000");
+    expect(firstCall.prompt).toContain("悬念");
+    expect(firstCall.prompt).toContain("家族惊变");
+    expect(firstCall.prompt).toContain("林云");
+
+    const rewriteCall = mockGenerateStream.mock.calls[1][0];
+    expect(rewriteCall.prompt).toContain("诊断");
+    expect(rewriteCall.prompt).toContain("校验失败");
+
     expect(callbacks.onError).toHaveBeenCalled();
     const errorArg = callbacks.onError.mock.calls[0][0] as Error;
     expect(errorArg.message).toContain("达到最大重试次数");
 
-    // 确认尝试更新数据库状态为 failed
     expect(mockDb.update).toHaveBeenCalled();
   });
 });

@@ -1,4 +1,5 @@
 import { createLLMClient } from "../llm";
+import { getSystem, renderInstruction } from "../prompts";
 
 export type ValidationResult = {
   wordCountValid: boolean;
@@ -7,36 +8,51 @@ export type ValidationResult = {
   diagnosticLog?: string;
 };
 
-export async function validateChapter(text: string): Promise<ValidationResult> {
+/** 解析 phase4-suspense-check 的 JSON 或兼容纯文本 true/false */
+export function parseSuspenseCheckResponse(responseText: string): boolean {
+  const trimmed = responseText.trim();
+  const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
+  if (jsonMatch) {
+    try {
+      const parsed = JSON.parse(jsonMatch[0]) as { hasHook?: boolean };
+      if (typeof parsed.hasHook === "boolean") {
+        return parsed.hasHook;
+      }
+    } catch {
+      // 回退到纯文本解析
+    }
+  }
+  return trimmed.toLowerCase() === "true";
+}
+
+export async function validateChapter(
+  text: string,
+  chapterNumber = 1,
+): Promise<ValidationResult> {
   const len = text.length;
   const wordCountValid = len >= 3000 && len <= 5000;
 
   const llm = createLLMClient({ provider: "gemini" });
-  const tailText = text.slice(-300);
+  const chapterEnding = text.slice(-300);
 
-  const prompt = `
-请判断以下小说正文结尾（最后300字）是否包含有效的故事悬念、未解的冲突或吸引读者继续阅读的钩子（留白）。
-如果包含悬念或钩子，请仅回复 "true"；如果不包含，请仅回复 "false"。不要包含任何其他字符。
-
-正文结尾：
-${tailText}
-`;
+  const prompt = renderInstruction("phase4-suspense-check", {
+    chapterNumber: String(chapterNumber),
+    chapterEnding,
+  });
 
   const responseText = await llm.generateText({
     prompt,
-    systemInstruction:
-      "你是一位严苛的网文质量审核员，擅长判断文章结尾的悬念质量。",
+    systemInstruction: getSystem("reviewer"),
     temperature: 0.1,
   });
 
-  const suspenseValid = responseText.trim().toLowerCase() === "true";
-
+  const suspenseValid = parseSuspenseCheckResponse(responseText);
   const passed = wordCountValid && suspenseValid;
 
   let diagnosticLog: string | undefined;
 
   if (!passed) {
-    const logs = [];
+    const logs: string[] = [];
     if (!wordCountValid) {
       if (len < 3000) {
         logs.push(
