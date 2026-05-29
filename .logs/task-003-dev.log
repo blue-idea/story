@@ -1,0 +1,55 @@
+
+> story@0.1.0 dev E:\NextCloud\coding\netx.js\story
+> next dev "--port" "3000"
+
+▲ Next.js 16.2.6 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.105:3000
+- Environments: .env
+✓ Ready in 456ms
+Creating turbopack project { dir: 'E:\\NextCloud\\coding\\netx.js\\story', testMode: true }
+
+ GET /login 200 in 1107ms (next.js: 970ms, application-code: 136ms)
+ GET /api/auth/csrf 500 in 1313ms (next.js: 1171ms, application-code: 142ms)
+ POST /api/auth/callback/credentials 500 in 102ms (next.js: 35ms, application-code: 67ms)
+ GET /api/auth/session 500 in 85ms (next.js: 3ms, application-code: 82ms)
+ GET /api/auth/session 500 in 138ms (next.js: 33ms, application-code: 105ms)
+ GET /api/auth/session 200 in 119ms (next.js: 80ms, application-code: 39ms)
+ GET /api/auth/session 200 in 43ms (next.js: 32ms, application-code: 10ms)
+ GET /api/auth/csrf 200 in 31ms (next.js: 2ms, application-code: 29ms)
+ POST /api/auth/callback/credentials 200 in 65ms (next.js: 1592µs, application-code: 63ms)
+ GET /api/auth/session 200 in 31ms (next.js: 3ms, application-code: 28ms)
+ GET /login 200 in 150ms (next.js: 45ms, application-code: 104ms)
+ GET /login 200 in 51ms (next.js: 5ms, application-code: 46ms)
+ HEAD /api/auth/session 400 in 87ms (next.js: 64ms, application-code: 23ms)
+ GET /login 200 in 542ms (next.js: 70ms, application-code: 471ms)
+ GET /login 200 in 543ms (next.js: 165ms, application-code: 378ms)
+ GET /login 200 in 349ms (next.js: 3ms, application-code: 346ms)
+ GET /login 200 in 331ms (next.js: 8ms, application-code: 322ms)
+ GET /login 200 in 280ms (next.js: 11ms, application-code: 269ms)
+ GET /login 200 in 280ms (next.js: 106ms, application-code: 174ms)
+ GET /login 200 in 285ms (next.js: 34ms, application-code: 251ms)
+ GET /login 200 in 284ms (next.js: 66ms, application-code: 219ms)
+ GET /login 200 in 174ms (next.js: 89ms, application-code: 85ms)
+ GET /login 200 in 182ms (next.js: 13ms, application-code: 169ms)
+ GET /login 200 in 178ms (next.js: 72ms, application-code: 107ms)
+ GET /login 200 in 182ms (next.js: 43ms, application-code: 139ms)
+ GET /login 200 in 163ms (next.js: 12ms, application-code: 152ms)
+ GET /login 200 in 158ms (next.js: 24ms, application-code: 134ms)
+ GET /login 200 in 109ms (next.js: 23ms, application-code: 86ms)
+ GET /login 200 in 111ms (next.js: 5ms, application-code: 106ms)
+ GET /login 200 in 110ms (next.js: 42ms, application-code: 68ms)
+ GET /login 200 in 110ms (next.js: 57ms, application-code: 53ms)
+ GET /login 200 in 40ms (next.js: 2ms, application-code: 37ms)
+ GET /login 200 in 41ms (next.js: 17ms, application-code: 24ms)
+ GET /api/auth/csrf 200 in 252ms (next.js: 210ms, application-code: 42ms)
+ POST /api/auth/callback/credentials 200 in 75ms (next.js: 8ms, application-code: 68ms)
+ HEAD /api/auth/session 200 in 683ms (next.js: 678ms, application-code: 6ms)
+ GET /api/auth/session 200 in 16ms (next.js: 3ms, application-code: 14ms)
+ GET / 200 in 265ms (next.js: 209ms, application-code: 56ms)
+ GET / 200 in 24ms (next.js: 2ms, application-code: 22ms)
+ GET /api/auth/csrf 200 in 132ms (next.js: 113ms, application-code: 20ms)
+ POST /api/auth/callback/credentials 200 in 289ms (next.js: 1535µs, application-code: 287ms)
+ GET /api/auth/session 200 in 100ms (next.js: 69ms, application-code: 30ms)
+ GET /api/auth/csrf 200 in 22ms (next.js: 1616µs, application-code: 20ms)
+ POST /api/auth/callback/credentials 401 in 281ms (next.js: 1360µs, application-code: 280ms)

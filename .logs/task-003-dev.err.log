@@ -1,0 +1,20 @@
+[next-auth][error][CALLBACK_CREDENTIALS_JWT_ERROR] 
+https://next-auth.js.org/errors#callback_credentials_jwt_error Signin in with credentials only supported if JWT strategy is enabled Error [UnsupportedStrategyError]: Signin in with credentials only supported if JWT strategy is enabled
+    at ignore-listed frames {
+  code: 'CALLBACK_CREDENTIALS_JWT_ERROR'
+}
+[next-auth][error][CALLBACK_CREDENTIALS_JWT_ERROR] 
+https://next-auth.js.org/errors#callback_credentials_jwt_error Signin in with credentials only supported if JWT strategy is enabled Error [UnsupportedStrategyError]: Signin in with credentials only supported if JWT strategy is enabled
+    at ignore-listed frames {
+  code: 'CALLBACK_CREDENTIALS_JWT_ERROR'
+}
+[next-auth][error][CALLBACK_CREDENTIALS_JWT_ERROR] 
+https://next-auth.js.org/errors#callback_credentials_jwt_error Signin in with credentials only supported if JWT strategy is enabled Error [UnsupportedStrategyError]: Signin in with credentials only supported if JWT strategy is enabled
+    at ignore-listed frames {
+  code: 'CALLBACK_CREDENTIALS_JWT_ERROR'
+}
+[next-auth][error][CALLBACK_CREDENTIALS_JWT_ERROR] 
+https://next-auth.js.org/errors#callback_credentials_jwt_error Signin in with credentials only supported if JWT strategy is enabled Error [UnsupportedStrategyError]: Signin in with credentials only supported if JWT strategy is enabled
+    at ignore-listed frames {
+  code: 'CALLBACK_CREDENTIALS_JWT_ERROR'
+}

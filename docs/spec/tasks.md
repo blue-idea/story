@@ -52,11 +52,11 @@
 
 ### Module 2: 认证模块与数据隔离 (NextAuth.js)
 
-- [ ] **TASK-003 · NextAuth.js 配置与轻量邮箱登录/注册**
-  - [ ] 安装 next-auth 依赖
-  - [ ] 编写 lib/auth.ts 配置 DrizzleAdapter，使用 Credentials 提供商（支持邮箱加密码或魔法无密码极简校验进行开发阶段的快捷测试）
-  - [ ] 编写 app/api/auth/[...nextauth]/route.ts
-  - [ ] 实现自定义极简登录页面 app/login/page.tsx
+- [x] **TASK-003 · NextAuth.js 配置与轻量邮箱登录/注册**
+  - [x] 安装 next-auth 依赖
+  - [x] 编写 lib/auth.ts 配置 DrizzleAdapter，使用 Credentials 提供商（支持邮箱加密码或魔法无密码极简校验进行开发阶段的快捷测试）
+  - [x] 编写 app/api/auth/[...nextauth]/route.ts
+  - [x] 实现自定义极简登录页面 app/login/page.tsx
 
   **验证方式：**
 
@@ -358,7 +358,7 @@
 | -------- | ---------------------------------------------------------- | :------: | :-------: | ------------------ |
 | TASK-001 | 初始化 Next.js 开发环境与 Drizzle ORM Schema               |   Unit   | ✅ 已完成 | `constitution.md`  |
 | TASK-002 | 数据库连接客户端与 Schema 结构推送                         |  Manual  | ✅ 已完成 | `design.md`        |
-| TASK-003 | NextAuth.js 配置与轻量邮箱登录/注册                        |   E2E    | ⬜ 待开始 | REQ-001            |
+| TASK-003 | NextAuth.js 配置与轻量邮箱登录/注册                        |   E2E    | ✅ 已完成 | REQ-001            |
 | TASK-004 | 认证拦截中间件与多租户隔离                                 |   API    | ⬜ 待开始 | REQ-001            |
 | TASK-005 | 编写 LLM 客户端适配器 (lib/llm.ts)                         |   Unit   | ⬜ 待开始 | `design.md`        |
 | TASK-006 | 编写大纲规划与人物档案生成解析逻辑 (lib/writer/planner.ts) |   Unit   | ⬜ 待开始 | REQ-002, REQ-003   |
