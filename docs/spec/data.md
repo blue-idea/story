@@ -103,14 +103,14 @@
 
 #### `novel_profiles` (大纲人设定稿表)
 
-| 字段名               | 数据类型    | 约束                                    | 说明                         |
-| -------------------- | ----------- | --------------------------------------- | ---------------------------- |
-| `id`                 | `uuid`      | PRIMARY KEY, DEFAULT gen_random_uuid()  | 唯一标识                     |
-| `novel_id`           | `uuid`      | REFERENCES novels(id) ON DELETE CASCADE | 关联的小说 ID                |
-| `outline`            | `text`      | NOT NULL                                | 生成的整体大纲 (Markdown)    |
-| `character_profiles` | `jsonb`     | NOT NULL                                | 核心角色与配角档案 JSON 数组 |
-| `created_at`         | `timestamp` | DEFAULT now()                           | 创建时间                     |
-| `updated_at`         | `timestamp` | DEFAULT now()                           | 更新时间                     |
+| 字段名               | 数据类型    | 约束                                    | 说明                                                                                               |
+| -------------------- | ----------- | --------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `id`                 | `uuid`      | PRIMARY KEY, DEFAULT gen_random_uuid()  | 唯一标识                                                                                           |
+| `novel_id`           | `uuid`      | REFERENCES novels(id) ON DELETE CASCADE | 关联的小说 ID                                                                                      |
+| `outline`            | `text`      | NOT NULL                                | 完整大纲 Markdown，结构对齐 `docs/novelist/references/guides/outline-template.md`（含 7 列章节表） |
+| `character_profiles` | `jsonb`     | NOT NULL                                | 人物档案，字段对齐 `character-template.md`（非简化 name/role 三元组）                              |
+| `created_at`         | `timestamp` | DEFAULT now()                           | 创建时间                                                                                           |
+| `updated_at`         | `timestamp` | DEFAULT now()                           | 更新时间                                                                                           |
 
 #### `chapters` (章节明细表)
 

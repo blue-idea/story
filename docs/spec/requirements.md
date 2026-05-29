@@ -102,6 +102,8 @@
 
 **用户故事：** 作为创作者，我希望在写作前预览大纲、人物设定和章节计划，并可以在页面上直接编辑各个章节的概要，以便把控小说的核心剧情走向。
 
+> **Novelist 对齐说明**：规划产出须符合 `docs/novelist/references/guides/outline-template.md`（7 列章节表 + 全书悬念线）与 `character-template.md`（可指导写作的人物粒度）。Prompt 与模版定义见 `docs/spec/prompts-design.md`。
+
 #### 验收标准
 
 ```yaml
@@ -144,6 +146,8 @@
 ### 需求 REQ-004 · 小说自动流式写作
 
 **用户故事：** 作为创作者，我希望 AI 能够按照串行机制依次生成各个章节，并在写作工作台上以打字机流式渲染正在创作的正文，让我直观感受创作状态。
+
+> **Novelist 对齐说明**：自动写作流遵循 `phase3-writing.md` 的写前分析 → 撰写 3000～5000 字 → 悬念钩子；**深度润色不在自动流中执行**，由 REQ-006 的手动选区润色承担。提示词外置在 `prompts/instructions/`。不实现 Skill 中的并行写作模式。
 
 #### 验收标准
 
@@ -222,7 +226,7 @@
 
 ### 需求 REQ-006 · 小说阅读、修改与打包导出
 
-**用户故事：** 作为创作者，我希望查看最终成稿的所有章节内容、手动修改微调正文，或一键将小说完整打包（含人物档案与大纲）以 Markdown 格式下载到本地。
+**用户故事：** 作为创作者，我希望查看最终成稿的所有章节内容、手动修改微调正文、对选中的段落进行「去 AI 味」润色，或一键将小说完整打包（含人物档案与大纲）以 Markdown 格式下载到本地。
 
 #### 验收标准
 
@@ -247,4 +251,16 @@
       newWordCount: "number"
     side_effects:
       - "持久化更新 chapters 表的 content 和 word_count 字段"
+
+- id: REQ-006-AC-003
+  ears: >
+    When the user selects a non-empty text range in the chapter editor and clicks "Polish Selection",
+    the system shall call the LLM with phase3-chapter-polish instructions and return polished text for the selection only, without overwriting the full chapter until the user confirms replacement.
+  test_type: API
+  expected:
+    http_status: 200
+    body_schema:
+      polishedText: "string"
+    side_effects:
+      - "不自动写入 chapters.content，除非用户随后点击保存"
 ```

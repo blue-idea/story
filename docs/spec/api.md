@@ -10,31 +10,34 @@
 
 后端接口使用 Next.js App Router 的 Route Handlers 实现，前缀统一为 `/api`。
 
-| 路由 | 方法 | 功能说明 | 响应格式 |
-|---|---|---|---|
-| `/api/auth/[...nextauth]` | GET/POST | NextAuth.js 认证端点（登录、注销、会话） | HTML / JSON |
-| `/api/preferences` | GET | 获取当前登录用户偏好与未完成项目检测 | JSON |
-| `/api/novel/create` | POST | 提交Q1-Q8表单，创建草稿并生成标题 | JSON |
-| `/api/novel/[id]/confirm-title` | POST | 确认标题并启动大纲异步生成 | JSON |
-| `/api/novel/[id]/plan` | GET | 获取大纲规划、人物设定 | JSON |
-| `/api/novel/[id]/plan/chapter` | PUT | 修改单章大纲提纲 | JSON |
-| `/api/novel/[id]/start-writing` | POST | 确认大纲并启动小说串行写作任务 | JSON |
-| `/api/novel/[id]/write/stream` | GET | SSE 服务端推送流式正文、校验日志与重试故障状态 | Event Stream |
-| `/api/novel/[id]/chapters` | GET | 获取小说章节列表与校验状态 | JSON |
-| `/api/novel/[id]/chapter/[chapterNumber]` | PUT | 手动编辑章节正文内容 | JSON |
-| `/api/novel/[id]/export` | GET | 导出下载整本小说（Markdown） | File (Markdown) |
+| 路由                                             | 方法     | 功能说明                                       | 响应格式        |
+| ------------------------------------------------ | -------- | ---------------------------------------------- | --------------- |
+| `/api/auth/[...nextauth]`                        | GET/POST | NextAuth.js 认证端点（登录、注销、会话）       | HTML / JSON     |
+| `/api/preferences`                               | GET      | 获取当前登录用户偏好与未完成项目检测           | JSON            |
+| `/api/novel/create`                              | POST     | 提交Q1-Q8表单，创建草稿并生成标题              | JSON            |
+| `/api/novel/[id]/confirm-title`                  | POST     | 确认标题并启动大纲异步生成                     | JSON            |
+| `/api/novel/[id]/plan`                           | GET      | 获取大纲规划、人物设定                         | JSON            |
+| `/api/novel/[id]/plan/chapter`                   | PUT      | 修改单章大纲提纲                               | JSON            |
+| `/api/novel/[id]/start-writing`                  | POST     | 确认大纲并启动小说串行写作任务                 | JSON            |
+| `/api/novel/[id]/write/stream`                   | GET      | SSE 服务端推送流式正文、校验日志与重试故障状态 | Event Stream    |
+| `/api/novel/[id]/chapters`                       | GET      | 获取小说章节列表与校验状态                     | JSON            |
+| `/api/novel/[id]/chapter/[chapterNumber]`        | PUT      | 手动编辑章节正文内容                           | JSON            |
+| `/api/novel/[id]/chapter/[chapterNumber]/polish` | POST     | 对用户选中的正文片段做去 AI 味润色             | JSON            |
+| `/api/novel/[id]/export`                         | GET      | 导出下载整本小说（Markdown）                   | File (Markdown) |
 
 ---
 
 ## 接口详细说明
 
 ### 1. `GET/POST /api/auth/[...nextauth]`
+
 - NextAuth.js 自动接管的认证路由。支持：
   - `/api/auth/signin`：登录页面。
   - `/api/auth/signout`：登出页面。
   - `/api/auth/session`：获取当前登录的用户 session。
 
 ### 2. `GET /api/preferences`
+
 - **说明**：获取当前认证用户的历史偏好及未完成小说（`in_progress` 或 `planning`）。
 - **响应体**：
   ```json
@@ -54,6 +57,7 @@
   ```
 
 ### 3. `POST /api/novel/create`
+
 - **说明**：创建新小说草稿（status = 'draft'），并调用 LLM 生成 5 个候选标题。
 - **请求体**：
   ```json
@@ -82,7 +86,8 @@
   ```
 
 ### 4. `POST /api/novel/[id]/confirm-title`
-- **说明**：确认小说的标题，并置状态为 `planning`。后台会启动 LLM 异步生成小说完整大纲和人设。
+
+- **说明**：确认小说的标题，并置状态为 `planning`。后台**串行两次** LLM 调用：① `phase2-outline` 生成完整 7 列大纲 Markdown 写入 `novel_profiles.outline`；② `phase2-characters` 生成人物档案写入 `novel_profiles.character_profiles`；最后解析大纲表写入 `chapters` 行。
 - **请求体**：
   ```json
   {
@@ -98,6 +103,7 @@
   ```
 
 ### 5. `GET /api/novel/[id]/plan`
+
 - **说明**：获取生成大纲及人物设定。
 - **响应体**：
   ```json
@@ -107,12 +113,17 @@
       { "name": "林克", "role": "主角", "description": "冷漠但善于自救" }
     ],
     "chapters": [
-      { "chapterNumber": 1, "title": "虚无的苏醒", "outlineSummary": "主角在冷冻舱中醒来..." }
+      {
+        "chapterNumber": 1,
+        "title": "虚无的苏醒",
+        "outlineSummary": "主角在冷冻舱中醒来..."
+      }
     ]
   }
   ```
 
 ### 6. `PUT /api/novel/[id]/plan/chapter`
+
 - **说明**：用户微调单章概要。
 - **请求体**：
   ```json
@@ -129,6 +140,7 @@
   ```
 
 ### 7. `POST /api/novel/[id]/start-writing`
+
 - **说明**：确认规划大纲并开启写作流程。小说状态置为 `in_progress`，并在 `chapters` 表中将所有章节置为 `pending`。
 - **响应体**：
   ```json
@@ -139,6 +151,7 @@
   ```
 
 ### 8. `GET /api/novel/[id]/write/stream`
+
 - **说明**：SSE 长连接，负责向客户端推送实时串行写作流状态、文字片段及校验结果。
 - **SSE 事件类型**：
   - `chapter_start`：开始本章写作。`{ "chapterNumber": 1, "status": "writing" }`
@@ -152,6 +165,7 @@
   - `novel_complete`：整部小说创作校验完毕。`{ "novelId": "e456c7d8-f9a8-4b7c-8d9e-0f1e2a3b4c5d", "status": "completed" }`
 
 ### 9. `GET /api/novel/[id]/chapters`
+
 - **说明**：获取整部小说的所有章节及其目前的生成/校验状态。
 - **响应体**：
   ```json
@@ -171,7 +185,25 @@
   }
   ```
 
-### 10. `PUT /api/novel/[id]/chapter/[chapterNumber]`
+### 10. `POST /api/novel/[id]/chapter/[chapterNumber]/polish`
+
+- **说明**：对用户**选中**的正文片段执行去 AI 味润色（`prompts/instructions/phase3-chapter-polish.md`）。不自动覆盖整章，由前端替换选区或展示对比后由用户保存。
+- **请求体**：
+  ```json
+  {
+    "selectedText": "需要润色的选中片段……",
+    "surroundingContext": "选区前后各约 200 字上下文（可选）"
+  }
+  ```
+- **响应体**：
+  ```json
+  {
+    "polishedText": "润色后的片段文本……"
+  }
+  ```
+
+### 11. `PUT /api/novel/[id]/chapter/[chapterNumber]`
+
 - **说明**：手动微调章节正文内容。
 - **请求体**：
   ```json
@@ -187,6 +219,7 @@
   }
   ```
 
-### 11. `GET /api/novel/[id]/export`
+### 12. `GET /api/novel/[id]/export`
+
 - **说明**：以 Markdown 文件形式打包小说下载。
 - **响应格式**：文件的 MIME 类型为 `text/markdown`。

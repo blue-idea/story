@@ -88,6 +88,70 @@
 
 ---
 
+### Module 2.5: Prompts 目录与 Novelist 流程对齐（阻塞 Module 3 后续 API）
+
+> 设计详见 `docs/spec/prompts-design.md`。在继续 TASK-010 及 UI 前，须将 `lib/writer` 从内嵌 Prompt 迁移至 `prompts/`。
+
+- [ ] **TASK-006R · 建立 prompts/ 目录与 lib/prompts 加载器**
+  - [ ] 按 `prompts-design.md` §3 创建 `prompts/system`、`instructions`、`templates`、`fragments` 骨架文件（从 `docs/novelist/references/guides/` 迁移模版正文）
+  - [ ] 实现 `lib/prompts/loader.ts`：`{{变量}}` 替换、`getSystem(role)`、`renderInstruction(id, ctx)`
+  - [ ] 编写 loader 单测（变量注入、文件缺失报错）
+
+  **验证方式：**
+
+  ```bash
+  pnpm vitest run lib/prompts/loader.test.ts
+  ```
+
+  **验收证据：** 单测通过；`renderInstruction('phase3-chapter-draft', ctx)` 输出包含字数区间与悬念钩子约束。
+  *需求: `prompts-design.md`, REQ-003, REQ-004
+  *测试类型: Unit
+
+- [ ] **TASK-006R-b · 重构 planner 对齐 Phase 1 L3 + Phase 2（两次 LLM）**
+  - [ ] `PlannerInput` 改为使用 `core_config` / `custom_config`（Q1-Q8）字段
+  - [ ] 标题：`phase1-title`；规划：**先** `phase2-outline` 落库 `outline`，**再** `phase2-characters` 落库 `character_profiles`
+  - [ ] 从完整 7 列 Markdown 表解析 `chapters` 行（严格 Skill，不新增 DB 字段）
+
+  **验证方式：**
+
+  ```bash
+  pnpm vitest run lib/writer/planner.test.ts
+  ```
+
+  **验收证据：** 单测含 7 列表格 fixture，能解析出 `chapters[].outlineSummary`。
+  *需求: REQ-002, REQ-003
+  *测试类型: Unit
+
+- [ ] **TASK-007R · 重构 validator：外置 phase4-suspense-check**
+  - [ ] 移除 `validator.ts` 内嵌 Prompt，改用 `prompts/instructions/phase4-suspense-check.md`
+
+  **验证方式：**
+
+  ```bash
+  pnpm vitest run lib/writer/validator.test.ts
+  ```
+
+  **验收证据：** 现有 validator 单测仍全部通过。
+  *需求: REQ-005
+  *测试类型: Unit
+
+- [ ] **TASK-008R · 重构 generator：对齐 Phase 3 写前上下文与重写 Prompt**
+  - [ ] 从 `novel_profiles.outline` 注入本章完整 7 列规划行 + 人物摘录 + 上一章上下文
+  - [ ] 校验失败使用 `phase3-chapter-rewrite.md` + `diagnosticLog`
+  - [ ] **禁止**在自动写作流中调用 `phase3-chapter-polish`
+
+  **验证方式：**
+
+  ```bash
+  pnpm vitest run lib/writer/generator.test.ts
+  ```
+
+  **验收证据：** 单测断言 mock LLM 收到的 prompt 含 `outline_summary` 与人物字段。
+  *需求: REQ-004, REQ-005
+  *测试类型: Unit
+
+---
+
 ### Module 3: 小说写手核心逻辑层 (lib/writer)
 
 - [x] **TASK-005 · 编写 LLM 客户端适配器 (lib/llm.ts)**
@@ -106,7 +170,7 @@
   *需求: `design.md` §技术选型
   *测试类型: Unit
 
-- [x] **TASK-006 · 编写大纲规划与人物档案生成解析逻辑 (lib/writer/planner.ts)**
+- [x] **TASK-006 · 编写大纲规划与人物档案生成解析逻辑 (lib/writer/planner.ts)** ⚠️ 待 TASK-006R-b 重构对齐 novelist
   - [x] 编写 planner.ts 模块，根据表单 Q1-Q8 的 JSON 数据组装 Prompt，请求 LLM 生成大纲 Markdown 和人设 JSON
   - [x] 解析 LLM 回包，提取 `# 大纲` 块及人设角色字段以格式化落库
 
@@ -212,7 +276,8 @@
 - [ ] **TASK-012 · 实现阅读、保存修改与打包下载 API**
   - [ ] 编写 /api/novel/[id]/chapters：获取章节列表
   - [ ] 编写 /api/novel/[id]/chapter/[chapterNumber] (PUT)：修改指定章节正文并重新计算字数落库
-  - [ ] 编写 /api/novel/[id]/export：组合大纲、人设和已完结正文生成 Markdown，添加 `Content-Disposition` 附件下载响应头
+  - [ ] 编写 /api/novel/[id]/chapter/[chapterNumber]/polish (POST)：选中片段润色（`lib/writer/polish.ts` + `phase3-chapter-polish.md`）
+  - [ ] 编写 /api/novel/[id]/export：按 Skill 结构组合 `01-大纲` / `00-人物档案` / 各章正文生成 Markdown 下载
 
   **验证方式：**
 
@@ -223,7 +288,7 @@
 
   **验收证据：** 接口输出规范拼接好的完整 Markdown 文本。
   *需求: `requirements.md` 中 REQ-006
-  验收标准：REQ-006-AC-001, REQ-006-AC-002
+  验收标准：REQ-006-AC-001, REQ-006-AC-002, REQ-006-AC-003
   *测试类型: API
 
 ---
@@ -302,6 +367,7 @@
 - [ ] **TASK-017 · 完稿阅读、内容修饰与打包导出页面开发**
   - [ ] 小说完结后跳转至阅读界面，提供舒适流畅的双栏或单栏极简读书排版
   - [ ] 允许在段落上直接双击或点击“修改”更新文本，提供“保存修改”按钮
+  - [ ] 支持选中文本后点击「润色选中内容」，调用 polish API 并预览替换（不自动覆盖全文）
   - [ ] 顶部提供明显的“导出 Markdown”发光按钮，点击后触发整本打包下载
 
   **验证方式：**
@@ -313,7 +379,7 @@
 
   **验收证据：** 页面排版舒适，文字可编辑保存，点击导出成功下载出排版整洁的小说 Markdown 文件。
   *需求: `requirements.md` 中 REQ-006
-  验收标准：REQ-006-AC-001
+  验收标准：REQ-006-AC-001, REQ-006-AC-003
   *测试类型: E2E
 
 ---
@@ -354,24 +420,28 @@
 
 ## 进度汇总
 
-| TASK ID  | 名称                                                       | 测试类型 |   状态    | 关联需求           |
-| -------- | ---------------------------------------------------------- | :------: | :-------: | ------------------ |
-| TASK-001 | 初始化 Next.js 开发环境与 Drizzle ORM Schema               |   Unit   | ✅ 已完成 | `constitution.md`  |
-| TASK-002 | 数据库连接客户端与 Schema 结构推送                         |  Manual  | ✅ 已完成 | `design.md`        |
-| TASK-003 | NextAuth.js 配置与轻量邮箱登录/注册                        |   E2E    | ✅ 已完成 | REQ-001            |
-| TASK-004 | 认证拦截中间件与多租户隔离                                 |   API    | ✅ 已完成 | REQ-001            |
-| TASK-005 | 编写 LLM 客户端适配器 (lib/llm.ts)                         |   Unit   | ✅ 已完成 | `design.md`        |
-| TASK-006 | 编写大纲规划与人物档案生成解析逻辑 (lib/writer/planner.ts) |   Unit   | ✅ 已完成 | REQ-002, REQ-003   |
-| TASK-007 | 编写字数与悬念质量校验模块 (lib/writer/validator.ts)       |   Unit   | ✅ 已完成 | REQ-005            |
-| TASK-008 | 编写串行写作状态机 (lib/writer/generator.ts)               |   Unit   | ✅ 已完成 | REQ-004, REQ-005   |
-| TASK-009 | 实现 /api/preferences (偏好与项目续写检测接口)             |   API    | ✅ 已完成 | REQ-001            |
-| TASK-010 | 实现三层问答创建及大纲管理 API                             |   API    | ⬜ 待开始 | REQ-002, REQ-003   |
-| TASK-011 | 实现流式写作启动及 SSE 接口                                |   API    | ⬜ 待开始 | REQ-004, REQ-005   |
-| TASK-012 | 实现阅读、保存修改与打包下载 API                           |   API    | ⬜ 待开始 | REQ-006            |
-| TASK-013 | 首页与快捷续写卡片 UI 开发                                 |   E2E    | ⬜ 待开始 | REQ-001            |
-| TASK-014 | 三层渐进式问答表单页面 UI 开发                             |   E2E    | ⬜ 待开始 | REQ-002            |
-| TASK-015 | 大纲规划与人设调整确认页面开发                             |   E2E    | ⬜ 待开始 | REQ-003            |
-| TASK-016 | SSE 流式写作监控工作台开发                                 |   E2E    | ⬜ 待开始 | REQ-004, REQ-005   |
-| TASK-017 | 完稿阅读、内容修饰与打包导出页面开发                       |   E2E    | ⬜ 待开始 | REQ-006            |
-| TASK-018 | 编写 Vitest 单元与 API 接口集成测试                        |   Unit   | ⬜ 待开始 | `test_strategy.md` |
-| TASK-019 | 编写 Playwright UI 端到端用户旅程测试                      |   E2E    | ⬜ 待开始 | `test_strategy.md` |
+| TASK ID     | 名称                                                       | 测试类型 |            状态             | 关联需求            |
+| ----------- | ---------------------------------------------------------- | :------: | :-------------------------: | ------------------- |
+| TASK-001    | 初始化 Next.js 开发环境与 Drizzle ORM Schema               |   Unit   |          ✅ 已完成          | `constitution.md`   |
+| TASK-002    | 数据库连接客户端与 Schema 结构推送                         |  Manual  |          ✅ 已完成          | `design.md`         |
+| TASK-003    | NextAuth.js 配置与轻量邮箱登录/注册                        |   E2E    |          ✅ 已完成          | REQ-001             |
+| TASK-004    | 认证拦截中间件与多租户隔离                                 |   API    |          ✅ 已完成          | REQ-001             |
+| TASK-005    | 编写 LLM 客户端适配器 (lib/llm.ts)                         |   Unit   |          ✅ 已完成          | `design.md`         |
+| TASK-006    | 编写大纲规划与人物档案生成解析逻辑 (lib/writer/planner.ts) |   Unit   | ✅ 已完成（待 006R-b 重构） | REQ-002, REQ-003    |
+| TASK-006R   | 建立 prompts/ 目录与 lib/prompts 加载器                    |   Unit   |          ⬜ 待开始          | `prompts-design.md` |
+| TASK-006R-b | 重构 planner 对齐 Phase 1 L3 + Phase 2                     |   Unit   |          ⬜ 待开始          | REQ-002, REQ-003    |
+| TASK-007    | 编写字数与悬念质量校验模块 (lib/writer/validator.ts)       |   Unit   |  ✅ 已完成（待 007R 重构）  | REQ-005             |
+| TASK-007R   | 重构 validator 外置 phase4-suspense-check                  |   Unit   |          ⬜ 待开始          | REQ-005             |
+| TASK-008    | 编写串行写作状态机 (lib/writer/generator.ts)               |   Unit   |  ✅ 已完成（待 008R 重构）  | REQ-004, REQ-005    |
+| TASK-008R   | 重构 generator 对齐 Phase 3 写前上下文                     |   Unit   |          ⬜ 待开始          | REQ-004, REQ-005    |
+| TASK-009    | 实现 /api/preferences (偏好与项目续写检测接口)             |   API    |          ✅ 已完成          | REQ-001             |
+| TASK-010    | 实现三层问答创建及大纲管理 API                             |   API    |          ⬜ 待开始          | REQ-002, REQ-003    |
+| TASK-011    | 实现流式写作启动及 SSE 接口                                |   API    |          ⬜ 待开始          | REQ-004, REQ-005    |
+| TASK-012    | 实现阅读、保存修改与打包下载 API                           |   API    |          ⬜ 待开始          | REQ-006             |
+| TASK-013    | 首页与快捷续写卡片 UI 开发                                 |   E2E    |          ⬜ 待开始          | REQ-001             |
+| TASK-014    | 三层渐进式问答表单页面 UI 开发                             |   E2E    |          ⬜ 待开始          | REQ-002             |
+| TASK-015    | 大纲规划与人设调整确认页面开发                             |   E2E    |          ⬜ 待开始          | REQ-003             |
+| TASK-016    | SSE 流式写作监控工作台开发                                 |   E2E    |          ⬜ 待开始          | REQ-004, REQ-005    |
+| TASK-017    | 完稿阅读、内容修饰与打包导出页面开发                       |   E2E    |          ⬜ 待开始          | REQ-006             |
+| TASK-018    | 编写 Vitest 单元与 API 接口集成测试                        |   Unit   |          ⬜ 待开始          | `test_strategy.md`  |
+| TASK-019    | 编写 Playwright UI 端到端用户旅程测试                      |   E2E    |          ⬜ 待开始          | `test_strategy.md`  |

@@ -7,7 +7,7 @@
 
 ## 项目说明
 
-本项目为 Novelist 写作网站。基于 `chinese-novelist` 的小说创作技能流程，采用表单和选项式的渐进式问答，引导用户逐步确定小说题材、世界观、人物设定和大纲，并支持串行/并行自动写作，并在界面中流式展现正文创作以及自动化的字数和质量校验/修复过程。
+本项目为 Novelist 写作网站。基于 `docs/novelist`（chinese-novelist）的小说创作技能流程，采用表单和选项式的渐进式问答，引导用户逐步确定小说题材、世界观、人物设定和大纲，并**仅支持串行**自动写作；在界面中流式展现正文创作以及自动化的字数和质量校验/修复过程。LLM 提示词与输出模版统一外置在 `prompts/` 目录（详见 `prompts-design.md`）。
 
 ---
 
@@ -70,6 +70,7 @@ docs/spec/
 ├── constitution.md     # 本文件（项目宪法）
 ├── requirements.md     # 需求与 EARS 验收标准
 ├── design.md           # 技术设计概览
+├── prompts-design.md   # Prompts 目录与 novelist 流程对齐
 ├── data.md             # 数据库设计
 ├── api.md              # API 接口设计
 ├── tasks.md            # 任务拆分清单
