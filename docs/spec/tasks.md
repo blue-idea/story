@@ -92,10 +92,10 @@
 
 > 设计详见 `docs/spec/prompts-design.md`。在继续 TASK-010 及 UI 前，须将 `lib/writer` 从内嵌 Prompt 迁移至 `prompts/`。
 
-- [ ] **TASK-006R · 建立 prompts/ 目录与 lib/prompts 加载器**
-  - [ ] 按 `prompts-design.md` §3 创建 `prompts/system`、`instructions`、`templates`、`fragments` 骨架文件（从 `docs/novelist/references/guides/` 迁移模版正文）
-  - [ ] 实现 `lib/prompts/loader.ts`：`{{变量}}` 替换、`getSystem(role)`、`renderInstruction(id, ctx)`
-  - [ ] 编写 loader 单测（变量注入、文件缺失报错）
+- [x] **TASK-006R · 建立 prompts/ 目录与 lib/prompts 加载器**
+  - [x] 按 `prompts-design.md` §4 创建 `prompts/system`、`instructions`、`templates`、`fragments` 骨架文件（从 `docs/novelist/references/guides/` 迁移模版正文）
+  - [x] 实现 `lib/prompts/loader.ts`：`{{变量}}` 替换、`getSystem(role)`、`renderInstruction(id, ctx)`
+  - [x] 编写 loader 单测（变量注入、文件缺失报错）
 
   **验证方式：**
 
@@ -443,7 +443,7 @@
 | TASK-004    | 认证拦截中间件与多租户隔离                                 |   API    |          ✅ 已完成          | REQ-001             |
 | TASK-005    | 编写 LLM 客户端适配器 (lib/llm.ts)                         |   Unit   |          ✅ 已完成          | `design.md`         |
 | TASK-006    | 编写大纲规划与人物档案生成解析逻辑 (lib/writer/planner.ts) |   Unit   | ✅ 已完成（待 006R-b 重构） | REQ-002, REQ-003    |
-| TASK-006R   | 建立 prompts/ 目录与 lib/prompts 加载器                    |   Unit   |          ⬜ 待开始          | `prompts-design.md` |
+| TASK-006R   | 建立 prompts/ 目录与 lib/prompts 加载器                    |   Unit   |          ✅ 已完成          | `prompts-design.md` |
 | TASK-006R-b | 重构 planner 对齐 Phase 1 L3 + Phase 2                     |   Unit   |          ⬜ 待开始          | REQ-002, REQ-003    |
 | TASK-007    | 编写字数与悬念质量校验模块 (lib/writer/validator.ts)       |   Unit   |  ✅ 已完成（待 007R 重构）  | REQ-005             |
 | TASK-007R   | 重构 validator 外置 phase4-suspense-check                  |   Unit   |          ⬜ 待开始          | REQ-005             |
