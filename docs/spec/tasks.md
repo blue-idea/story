@@ -240,15 +240,15 @@
   验收标准：REQ-001-AC-002
   *测试类型: API
 
-- [ ] **TASK-010 · 实现完整分步向导 API 及大纲管理 API**
-  - [ ] `POST /api/novel/wizard`：Layer1 后创建 `draft` + `core_config`
-  - [ ] `PATCH /api/novel/[id]/wizard`：Layer2 逐题合并 `custom_config`
-  - [ ] `POST /api/novel/[id]/wizard/suggest`：单题 🎲（`wizard-suggest.md`）
-  - [ ] `POST /api/novel/[id]/wizard/confirm-config`：配置确认 + 默认值
-  - [ ] `POST /api/novel/[id]/wizard/titles`：Layer3 候选标题
-  - [ ] **不实现** `POST /api/novel/create`
-  - [ ] `/api/novel/[id]/confirm-title`：串行两次 LLM 规划
-  - [ ] `/api/novel/[id]/plan` (GET/PUT)：生成态与 7 列章节表
+- [x] **TASK-010 · 实现完整分步向导 API 及大纲管理 API**
+  - [x] `POST /api/novel/wizard`：Layer1 后创建 `draft` + `core_config`
+  - [x] `PATCH /api/novel/[id]/wizard`：Layer2 逐题合并 `custom_config`
+  - [x] `POST /api/novel/[id]/wizard/suggest`：单题 🎲（`wizard-suggest.md`）
+  - [x] `POST /api/novel/[id]/wizard/confirm-config`：配置确认 + 默认值
+  - [x] `POST /api/novel/[id]/wizard/titles`：Layer3 候选标题
+  - [x] **不实现** `POST /api/novel/create`
+  - [x] `/api/novel/[id]/confirm-title`：串行两次 LLM 规划
+  - [x] `/api/novel/[id]/plan` (GET/PUT)：生成态与 7 列章节表
 
   **验证方式：**
 
@@ -450,7 +450,7 @@
 | TASK-008    | 编写串行写作状态机 (lib/writer/generator.ts)               |   Unit   |  ✅ 已完成（待 008R 重构）  | REQ-004, REQ-005    |
 | TASK-008R   | 重构 generator 对齐 Phase 3 写前上下文                     |   Unit   |          ✅ 已完成          | REQ-004, REQ-005    |
 | TASK-009    | 实现 /api/preferences (偏好与项目续写检测接口)             |   API    |          ✅ 已完成          | REQ-001             |
-| TASK-010    | 实现三层问答创建及大纲管理 API                             |   API    |          ⬜ 待开始          | REQ-002, REQ-003    |
+| TASK-010    | 实现三层问答创建及大纲管理 API                             |   API    |          ✅ 已完成          | REQ-002, REQ-003    |
 | TASK-011    | 实现流式写作启动及 SSE 接口                                |   API    |          ⬜ 待开始          | REQ-004, REQ-005    |
 | TASK-012    | 实现阅读、保存修改与打包下载 API                           |   API    |          ⬜ 待开始          | REQ-006             |
 | TASK-013    | 首页与快捷续写卡片 UI 开发                                 |   E2E    |          ⬜ 待开始          | REQ-001             |

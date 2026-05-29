@@ -20,8 +20,8 @@
 | `/api/novel/[id]/wizard/confirm-config`          | POST     | Layer2 创作配置确认                            | JSON            |
 | `/api/novel/[id]/wizard/titles`                  | POST     | Layer3 生成候选标题                            | JSON            |
 | `/api/novel/[id]/confirm-title`                  | POST     | 确认标题并启动大纲异步生成                     | JSON            |
-| `/api/novel/[id]/plan`                           | GET      | 获取大纲规划、人物设定                         | JSON            |
-| `/api/novel/[id]/plan/chapter`                   | PUT      | 修改单章大纲提纲                               | JSON            |
+| `/api/novel/[id]/plan`                           | GET/PUT  | 获取大纲规划，或保存单章大纲摘要               | JSON            |
+| `/api/novel/[id]/plan/chapter`                   | PUT      | 修改单章大纲提纲（兼容别名）                   | JSON            |
 | `/api/novel/[id]/start-writing`                  | POST     | 确认大纲并启动小说串行写作任务                 | JSON            |
 | `/api/novel/[id]/write/stream`                   | GET      | SSE 服务端推送流式正文、校验日志与重试故障状态 | Event Stream    |
 | `/api/novel/[id]/chapters`                       | GET      | 获取小说章节列表与校验状态                     | JSON            |
@@ -131,7 +131,7 @@
   }
   ```
 
-### 6. `PUT /api/novel/[id]/plan/chapter`
+### 6. `PUT /api/novel/[id]/plan`
 
 - **说明**：用户微调单章概要。
 - **请求体**：
@@ -147,6 +147,8 @@
     "success": true
   }
   ```
+
+> 兼容别名：`PUT /api/novel/[id]/plan/chapter`
 
 ### 7. `POST /api/novel/[id]/start-writing`
 
