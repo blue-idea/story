@@ -90,10 +90,10 @@
 
 ### Module 3: 小说写手核心逻辑层 (lib/writer)
 
-- [ ] **TASK-005 · 编写 LLM 客户端适配器 (lib/llm.ts)**
-  - [ ] 封装 Google Gemini / OpenAI 兼容 SDK 客户端
-  - [ ] 实现非流式文本调用接口（用于大纲、标题、诊断信息）
-  - [ ] 实现流式 SSE 文本输出接口，支持 `for await (const chunk of stream)` 迭代（用于正文流式写作）
+- [x] **TASK-005 · 编写 LLM 客户端适配器 (lib/llm.ts)**
+  - [x] 封装 Google Gemini / OpenAI 兼容 SDK 客户端
+  - [x] 实现非流式文本调用接口（用于大纲、标题、诊断信息）
+  - [x] 实现流式 SSE 文本输出接口，支持 `for await (const chunk of stream)` 迭代（用于正文流式写作）
 
   **验证方式：**
 
@@ -360,7 +360,7 @@
 | TASK-002 | 数据库连接客户端与 Schema 结构推送                         |  Manual  | ✅ 已完成 | `design.md`        |
 | TASK-003 | NextAuth.js 配置与轻量邮箱登录/注册                        |   E2E    | ✅ 已完成 | REQ-001            |
 | TASK-004 | 认证拦截中间件与多租户隔离                                 |   API    | ✅ 已完成 | REQ-001            |
-| TASK-005 | 编写 LLM 客户端适配器 (lib/llm.ts)                         |   Unit   | ⬜ 待开始 | `design.md`        |
+| TASK-005 | 编写 LLM 客户端适配器 (lib/llm.ts)                         |   Unit   | ✅ 已完成 | `design.md`        |
 | TASK-006 | 编写大纲规划与人物档案生成解析逻辑 (lib/writer/planner.ts) |   Unit   | ⬜ 待开始 | REQ-002, REQ-003   |
 | TASK-007 | 编写字数与悬念质量校验模块 (lib/writer/validator.ts)       |   Unit   | ⬜ 待开始 | REQ-005            |
 | TASK-008 | 编写串行写作状态机 (lib/writer/generator.ts)               |   Unit   | ⬜ 待开始 | REQ-004, REQ-005   |

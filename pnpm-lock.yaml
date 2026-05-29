@@ -14,6 +14,9 @@ importers:
       "@auth/drizzle-adapter":
         specifier: ^1.11.2
         version: 1.11.2
+      "@google/generative-ai":
+        specifier: ^0.24.1
+        version: 0.24.1
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
@@ -29,6 +32,9 @@ importers:
       next-auth:
         specifier: ^4.24.14
         version: 4.24.14(next@16.2.6(@babel/core@7.29.7)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      openai:
+        specifier: ^6.39.1
+        version: 6.39.1(zod@4.4.3)
       pg:
         specifier: ^8.21.0
         version: 8.21.0
@@ -558,6 +564,13 @@ packages:
         integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==,
       }
     engines: { node: ^18.18.0 || ^20.9.0 || >=21.1.0 }
+
+  "@google/generative-ai@0.24.1":
+    resolution:
+      {
+        integrity: sha512-MqO+MLfM6kjxcKoy0p1wRzG3b4ZZXtPI+z2IE26UogS2Cm/XHO+7gGRBh6gcJsOiIVoH93UwKvW4HdgiOZCy9Q==,
+      }
+    engines: { node: ">=18.0.0" }
 
   "@humanfs/core@0.19.2":
     resolution:
@@ -3384,6 +3397,21 @@ packages:
       }
     engines: { node: ">=18" }
 
+  openai@6.39.1:
+    resolution:
+      {
+        integrity: sha512-z3dO9fEWOXBzlXynVb/xZ/tujzUjFWQWn3C0n0mw6Vo0zJTbEkaN4b2cLWjhJ6haJQx8LlREoafHRl+Gu/Hl+A==,
+      }
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.25 || ^4.0
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   openid-client@5.7.1:
     resolution:
       {
@@ -4665,6 +4693,8 @@ snapshots:
     dependencies:
       "@eslint/core": 0.17.0
       levn: 0.4.1
+
+  "@google/generative-ai@0.24.1": {}
 
   "@humanfs/core@0.19.2":
     dependencies:
@@ -6338,6 +6368,10 @@ snapshots:
   onetime@7.0.0:
     dependencies:
       mimic-function: 5.0.1
+
+  openai@6.39.1(zod@4.4.3):
+    optionalDependencies:
+      zod: 4.4.3
 
   openid-client@5.7.1:
     dependencies:

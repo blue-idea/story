@@ -48,11 +48,13 @@
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.2",
+    "@google/generative-ai": "^0.24.1",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "next": "^16.2.6",
     "next-auth": "^4.24.14",
+    "openai": "^6.39.1",
     "pg": "^8.21.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6"
