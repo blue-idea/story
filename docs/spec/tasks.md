@@ -107,10 +107,10 @@
   *需求: `prompts-design.md`, REQ-003, REQ-004
   *测试类型: Unit
 
-- [ ] **TASK-006R-b · 重构 planner 对齐 Phase 1 L3 + Phase 2（两次 LLM）**
-  - [ ] `PlannerInput` 改为使用 `core_config` / `custom_config`（Q1-Q8）字段
-  - [ ] 标题：`phase1-title`；规划：**先** `phase2-outline` 落库 `outline`，**再** `phase2-characters` 落库 `character_profiles`
-  - [ ] 从完整 7 列 Markdown 表解析 `chapters` 行（严格 Skill，不新增 DB 字段）
+- [x] **TASK-006R-b · 重构 planner 对齐 Phase 1 L3 + Phase 2（两次 LLM）**
+  - [x] `PlannerInput` 改为使用 `core_config` / `custom_config`（Q1-Q8）字段
+  - [x] 标题：`phase1-title`；规划：**先** `phase2-outline` 落库 `outline`，**再** `phase2-characters` 落库 `character_profiles`
+  - [x] 从完整 7 列 Markdown 表解析 `chapters` 行（严格 Skill，不新增 DB 字段）
 
   **验证方式：**
 
@@ -444,7 +444,7 @@
 | TASK-005    | 编写 LLM 客户端适配器 (lib/llm.ts)                         |   Unit   |          ✅ 已完成          | `design.md`         |
 | TASK-006    | 编写大纲规划与人物档案生成解析逻辑 (lib/writer/planner.ts) |   Unit   | ✅ 已完成（待 006R-b 重构） | REQ-002, REQ-003    |
 | TASK-006R   | 建立 prompts/ 目录与 lib/prompts 加载器                    |   Unit   |          ✅ 已完成          | `prompts-design.md` |
-| TASK-006R-b | 重构 planner 对齐 Phase 1 L3 + Phase 2                     |   Unit   |          ⬜ 待开始          | REQ-002, REQ-003    |
+| TASK-006R-b | 重构 planner 对齐 Phase 1 L3 + Phase 2                     |   Unit   |          ✅ 已完成          | REQ-002, REQ-003    |
 | TASK-007    | 编写字数与悬念质量校验模块 (lib/writer/validator.ts)       |   Unit   |  ✅ 已完成（待 007R 重构）  | REQ-005             |
 | TASK-007R   | 重构 validator 外置 phase4-suspense-check                  |   Unit   |          ⬜ 待开始          | REQ-005             |
 | TASK-008    | 编写串行写作状态机 (lib/writer/generator.ts)               |   Unit   |  ✅ 已完成（待 008R 重构）  | REQ-004, REQ-005    |

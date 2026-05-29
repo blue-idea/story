@@ -1,105 +1,148 @@
+import type {
+  CharacterProfile,
+  CoreConfig,
+  CustomConfig,
+} from "../../db/schema";
 import { createLLMClient } from "../llm";
+import { getSystem, renderInstruction } from "../prompts";
+import { parseChaptersFromOutline, type ParsedChapter } from "./parse-outline";
 
+/** Q1-Q8 配置（对齐 novels.core_config / custom_config） */
 export type PlannerInput = {
-  genre: string;
-  protagonist: string;
-  conflict: string;
-  world: string;
-  wordCount: string;
-  style: string;
-  pacing: string;
-  extra: string;
+  coreConfig: CoreConfig;
+  customConfig: CustomConfig;
 };
 
-export type Character = {
-  name: string;
-  role: string;
-  background: string;
+export type PlannerInputWithTitle = PlannerInput & {
+  title: string;
 };
 
-export type PlanResult = {
-  candidateTitles: string[];
-  characters: Character[];
+export type Phase2PlanResult = {
   outline: string;
+  characterProfiles: CharacterProfile[];
+  chapters: ParsedChapter[];
 };
 
-export async function generatePlan(input: PlannerInput): Promise<PlanResult> {
-  const llm = createLLMClient({ provider: "gemini" });
+export type { ParsedChapter };
 
-  const prompt = `
-请作为一名专业的小说大纲策划，根据以下设定生成小说规划。
-设定要求：
-- 题材：${input.genre}
-- 主角：${input.protagonist}
-- 核心冲突：${input.conflict}
-- 世界观：${input.world}
-- 目标字数/篇幅：${input.wordCount}
-- 风格基调：${input.style}
-- 节奏安排：${input.pacing}
-- 补充说明：${input.extra}
-
-请严格按以下格式输出结果，不要包含额外废话：
-
-# 候选标题
-1. [标题1]
-2. [标题2]
-3. [标题3]
-4. [标题4]
-5. [标题5]
-
-# 人物档案
-\`\`\`json
-[
-  { "name": "角色名", "role": "角色定位(主角/配角/反派)", "background": "背景和性格设定" }
-]
-\`\`\`
-
-# 大纲
-（在此处输出多章节分卷大纲，使用 Markdown 格式，例如 ## 第一章：标题）
-`;
-
-  const responseText = await llm.generateText({
-    prompt,
-    systemInstruction:
-      "你是一位经验丰富的金牌网络小说编辑，擅长构思具有极强商业价值和悬念冲突的网文大纲。",
-  });
-
-  const titles: string[] = [];
-  const titlesMatch = responseText.match(/# 候选标题\n([\s\S]*?)\n# 人物档案/);
-  if (titlesMatch && titlesMatch[1]) {
-    const lines = titlesMatch[1]
-      .split("\n")
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-    for (const line of lines) {
-      const match = line.match(/^\d+\.\s*(.+)/);
-      if (match) {
-        titles.push(match[1]);
-      }
-    }
-  }
-
-  let characters: Character[] = [];
-  const charsMatch = responseText.match(
-    /# 人物档案\s*```json\s*([\s\S]*?)\s*```/,
-  );
-  if (charsMatch && charsMatch[1]) {
-    try {
-      characters = JSON.parse(charsMatch[1]);
-    } catch (e) {
-      console.error("Failed to parse characters JSON", e);
-    }
-  }
-
-  let outline = "";
-  const outlineMatch = responseText.match(/# 大纲\s*([\s\S]*)/);
-  if (outlineMatch && outlineMatch[1]) {
-    outline = outlineMatch[1].trim();
-  }
-
+function buildTitleContext(input: PlannerInput) {
   return {
-    candidateTitles: titles,
-    characters,
-    outline,
+    genre: input.coreConfig.genre,
+    protagonist: input.coreConfig.protagonist,
+    conflict: input.coreConfig.conflict,
+    theme: input.customConfig.theme,
+    tone: input.customConfig.tone,
   };
 }
+
+function buildOutlineContext(input: PlannerInputWithTitle) {
+  return {
+    ...buildTitleContext(input),
+    title: input.title,
+    chapterCount: String(input.customConfig.chapterCount),
+  };
+}
+
+/** 解析 phase1-title 编号列表输出 */
+export function parseCandidateTitles(responseText: string): string[] {
+  const titles: string[] = [];
+  for (const line of responseText.split("\n")) {
+    const trimmed = line.trim();
+    const match = trimmed.match(/^\d+\.\s*(.+?)(?:\s*[—\-–]\s*|$)/);
+    if (match?.[1]) {
+      titles.push(match[1].trim());
+    }
+  }
+  return titles;
+}
+
+/** 从人物档案 Markdown 解析为 CharacterProfile[] */
+export function parseCharacterProfilesMarkdown(
+  markdown: string,
+): CharacterProfile[] {
+  const profiles: CharacterProfile[] = [];
+  const sectionPattern = /##\s*(主角|反派|配角)\s*\n([\s\S]*?)(?=\n##\s|$)/g;
+
+  let sectionMatch: RegExpExecArray | null;
+  while ((sectionMatch = sectionPattern.exec(markdown)) !== null) {
+    const roleLabel = sectionMatch[1];
+    const body = sectionMatch[2];
+    const namePattern = /###\s*(.+?)\s*\n([\s\S]*?)(?=###\s*|\n##\s|$)/g;
+
+    let nameMatch: RegExpExecArray | null;
+    while ((nameMatch = namePattern.exec(body)) !== null) {
+      profiles.push({
+        name: nameMatch[1].trim(),
+        role: roleLabel,
+        summary: nameMatch[2].trim(),
+      });
+    }
+  }
+
+  return profiles;
+}
+
+/** Phase 1 Layer 3：候选标题（phase1-title） */
+export async function generateCandidateTitles(
+  input: PlannerInput,
+): Promise<string[]> {
+  const llm = createLLMClient({ provider: "gemini" });
+  const prompt = renderInstruction("phase1-title", buildTitleContext(input));
+  const responseText = await llm.generateText({
+    prompt,
+    systemInstruction: getSystem("editor"),
+  });
+  return parseCandidateTitles(responseText);
+}
+
+/** Phase 2 第 1 次 LLM：完整 7 列大纲 */
+export async function generateOutline(
+  input: PlannerInputWithTitle,
+): Promise<string> {
+  const llm = createLLMClient({ provider: "gemini" });
+  const prompt = renderInstruction(
+    "phase2-outline",
+    buildOutlineContext(input),
+  );
+  return llm.generateText({
+    prompt,
+    systemInstruction: getSystem("editor"),
+  });
+}
+
+/** Phase 2 第 2 次 LLM：人物档案（依赖 outline） */
+export async function generateCharacterProfiles(
+  input: PlannerInputWithTitle,
+  outline: string,
+): Promise<CharacterProfile[]> {
+  const llm = createLLMClient({ provider: "gemini" });
+  const prompt = renderInstruction("phase2-characters", {
+    outlineSummary: outline,
+    genre: input.coreConfig.genre,
+    protagonist: input.coreConfig.protagonist,
+  });
+  const responseText = await llm.generateText({
+    prompt,
+    systemInstruction: getSystem("editor"),
+  });
+  return parseCharacterProfilesMarkdown(responseText);
+}
+
+/**
+ * Phase 2 完整规划：先 outline → 再 characters → 解析 chapters
+ */
+export async function runPhase2Planning(
+  input: PlannerInputWithTitle,
+): Promise<Phase2PlanResult> {
+  const outline = await generateOutline(input);
+  const characterProfiles = await generateCharacterProfiles(input, outline);
+  const chapters = parseChaptersFromOutline(outline);
+
+  return {
+    outline,
+    characterProfiles,
+    chapters,
+  };
+}
+
+export { parseChaptersFromOutline };
