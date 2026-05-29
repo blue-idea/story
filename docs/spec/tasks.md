@@ -139,10 +139,10 @@
   验收标准：REQ-005-AC-001
   *测试类型: Unit
 
-- [ ] **TASK-008 · 编写串行写作状态机 (lib/writer/generator.ts)**
-  - [ ] 编写 generator.ts 业务类，按串行顺序遍历章节骨架
-  - [ ] 启动单章写作，并将流式正文传输给 SSE 容器
-  - [ ] 写完单章触发校验器。校验不合格则携带诊断意见重写，累加 `retryCount` 达到 3 轮未通过或遭遇 LLM 连接异常报错时，抛出致命错误，并将小说及当前章状态修改为 `failed` 挂起任务
+- [x] **TASK-008 · 编写串行写作状态机 (lib/writer/generator.ts)**
+  - [x] 编写 generator.ts 业务类，按串行顺序遍历章节骨架
+  - [x] 启动单章写作，并将流式正文传输给 SSE 容器
+  - [x] 写完单章触发校验器。校验不合格则携带诊断意见重写，累加 `retryCount` 达到 3 轮未通过或遭遇 LLM 连接异常报错时，抛出致命错误，并将小说及当前章状态修改为 `failed` 挂起任务
 
   **验证方式：**
 
@@ -160,9 +160,9 @@
 
 ### Module 4: 后端 API (Route Handlers)
 
-- [ ] **TASK-009 · 实现 /api/preferences (偏好与项目续写检测接口)**
-  - [ ] 从 userPreferences 表加载历史设置
-  - [ ] 扫描 novels 表中属于当前用户的且状态为 `in_progress` 或 `planning` 的最新小说，若有则提取小说名称及当前已生成章节数
+- [x] **TASK-009 · 实现 /api/preferences (偏好与项目续写检测接口)**
+  - [x] 编写 GET 接口：从 userPreferences 表加载历史设置，扫描 novels 表中属于当前用户的且状态为 `in_progress` 或 `failed` 的最新小说作为 `lastActiveNovel`
+  - [x] 编写 POST 接口：保存或更新用户的写作偏好设置
 
   **验证方式：**
 
@@ -363,8 +363,8 @@
 | TASK-005 | 编写 LLM 客户端适配器 (lib/llm.ts)                         |   Unit   | ✅ 已完成 | `design.md`        |
 | TASK-006 | 编写大纲规划与人物档案生成解析逻辑 (lib/writer/planner.ts) |   Unit   | ✅ 已完成 | REQ-002, REQ-003   |
 | TASK-007 | 编写字数与悬念质量校验模块 (lib/writer/validator.ts)       |   Unit   | ✅ 已完成 | REQ-005            |
-| TASK-008 | 编写串行写作状态机 (lib/writer/generator.ts)               |   Unit   | ⬜ 待开始 | REQ-004, REQ-005   |
-| TASK-009 | 实现 /api/preferences (偏好与项目续写检测接口)             |   API    | ⬜ 待开始 | REQ-001            |
+| TASK-008 | 编写串行写作状态机 (lib/writer/generator.ts)               |   Unit   | ✅ 已完成 | REQ-004, REQ-005   |
+| TASK-009 | 实现 /api/preferences (偏好与项目续写检测接口)             |   API    | ✅ 已完成 | REQ-001            |
 | TASK-010 | 实现三层问答创建及大纲管理 API                             |   API    | ⬜ 待开始 | REQ-002, REQ-003   |
 | TASK-011 | 实现流式写作启动及 SSE 接口                                |   API    | ⬜ 待开始 | REQ-004, REQ-005   |
 | TASK-012 | 实现阅读、保存修改与打包下载 API                           |   API    | ⬜ 待开始 | REQ-006            |
