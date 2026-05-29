@@ -1,8 +1,8 @@
 # 接口设计（API Design）
 
 > 文件路径：`docs/spec/api.md`
-> 版本：1.0.0 · 日期：2026-05-29
-> 状态：已定稿
+> 版本：1.1.0 · 日期：2026-05-29
+> 状态：已定稿（含渐进式披露向导 API）
 
 ---
 
@@ -14,7 +14,11 @@
 | ------------------------------------------------ | -------- | ---------------------------------------------- | --------------- |
 | `/api/auth/[...nextauth]`                        | GET/POST | NextAuth.js 认证端点（登录、注销、会话）       | HTML / JSON     |
 | `/api/preferences`                               | GET      | 获取当前登录用户偏好与未完成项目检测           | JSON            |
-| `/api/novel/create`                              | POST     | 提交Q1-Q8表单，创建草稿并生成标题              | JSON            |
+| `/api/novel/wizard`                              | POST     | Layer1 完成后创建 draft（`core_config`）       | JSON            |
+| `/api/novel/[id]/wizard`                         | PATCH    | 增量更新 `custom_config`（Layer2，可选）       | JSON            |
+| `/api/novel/[id]/wizard/suggest`                 | POST     | Layer2 单题随机建议（🎲）                      | JSON            |
+| `/api/novel/[id]/wizard/confirm-config`          | POST     | Layer2 创作配置确认                            | JSON            |
+| `/api/novel/[id]/wizard/titles`                  | POST     | Layer3 生成候选标题                            | JSON            |
 | `/api/novel/[id]/confirm-title`                  | POST     | 确认标题并启动大纲异步生成                     | JSON            |
 | `/api/novel/[id]/plan`                           | GET      | 获取大纲规划、人物设定                         | JSON            |
 | `/api/novel/[id]/plan/chapter`                   | PUT      | 修改单章大纲提纲                               | JSON            |
@@ -56,34 +60,39 @@
   }
   ```
 
-### 3. `POST /api/novel/create`
+### 3. 渐进式披露向导 API（Phase 1）
 
-- **说明**：创建新小说草稿（status = 'draft'），并调用 LLM 生成 5 个候选标题。
-- **请求体**：
-  ```json
-  {
-    "coreConfig": {
-      "genre": "科幻",
-      "protagonist": "林克",
-      "conflict": "飞船坠入黑洞，AI 在撒谎"
-    },
-    "customConfig": {
-      "worldbuilding": "近未来硬科幻",
-      "perspective": "第一人称",
-      "tone": "冷峻",
-      "theme": "信任与谎言",
-      "audience": "科幻读者",
-      "chapterCount": 10
-    }
-  }
-  ```
-- **响应体**：
-  ```json
-  {
-    "novelId": "e456c7d8-f9a8-4b7c-8d9e-0f1e2a3b4c5d",
-    "candidateTitles": ["黑洞视界", "最后的领航员", "智能的阴谋"]
-  }
-  ```
+> 披露节奏见 `docs/spec/prompts-design.md` §2。UI 逐题调用；仅在 Layer2「配置确认」后才请求标题。
+
+#### `POST /api/novel/wizard`
+
+- **时机**：Layer 1 摘要确认后。
+- **请求体**：`{ "coreConfig": { ... Q1-Q3 及追问字段 } }`
+- **响应体**：`{ "novelId": "uuid", "status": "draft" }`
+
+#### `PATCH /api/novel/[id]/wizard`
+
+- **时机**：Layer 2 每完成一题（可选，用于断点续填）。
+- **请求体**：`{ "customConfigPartial": { "worldbuilding": "..." } }`
+
+#### `POST /api/novel/[id]/wizard/suggest`
+
+- **时机**：用户点击 🎲 随机生成。
+- **请求体**：`{ "questionId": "q4", "context": { "coreConfig", "customConfigSoFar" } }`
+- **响应体**：`{ "suggestion": "一句话建议", "field": "worldbuilding" }`
+- **Prompt**：`prompts/instructions/wizard-suggest.md`
+
+#### `POST /api/novel/[id]/wizard/confirm-config`
+
+- **时机**：Layer 2 完整配置摘要页用户点击「确认」。
+- **说明**：合并默认值（跳过题），校验必填；**不**生成标题。
+
+#### `POST /api/novel/[id]/wizard/titles`
+
+- **时机**：配置确认通过后，进入 Layer 3。
+- **前置**：须已调用 `confirm-config`；`novel.status === 'draft'`。
+- **响应体**：`{ "candidateTitles": ["...", "..."] }`（3 或 5 个）
+- **说明**：替代原 `POST /api/novel/create`；**禁止**一次性提交 Q1-Q8。
 
 ### 4. `POST /api/novel/[id]/confirm-title`
 

@@ -240,21 +240,35 @@
   验收标准：REQ-001-AC-002
   *测试类型: API
 
-- [ ] **TASK-010 · 实现三层问答创建及大纲管理 API**
-  - [ ] 编写 /api/novel/create：接收 Q1-Q8 选项，创建状态为 `draft` 的小说，调用 AI 提取并生成候选标题，返回 novelId 和 candidateTitles
-  - [ ] 编写 /api/novel/[id]/confirm-title：确认标题并修改状态为 `planning`，异步触发大纲生成
-  - [ ] 编写 /api/novel/[id]/plan (GET/PUT)：用于获取完整规划人设大纲，并支持针对单章的提纲编辑修改
+- [ ] **TASK-010 · 实现完整分步向导 API 及大纲管理 API**
+  - [ ] `POST /api/novel/wizard`：Layer1 后创建 `draft` + `core_config`
+  - [ ] `PATCH /api/novel/[id]/wizard`：Layer2 逐题合并 `custom_config`
+  - [ ] `POST /api/novel/[id]/wizard/suggest`：单题 🎲（`wizard-suggest.md`）
+  - [ ] `POST /api/novel/[id]/wizard/confirm-config`：配置确认 + 默认值
+  - [ ] `POST /api/novel/[id]/wizard/titles`：Layer3 候选标题
+  - [ ] **不实现** `POST /api/novel/create`
+  - [ ] `/api/novel/[id]/confirm-title`：串行两次 LLM 规划
+  - [ ] `/api/novel/[id]/plan` (GET/PUT)：生成态与 7 列章节表
 
   **验证方式：**
 
   ```bash
-  # 测试新建草稿
-  curl -X POST -H "Content-Type: application/json" -d '{"coreConfig":{},"customConfig":{}}' http://localhost:3000/api/novel/create
+  # 1. Layer1 后创建
+  curl -X POST -b cookie.txt -H "Content-Type: application/json" \
+    -d '{"coreConfig":{"genre":"科幻","protagonist":"男性主角","conflict":"查明真相"}}' \
+    http://localhost:3000/api/novel/wizard
+  # 2. Layer2 增量（示例 novelId）
+  curl -X PATCH -b cookie.txt -H "Content-Type: application/json" \
+    -d '{"customConfigPartial":{"worldbuilding":"近未来硬科幻"}}' \
+    http://localhost:3000/api/novel/NOVEL_ID/wizard
+  # 3. 配置确认 → 标题
+  curl -X POST -b cookie.txt http://localhost:3000/api/novel/NOVEL_ID/wizard/confirm-config
+  curl -X POST -b cookie.txt http://localhost:3000/api/novel/NOVEL_ID/wizard/titles
   ```
 
-  **验收证据：** 各接口返回 200 HTTP 响应，数据库对应的字段状态发生正确更新。
+  **验收证据：** 分步调用链返回 200；`novels` 状态随步骤为 `draft` → `planning`；无 `create` 路由。
   *需求: `requirements.md` 中 REQ-002, REQ-003
-  验收标准：REQ-002-AC-002, REQ-003-AC-002
+  验收标准：REQ-002-AC-002c, REQ-002-AC-003, REQ-003-AC-001
   *测试类型: API
 
 - [ ] **TASK-011 · 实现流式写作启动及 SSE 接口**
@@ -312,10 +326,11 @@
   验收标准：REQ-001-AC-003
   *测试类型: E2E
 
-- [ ] **TASK-014 · 三层渐进式问答表单页面 UI 开发**
-  - [ ] 编写 FormSteps.tsx，实现第一层“核心定位”（题材、主角、冲突）和第二层“深度配置”（世界观、字数等）的选项卡
-  - [ ] 添加单选⭐的推荐标记动效（基于用户历史偏好）
-  - [ ] 第三阶段展示候选标题发光卡片，支持打字输入自定义标题，提交后加载动效转场
+- [ ] **TASK-014 · 渐进式披露创建向导 UI（对齐 phase1-layer\*.md）**
+  - [ ] 实现 `components/novel-wizard/`：Layer1 逐题 Q1→Q3（含追问）、Layer1 摘要、Layer2 逐题 Q4→Q8（跳过/🎲/直达 Q8）、创作配置确认卡、Layer3 标题选择
+  - [ ] **禁止**一屏展示全部 Q1-Q8；未确认 Layer2 前不展示标题候选
+  - [ ] 偏好⭐：选项排序与标记（`GET /api/preferences`）
+  - [ ] Phase 0 快捷入口：长文创意解析后三选一（可选，见 `prompts-design.md` §2.2）
 
   **验证方式：**
 
@@ -326,7 +341,7 @@
 
   **验收证据：** 表单过渡动画顺滑无突变，提交选项后成功渲染 5 个候选发光卡片标题。
   *需求: `requirements.md` 中 REQ-002
-  验收标准：REQ-002-AC-001, REQ-002-AC-003
+  验收标准：REQ-002-AC-001, REQ-002-AC-001b, REQ-002-AC-002, REQ-002-AC-002b, REQ-002-AC-002c, REQ-002-AC-003, REQ-002-AC-004
   *测试类型: E2E
 
 - [ ] **TASK-015 · 大纲规划与人设调整确认页面开发**

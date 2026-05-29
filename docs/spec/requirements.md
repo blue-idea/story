@@ -60,31 +60,57 @@
 
 ### 需求 REQ-002 · 三层递进式问答表单
 
-**用户故事：** 作为已登录创作者，我希望通过表单选项逐步定制小说的核心属性（题材、主角、冲突、世界观等），以发起新作品的创作，并支持 AI 推荐生成候选标题。
+**用户故事：** 作为已登录创作者，我希望按 Skill 的**渐进式披露**方式逐层、逐题定制小说（核心定位 → 深度配置确认 → 标题），而不是一屏填写全部字段，并支持跳过、随机生成与偏好推荐。
+
+> **渐进式披露**：行为定义见 `docs/spec/prompts-design.md` §2；流程源文件见 `docs/novelist/references/flows/phase1-layer*.md`。
 
 #### 验收标准
 
 ```yaml
 - id: REQ-002-AC-001
   ears: >
-    When the user completes and submits the first layer form (Q1-Q3: genre, protagonist, conflict),
-    the system shall transition the UI seamlessly to the second layer custom settings form (Q4-Q8).
+    While the user is in the novel creation wizard, when viewing any step in Layer 1 (Q1-Q3),
+    the system shall display only the current question and its follow-up prompts, and shall not display Layer 2 (Q4-Q8) or title selection UI.
   test_type: E2E
   expected:
-    ui_state: "表单第一阶段提交成功，UI 无缝滑动到下一阶段"
+    ui_state: "当前屏仅显示一道主题问及其追问；无 Q4-Q8 表单项；有 Layer1 进度指示"
+
+- id: REQ-002-AC-001b
+  ears: >
+    When the user completes Q1-Q3 and views the Layer 1 summary,
+    the system shall show a summary card (genre, protagonist, conflict) and require explicit navigation to Layer 2.
+  test_type: E2E
+  expected:
+    ui_state: "展示 Layer1 摘要；点击「进入深度定制」后才出现 Q4"
 
 - id: REQ-002-AC-002
   ears: >
-    When the user completes and submits Q1-Q8 questions,
-    the system shall create a novel record with status 'draft' owned by the current logged-in user, and return AI-generated candidate titles.
+    While in Layer 2, when the user is on a single question step (Q4-Q8),
+    the system shall offer skip and random-suggest actions for that question only, and shall offer a shortcut to jump to Q8 (chapter count).
+  test_type: E2E
+  expected:
+    ui_state: "每题可见「跳过」「随机生成」；存在「直接配置章节数」入口"
+
+- id: REQ-002-AC-002b
+  ears: >
+    When the user completes Layer 2 and reaches the full configuration review screen,
+    the system shall display the complete creative config summary and require explicit confirmation before showing title candidates.
+  test_type: E2E
+  expected:
+    ui_state: "完整配置摘要卡；未确认前不显示标题候选"
+
+- id: REQ-002-AC-002c
+  ears: >
+    When the user confirms the creative configuration on the review screen,
+    the system shall persist the full custom_config via POST /api/novel/[id]/wizard/confirm-config,
+    and when the user enters Layer 3, POST /api/novel/[id]/wizard/titles shall return AI-generated candidate titles for the existing draft novel.
   test_type: API
   expected:
     http_status: 200
     body_schema:
-      novelId: "string"
       candidateTitles: "array of strings"
     side_effects:
-      - "在 novels 表中插入一条状态为 'draft' 的记录，其 user_id 关联当前登录的 user id"
+      - "novels 表 draft 记录在 Layer1 已由 POST /api/novel/wizard 创建；titles 接口不重复创建小说"
 
 - id: REQ-002-AC-003
   ears: >
@@ -94,6 +120,14 @@
   expected:
     ui_state: "更新标题成功，页面跳转到大纲规划页面"
     url: "/novel/[id]/plan"
+
+- id: REQ-002-AC-004
+  ears: >
+    When the user has historical preferences, when displaying Layer 1 or Layer 2 option lists,
+    the system shall sort preferred options to the top and mark them with a visible star indicator.
+  test_type: E2E
+  expected:
+    ui_state: "与偏好匹配的选项带⭐且排在前列"
 ```
 
 ---
@@ -103,6 +137,8 @@
 **用户故事：** 作为创作者，我希望在写作前预览大纲、人物设定和章节计划，并可以在页面上直接编辑各个章节的概要，以便把控小说的核心剧情走向。
 
 > **Novelist 对齐说明**：规划产出须符合 `docs/novelist/references/guides/outline-template.md`（7 列章节表 + 全书悬念线）与 `character-template.md`（可指导写作的人物粒度）。Prompt 与模版定义见 `docs/spec/prompts-design.md`。
+>
+> **渐进式披露**：大纲与人设生成完成前仅显示加载态；完整规划内容在用户确认前一次性披露（`prompts-design.md` §2.6）。
 
 #### 验收标准
 

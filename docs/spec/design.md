@@ -14,7 +14,16 @@ e:/NextCloud/coding/netx.js/story/
 │   ├── api/                       # API Route Handlers
 │   │   ├── auth/                  # NextAuth.js 路由 ([...nextauth]/route.ts)
 │   │   ├── preferences/           # 偏好与续写检测接口
-│   │   └── novel/                 # 小说管理与流程接口
+│   │   └── novel/
+│   │       ├── wizard/            # POST 创建 draft（Layer1 后）
+│   │       └── [id]/
+│   │           ├── wizard/        # PATCH 增量 custom_config
+│   │           ├── wizard/suggest/
+│   │           ├── wizard/confirm-config/
+│   │           ├── wizard/titles/
+│   │           ├── confirm-title/
+│   │           ├── plan/
+│   │           └── write/stream/
 │   ├── novel/
 │   │   ├── create/                # 三层问答表单页面
 │   │   └── [id]/
@@ -26,7 +35,12 @@ e:/NextCloud/coding/netx.js/story/
 │   ├── layout.tsx                 # 根布局
 │   └── page.tsx                   # 首页（快捷入口/未完成项目卡片）
 ├── components/                    # UI 组件
-│   ├── FormSteps.tsx              # 问答表单组件
+│   ├── novel-wizard/              # 渐进式披露向导（逐题，对齐 phase1-layer*.md）
+│   │   ├── WizardShell.tsx
+│   │   ├── QuestionStep.tsx
+│   │   ├── LayerSummary.tsx
+│   │   ├── ConfigReview.tsx
+│   │   └── TitlePicker.tsx
 │   ├── OutlineCard.tsx            # 大纲编辑卡片
 │   ├── StreamTerminal.tsx         # 流式写作终端面板
 │   └── ui/                        # 原子 UI 组件（按钮、对话框等）
@@ -200,7 +214,7 @@ sequenceDiagram
 
 作品生成逻辑须遵循 `docs/novelist/SKILL.md` 定义的阶段（Phase 0～4），Web 端仅实现**串行写作**模式。各阶段 LLM 指令与 Markdown 输出模版存放在 `prompts/`，由 `lib/prompts/loader.ts` 加载并注入 `core_config` / `custom_config` / 章节上下文变量。
 
-阶段映射、目录结构、Gap 分析与任务拆分详见 **[prompts-design.md](./prompts-design.md)**。
+阶段映射、**渐进式披露**、目录结构、Gap 分析与任务拆分详见 **[prompts-design.md](./prompts-design.md)**（§2）。
 
 ### Writer 引擎职责边界
 

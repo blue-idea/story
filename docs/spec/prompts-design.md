@@ -1,8 +1,8 @@
 # Prompts 与 Novelist 流程对齐设计
 
 > 文件路径：`docs/spec/prompts-design.md`
-> 版本：1.1.0 · 日期：2026-05-29
-> 状态：已定稿（用户决策 2026-05-29）
+> 版本：1.2.0 · 日期：2026-05-29
+> 状态：已定稿（含渐进式披露对齐）
 > 关联：`docs/novelist/SKILL.md`、`docs/spec/design.md`
 
 ---
@@ -26,10 +26,200 @@
 | 1   | Phase 2 LLM 调用 | **分两次**：先 `phase2-outline` 生成 `01-大纲.md` 等价物，再 `phase2-characters` 生成 `00-人物档案.md` 等价物；第二次调用可读取第一次产出的大纲摘要                                                                 |
 | 2   | 润色（去 AI 味） | **不纳入自动写作流**；仅对用户**手动选中**的正文片段调用 `phase3-chapter-polish`（阅读/编辑页触发）                                                                                                                 |
 | 3   | 数据与模版       | **严格按照 Skill**：`novel_profiles.outline` 存完整 7 列大纲 Markdown；`character_profiles` 存符合 `character-template.md` 的结构化内容；**不新增** `outline_meta` 等扩展字段；章节规划从大纲表解析，不另造简化格式 |
+| 4   | 交互方式         | **渐进式披露**：与 Skill 一致，按层、按题、按阶段逐步展示；禁止一屏堆叠全部 Q1-Q8                                                                                                                                   |
+| 5   | 向导 API         | **完整分步 API**（§2.9）；**不实现** `POST /api/novel/create`                                                                                                                                                       |
 
 ---
 
-## 2. Novelist 阶段 ↔ Web 产品映射
+## 2. 渐进式披露（Progressive Disclosure）
+
+Web 端交互须复刻 Skill 的披露节奏：**先披露最少必要信息，完成一层后再开放下一层**；层内**一题一屏（或一题一卡）**，追问仅在需要时出现。参考 `docs/novelist/SKILL.md` Phase 0～2 与 `references/flows/phase0-initialization.md`、`phase1-layer*.md`。
+
+### 2.1 披露层级总览
+
+```mermaid
+flowchart TB
+  subgraph P0 [Phase 0 仅首页]
+    W[欢迎 + 偏好⭐]
+    R[未完成项目续写]
+    S[快捷入口：信息充足可跳过问答]
+  end
+
+  subgraph P1 [Phase 1 创建向导 /novel/wizard]
+    L1[Layer 1 必答 Q1→Q2→Q3 逐题]
+    S1[Layer1 摘要]
+    L2[Layer 2 可选 Q4…Q8 逐题]
+    S2[创作配置确认]
+    L3[Layer 3 标题候选]
+  end
+
+  subgraph P2 [Phase 2 规划页]
+    G[异步生成中…]
+    V[大纲+人设+章节表预览]
+    C[用户确认后开始写作]
+  end
+
+  subgraph P3 [Phase 3 工作台]
+    A[全自动 无需确认]
+  end
+
+  P0 --> L1
+  L1 --> S1 --> L2 --> S2 --> L3
+  L3 --> G --> V --> C --> A
+```
+
+| 披露层       | 用户可见范围                            | 不可提前展示                 |
+| ------------ | --------------------------------------- | ---------------------------- |
+| Phase 0      | 续写卡片、新建、（可选）快捷规划入口    | 问答向导、大纲、写作台       |
+| Layer 1      | 当前题 Q1/Q2/Q3 及本题追问              | Q4-Q8、标题、大纲            |
+| Layer 1 完成 | 已收集摘要 +「进入深度定制」            | 标题、大纲                   |
+| Layer 2      | 当前题 Q4-Q8；支持跳过/🎲/直达 Q8       | Layer 3、大纲                |
+| Layer 2 完成 | 完整「创作配置确认」卡 + 确认/修改      | 标题候选（确认前）           |
+| Layer 3      | 3～5 个标题候选 + 自定义 + 重新生成     | 大纲正文                     |
+| Phase 2      | 生成进度 → 规划预览 →「确认并开始写作」 | 写作流式终端                 |
+| Phase 3      | 写作工作台                              | —（Skill：禁止再向用户确认） |
+
+### 2.2 Phase 0 · 初始化（首页 `app/page.tsx`）
+
+对齐 `phase0-initialization.md`：
+
+| 行为     | Web 实现要点                                                                                                            |
+| -------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 加载偏好 | `GET /api/preferences` → `hasPreferences` 时展示「欢迎回来」及⭐推荐说明                                                |
+| 中断续写 | `unfinishedProject` 存在时优先展示「继续创作」大卡片，**不**默认进入问答                                                |
+| 快捷入口 | 新建页支持粘贴长文创意；若解析出题材/主角/冲突齐全，提供三选一：直接规划 / 先确认提取结果 / 走完整问答（与 Skill 一致） |
+| 新建作品 | 无未完成项目时进入 Layer 1 第一题，**非**整表表单                                                                       |
+
+### 2.3 Phase 1 · Layer 1 核心定位（必答）
+
+对齐 `phase1-layer1-core.md`：
+
+| 规则       | UI/API                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------ |
+| 逐题披露   | 路由或向导状态 `step=q1` → `q2` → `q3`；每步仅渲染当前题 + 选项 + 进度条（1/3）                        |
+| 条件追问   | Q2：职业/身份、核心性格；Q3：驱动力 — 以子步骤或折叠卡片形式**跟在当前题后**，不跳到下一主问题         |
+| 可选轻提示 | Q2 配角网络：可跳过，不阻塞进入 Q3                                                                     |
+| 层末摘要   | Q3 完成后展示 Markdown 摘要（题材/主角/冲突），按钮「进入深度定制」                                    |
+| 偏好写入   | 摘要确认后 `POST /api/preferences` 静默合并 Layer1 答案（对应 Skill 静默更新 `user-preferences.json`） |
+
+**数据**：Layer 1 结束前可仅存前端状态；或在首次完成 Layer1 时 `POST /api/novel/wizard` 创建 `draft` 仅含 `core_config`（见 §2.7）。
+
+### 2.4 Phase 1 · Layer 2 深度定制（可选）
+
+对齐 `phase1-layer2-customize.md`：
+
+| 规则          | UI                                                                                       |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| 逐题披露      | `step=q4` … `q8`，每题一屏；顶部提供「跳过本题」「🎲 随机生成」                          |
+| 加速路径      | 固定入口「直接配置章节数（Q8）」— 中间题用 Skill 默认值填充                              |
+| 智能推荐      | 题材为奇幻/科幻时 Q4 显示⚠️推荐；都市现实可提示「可跳过，默认现实世界」                  |
+| Q1 已含世界观 | Q4 标记「已在创意中覆盖」并允许一键确认                                                  |
+| 偏好⭐        | Q5 视角/基调、Q8 章节数：与 `user_preferences` 匹配项置顶并⭐                            |
+| 层末确认      | Q8 后展示**完整创作配置确认**（与 Skill 摘要模板字段一致），用户选「确认」才进入 Layer 3 |
+| 修改回路      | 选「修改某些设置」→ 回到指定题号，**不**清空已答其他题                                   |
+
+**随机生成**：调用 `POST /api/novel/wizard/suggest`（或等价）传入 `questionId` + 当前已答上下文，返回一句话建议供用户确认后写入。
+
+### 2.5 Phase 1 · Layer 3 标题
+
+对齐 `phase1-layer3-title.md`：
+
+| 规则     | UI                                                           |
+| -------- | ------------------------------------------------------------ |
+| 触发时机 | 仅当 Layer 2「创作配置确认」通过后请求标题                   |
+| 候选数量 | 简单题材 3 个，复杂 5 个（由后端 `phase1-title` 按题材判断） |
+| 重新生成 | 提供「重新生成一组」；超过 5 轮提示可自定义输入              |
+| 自定义   | 支持 Other / 输入框                                          |
+| 确认后   | `POST confirm-title` → 跳转 `/novel/[id]/plan`（生成中状态） |
+
+### 2.6 Phase 2 · 规划确认（二次确认）
+
+对齐 `phase2-planning.md`：大纲/人设生成完成后**才**披露规划详情；用户点击「确认并开始写作」前不连接 SSE。
+
+| 状态                    | 用户看到                                                     |
+| ----------------------- | ------------------------------------------------------------ |
+| `planning` + 无 profile | 骨架屏 /「正在生成大纲与人设…」                              |
+| profile 就绪            | 完整 `outline` Markdown 预览、人物卡、章节表（7 列解析展示） |
+| 编辑                    | 单章 `outline_summary` 可编辑保存（REQ-003）                 |
+| 确认                    | 按钮「确认并开始写作」→ `in_progress` → `/write`             |
+
+### 2.7 Phase 3～4 · 全自动（零披露）
+
+对齐 Skill「疯狂创作 / 自动校验」：进入写作台后**不再**弹出确认框；故障时仅披露错误 +「重试本章」。
+
+### 2.8 向导状态机（前端）
+
+```
+novelCreateWizardState =
+  | { phase: 'layer1'; step: 'q1'|'q2'|'q2-followup'|'q3'|'q3-followup'|'summary' }
+  | { phase: 'layer2'; step: 'q4'|…|'q8'|'config-review' }
+  | { phase: 'layer3'; step: 'titles'|'title-regenerate' }
+```
+
+组件建议：`components/novel-wizard/`（替代「单层 FormSteps 选项卡」一次性展示两层）。
+
+| 组件               | 职责                     |
+| ------------------ | ------------------------ |
+| `WizardShell.tsx`  | 进度条、层标题、禁止跳层 |
+| `QuestionStep.tsx` | 单题选项 + 跳过/随机     |
+| `LayerSummary.tsx` | L1/L2 摘要卡             |
+| `TitlePicker.tsx`  | Layer 3 候选标题         |
+| `ConfigReview.tsx` | L2 末配置确认            |
+
+### 2.9 API 与披露节奏（已定稿：完整分步 API）
+
+**已确认**：仅实现分步向导 API；**不实现** `POST /api/novel/create` 一次性提交。前端每步与后端状态同步，支持 Layer2 断点续填。
+
+```mermaid
+sequenceDiagram
+  participant UI as novel-wizard
+  participant API as Route Handlers
+  participant DB as Postgres
+
+  UI->>API: POST /api/novel/wizard (core_config)
+  API->>DB: INSERT novels draft
+  API-->>UI: novelId
+
+  loop Layer2 每题
+    UI->>API: PATCH /api/novel/{id}/wizard (partial custom_config)
+    opt 用户点 🎲
+      UI->>API: POST .../wizard/suggest
+      API-->>UI: suggestion
+    end
+  end
+
+  UI->>API: POST .../wizard/confirm-config
+  API->>DB: 合并默认值，校验完整 custom_config
+
+  UI->>API: POST .../wizard/titles
+  API-->>UI: candidateTitles
+
+  UI->>API: POST .../confirm-title
+  API->>DB: title, status=planning
+  Note over API: 串行 phase2-outline → phase2-characters
+```
+
+| 接口                                         | 披露节点               | 说明                                             |
+| -------------------------------------------- | ---------------------- | ------------------------------------------------ |
+| `POST /api/novel/wizard`                     | Layer 1 摘要确认后     | 创建 `draft`，写入 `core_config`；返回 `novelId` |
+| `PATCH /api/novel/[id]/wizard`               | Layer 2 **每完成一题** | 增量合并 `custom_config`；须校验 `novel.user_id` |
+| `POST /api/novel/[id]/wizard/suggest`        | 用户点 🎲              | 单题 AI 建议（`wizard-suggest.md`）              |
+| `POST /api/novel/[id]/wizard/confirm-config` | Layer 2 配置确认卡     | 填充跳过项默认值；**不**生成标题                 |
+| `POST /api/novel/[id]/wizard/titles`         | 进入 Layer 3           | 调用 `phase1-title`；返回 3/5 个候选             |
+| `POST /api/novel/[id]/confirm-title`         | 用户选定标题           | `status=planning`；异步两次 LLM 规划             |
+
+**禁止**：`POST /api/novel/create`（已从 `api.md` 移除）。
+
+### 2.10 与 `prompts/` 的关系
+
+渐进式披露影响 **UI 与 API 状态机**，不新增写作 Prompt。可选增加：
+
+- `prompts/instructions/wizard-suggest.md` — 单题随机生成（Layer 2 的 🎲）
+- `prompts/instructions/wizard-extract.md` — Phase 0 快捷入口从长文提取 Q1-Q3
+
+---
+
+## 3. Novelist 阶段 ↔ Web 产品映射
 
 ```mermaid
 flowchart LR
@@ -40,7 +230,7 @@ flowchart LR
   P3 --> P4[Phase 4 校验修复]
 
   P0 -.->|GET /api/preferences| W0[首页续写检测]
-  P1 -.->|POST create + confirm-title| W1[问答表单 + 标题]
+  P1 -.->|wizard 分步 API + confirm-title| W1[问答向导 + 标题]
   P2 -.->|GET/PUT plan| W2[大纲确认页]
   P25 -.->|固定 serial| SKIP[Web 跳过 UI]
   P3 -.->|SSE write/stream| W3[写作工作台]
@@ -70,7 +260,7 @@ flowchart LR
 
 ---
 
-## 3. `prompts/` 目录结构（目标态）
+## 4. `prompts/` 目录结构（目标态）
 
 ```
 prompts/
@@ -87,6 +277,8 @@ prompts/
 │   ├── phase3-chapter-polish.md       # 去 AI 味润色（仅手动选中片段，非自动流水线）
 │   ├── phase3-chapter-rewrite.md      # 校验失败扩写/重写（携带 diagnostic）
 │   └── phase4-suspense-check.md       # 末尾 300 字悬念判定
+│   ├── wizard-suggest.md              # Layer2 单题 🎲 随机建议
+│   └── wizard-extract.md              # Phase0 快捷入口长文提取 Q1-Q3
 ├── templates/                         # 输出骨架（非 LLM 指令，用于解析/导出）
 │   ├── outline.md                     # ← novelist outline-template.md
 │   ├── character.md                   # ← novelist character-template.md
@@ -98,7 +290,7 @@ prompts/
     └── chapter-quality-checklist.md   # 张力/对话/意外转折检查项
 ```
 
-### 3.1 变量命名约定
+### 4.1 变量命名约定
 
 与 `data.md` 中 `core_config` / `custom_config` 字段对齐：
 
@@ -121,7 +313,7 @@ prompts/
 | `{{previousChapterSummary}}` | 上一章摘要或末尾片段          | Phase 3 连贯性 |
 | `{{diagnosticLog}}`          | `validation_log`              | Phase 4 修复   |
 
-### 3.2 加载层设计（实现指引，非本期编码）
+### 4.2 加载层设计（实现指引，非本期编码）
 
 ```
 lib/prompts/
@@ -134,17 +326,17 @@ lib/prompts/
 
 ---
 
-## 4. 各阶段 Prompt 与模版要点
+## 5. 各阶段 Prompt 与模版要点
 
-### 4.1 Phase 1 · 标题生成 (`phase1-title.md`)
+### 5.1 Phase 1 · 标题生成 (`phase1-title.md`)
 
 **对齐**：`phase1-layer3-title.md` + `title-guide.md`
 
 - 输入：Layer 1/2 全部字段 + 用户偏好摘要（可选）
 - 输出：3 个（简单题材）或 5 个（复杂题材）候选标题；每项含「技巧名 + 一句话说明」
-- 解析：正则或 JSON 块提取 `candidateTitles[]`（与 `api.md` POST create 响应一致）
+- 解析：正则或 JSON 块提取 `candidateTitles[]`（由 `POST .../wizard/titles` 返回）
 
-### 4.2 Phase 2 · 规划（两次 LLM 调用）
+### 5.2 Phase 2 · 规划（两次 LLM 调用）
 
 **对齐**：`phase2-planning.md`、`outline-template.md`（7 列）、`character-template.md`
 
@@ -189,7 +381,7 @@ sequenceDiagram
 - `novel_profiles.character_profiles` ← 符合 `00-人物档案.md` / `character-template.md` 的结构化 JSON（字段与 Skill 模版一一对应）
 - `chapters` ← 从 7 列表格解析：`title`、以及 `outline_summary`（存**该行 7 列内容的规范化文本**，供 Phase 3 注入；运行时亦可从 `outline` 再解析，以保持与 Skill 读 `01-大纲.md` 一致）
 
-### 4.3 Phase 3 · 章节创作（仅 `phase3-chapter-draft.md`，自动流）
+### 5.3 Phase 3 · 章节创作（仅 `phase3-chapter-draft.md`，自动流）
 
 **对齐**：`phase3-writing.md` 逐步流程
 
@@ -208,7 +400,7 @@ sequenceDiagram
 
 **自动写作流不包含润色**：Skill Phase 3 步骤 9-10「深度润色」在 Web 端**不**由 `generator.ts` 自动执行，避免额外 LLM 成本与不可控的全章改写。自动流在初稿生成后直接进入 Phase 4 字数/悬念校验；未通过则走 `phase3-chapter-rewrite.md`。
 
-### 4.4 手动润色（`phase3-chapter-polish.md`，用户触发）
+### 5.4 手动润色（`phase3-chapter-polish.md`，用户触发）
 
 **对齐**：`phase3-writing.md` 步骤 9-10 的写作规范，但执行时机改为**用户主动**。
 
@@ -222,7 +414,7 @@ sequenceDiagram
 
 关联需求：**REQ-006-AC-003**（见 `requirements.md`）。
 
-### 4.5 Phase 4 · 校验 (`phase4-suspense-check.md` + 字数规则)
+### 5.5 Phase 4 · 校验 (`phase4-suspense-check.md` + 字数规则)
 
 **对齐**：`phase4-validation.md`、`scripts/check_chapter_wordcount.py`
 
@@ -234,9 +426,9 @@ sequenceDiagram
 
 ---
 
-## 5. 与现有实现 / 规格的差异（Gap Analysis）
+## 6. 与现有实现 / 规格的差异（Gap Analysis）
 
-### 5.1 代码层（已实现，待重构）
+### 6.1 代码层（已实现，待重构）
 
 | 模块                      | 现状                                                             | 目标                                                                 |
 | ------------------------- | ---------------------------------------------------------------- | -------------------------------------------------------------------- |
@@ -245,7 +437,9 @@ sequenceDiagram
 | `lib/writer/validator.ts` | 悬念 Prompt 内嵌                                                 | 迁至 `phase4-suspense-check.md`                                      |
 | `prompts/` 目录           | 不存在                                                           | 按 §3 创建                                                           |
 
-### 5.2 规格文档
+| `FormSteps.tsx`（规划） | 两层选项卡一次性展示 | 改为 `novel-wizard` 逐题披露（§2） |
+
+### 6.2 规格文档
 
 | 文件              | 问题                                | 建议修订                                         |
 | ----------------- | ----------------------------------- | ------------------------------------------------ |
@@ -255,7 +449,7 @@ sequenceDiagram
 | `tasks.md`        | TASK-006～008 已完成但基于旧 Prompt | 新增 **TASK-006R** 重构任务（见下）              |
 | `traceability.md` | 无 prompts 任务行                   | TASK-006R 合并到 006/007/008 追溯                |
 
-### 5.3 有意不纳入 Web 的 Skill 能力
+### 6.3 有意不纳入 Web 的 Skill 能力
 
 | Skill 能力                                  | Web 处理                                                 |
 | ------------------------------------------- | -------------------------------------------------------- |
@@ -266,23 +460,27 @@ sequenceDiagram
 
 ---
 
-## 6. API / 数据模型对齐检查
+## 7. API / 数据模型对齐检查
 
 当前 `api.md` + `data.md` **无需结构性变更**，仅需实现层按 Prompt 输出解析：
 
-| API                           | Prompt 阶段                                          | 备注                                                                         |
-| ----------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------- |
-| `POST /api/novel/create`      | `phase1-title`（仅标题）                             | 与 `confirm-title` 后触发的 `phase2` 拆分，符合 Skill Layer 3 → Phase 2 顺序 |
-| `POST .../confirm-title`      | **两次**异步：`phase2-outline` → `phase2-characters` | 顺序执行，失败则 `planning` 置 `failed`                                      |
-| `GET .../plan`                | —                                                    | 返回完整 `outline` Markdown + `characterProfiles` + 从表解析的 `chapters[]`  |
-| `GET .../write/stream`        | `phase3-draft` + `phase4` 循环                       | SSE 事件不变；**无**自动 polish 事件                                         |
-| `POST .../chapter/[n]/polish` | `phase3-chapter-polish`                              | 仅选中片段；见 §4.4                                                          |
+| API                              | Prompt 阶段                                          | 备注                                                                        |
+| -------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------------------- |
+| `POST /api/novel/wizard`         | —                                                    | Layer1 后创建 `draft` + `core_config`                                       |
+| `PATCH .../wizard`               | —                                                    | Layer2 逐题更新 `custom_config`                                             |
+| `POST .../wizard/suggest`        | `wizard-suggest`                                     | 单题 🎲                                                                     |
+| `POST .../wizard/confirm-config` | —                                                    | Layer2 配置确认                                                             |
+| `POST .../wizard/titles`         | `phase1-title`                                       | Layer3 候选标题                                                             |
+| `POST .../confirm-title`         | **两次**异步：`phase2-outline` → `phase2-characters` | 顺序执行，失败则 `planning` 置 `failed`                                     |
+| `GET .../plan`                   | —                                                    | 返回完整 `outline` Markdown + `characterProfiles` + 从表解析的 `chapters[]` |
+| `GET .../write/stream`           | `phase3-draft` + `phase4` 循环                       | SSE 事件不变；**无**自动 polish 事件                                        |
+| `POST .../chapter/[n]/polish`    | `phase3-chapter-polish`                              | 仅选中片段；见 §4.4                                                         |
 
 **数据模型（严格 Skill，已否决扩展字段）**：不新增 `outline_meta`。规划 UI 展示 7 列时，从 `novel_profiles.outline` 解析 Markdown 表格；与 Skill 读 `01-大纲.md` 的方式一致。
 
 ---
 
-## 7. 任务拆分建议（纳入 `tasks.md`）
+## 8. 任务拆分建议（纳入 `tasks.md`）
 
 在 **TASK-010 之前**插入 Prompt 层重构（阻塞后续 API/UI 质量）：
 
@@ -298,7 +496,7 @@ sequenceDiagram
 
 ---
 
-## 8. 测试策略补充
+## 9. 测试策略补充
 
 | 类型 | 新增关注点                                                     |
 | ---- | -------------------------------------------------------------- |
@@ -309,7 +507,7 @@ sequenceDiagram
 
 ---
 
-## 9. 文档变更清单（本次对齐）
+## 10. 文档变更清单（本次对齐）
 
 | 文件                          | 变更                                             |
 | ----------------------------- | ------------------------------------------------ |
@@ -321,13 +519,15 @@ sequenceDiagram
 
 ---
 
-## 10. 已确认决策记录
+## 11. 已确认决策记录
 
 | #   | 用户选择                | 规格影响                                                                                            |
 | --- | ----------------------- | --------------------------------------------------------------------------------------------------- |
 | 1   | Phase 2 **分两次** LLM  | `planner.ts` 拆为 outline / characters 两步；`confirm-title` 后台任务串行                           |
 | 2   | 润色仅 **手动选中内容** | `generator` 不调用 polish；新增 polish API + 阅读页 UI；REQ-006-AC-003                              |
 | 3   | **严格按照 Skill**      | 模版与 `docs/novelist/references/guides/` 对齐；`outline` 存完整 7 列 Markdown；否决 `outline_meta` |
+| 4   | **渐进式披露**          | §2：`novel-wizard` 逐题 UI；Phase 2 二次确认                                                        |
+| 5   | **完整分步向导 API**    | §2.9 六端点链；废弃 `POST /api/novel/create`                                                        |
 
 ---
 
