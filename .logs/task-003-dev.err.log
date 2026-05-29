@@ -18,3 +18,4 @@ https://next-auth.js.org/errors#callback_credentials_jwt_error Signin in with cr
     at ignore-listed frames {
   code: 'CALLBACK_CREDENTIALS_JWT_ERROR'
 }
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy

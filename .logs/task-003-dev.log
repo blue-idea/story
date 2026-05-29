@@ -53,3 +53,6 @@ Creating turbopack project { dir: 'E:\\NextCloud\\coding\\netx.js\\story', testM
  GET /api/auth/session 200 in 100ms (next.js: 69ms, application-code: 30ms)
  GET /api/auth/csrf 200 in 22ms (next.js: 1616µs, application-code: 20ms)
  POST /api/auth/callback/credentials 401 in 281ms (next.js: 1360µs, application-code: 280ms)
+✓ Compiled in 14ms
+[?25h
+ ELIFECYCLE  Command failed with exit code 1.

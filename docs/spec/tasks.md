@@ -70,9 +70,9 @@
   验收标准：REQ-001-AC-001
   *测试类型: E2E
 
-- [ ] **TASK-004 · 认证拦截中间件与多租户隔离**
-  - [ ] 编写 middleware.ts 拦截非 /login、/api/auth 的路由，重定向至登录页
-  - [ ] 在后端 Route Handlers 中获取当前 session，针对所有增删改查均加入 `where(eq(novels.userId, session.user.id))` 过滤
+- [x] **TASK-004 · 认证拦截中间件与多租户隔离**
+  - [x] 编写 middleware.ts 拦截非 /login、/api/auth 的路由，重定向至登录页
+  - [x] 在后端 Route Handlers 中获取当前 session，针对所有增删改查均加入 `where(eq(novels.userId, session.user.id))` 过滤
 
   **验证方式：**
 
@@ -359,7 +359,7 @@
 | TASK-001 | 初始化 Next.js 开发环境与 Drizzle ORM Schema               |   Unit   | ✅ 已完成 | `constitution.md`  |
 | TASK-002 | 数据库连接客户端与 Schema 结构推送                         |  Manual  | ✅ 已完成 | `design.md`        |
 | TASK-003 | NextAuth.js 配置与轻量邮箱登录/注册                        |   E2E    | ✅ 已完成 | REQ-001            |
-| TASK-004 | 认证拦截中间件与多租户隔离                                 |   API    | ⬜ 待开始 | REQ-001            |
+| TASK-004 | 认证拦截中间件与多租户隔离                                 |   API    | ✅ 已完成 | REQ-001            |
 | TASK-005 | 编写 LLM 客户端适配器 (lib/llm.ts)                         |   Unit   | ⬜ 待开始 | `design.md`        |
 | TASK-006 | 编写大纲规划与人物档案生成解析逻辑 (lib/writer/planner.ts) |   Unit   | ⬜ 待开始 | REQ-002, REQ-003   |
 | TASK-007 | 编写字数与悬念质量校验模块 (lib/writer/validator.ts)       |   Unit   | ⬜ 待开始 | REQ-005            |
