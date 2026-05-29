@@ -32,10 +32,10 @@
   *需求: `constitution.md`
   *测试类型: Unit
 
-- [ ] **TASK-002 · 数据库连接客户端与 Schema 结构推送**
-  - [ ] 编写 db/index.ts 导出 Drizzle 客户端连接
-  - [ ] 创建 .env.example 模板，声明 `DATABASE_URL` 等
-  - [ ] 运行 Drizzle push 将 schemas 推送到本地 Postgres 数据库，验证表结构创建
+- [x] **TASK-002 · 数据库连接客户端与 Schema 结构推送**
+  - [x] 编写 db/index.ts 导出 Drizzle 客户端连接
+  - [x] 创建 .env.example 模板，声明 `DATABASE_URL` 等
+  - [x] 运行 Drizzle push 将 schemas 推送到本地 Postgres 数据库，验证表结构创建
 
   **验证方式：**
 
@@ -357,7 +357,7 @@
 | TASK ID  | 名称                                                       | 测试类型 |   状态    | 关联需求           |
 | -------- | ---------------------------------------------------------- | :------: | :-------: | ------------------ |
 | TASK-001 | 初始化 Next.js 开发环境与 Drizzle ORM Schema               |   Unit   | ✅ 已完成 | `constitution.md`  |
-| TASK-002 | 数据库连接客户端与 Schema 结构推送                         |  Manual  | ⬜ 待开始 | `design.md`        |
+| TASK-002 | 数据库连接客户端与 Schema 结构推送                         |  Manual  | ✅ 已完成 | `design.md`        |
 | TASK-003 | NextAuth.js 配置与轻量邮箱登录/注册                        |   E2E    | ⬜ 待开始 | REQ-001            |
 | TASK-004 | 认证拦截中间件与多租户隔离                                 |   API    | ⬜ 待开始 | REQ-001            |
 | TASK-005 | 编写 LLM 客户端适配器 (lib/llm.ts)                         |   Unit   | ⬜ 待开始 | `design.md`        |
