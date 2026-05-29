@@ -1,5 +1,5 @@
 ---
-name:hns-gh-ac
+name: hns-gh-ac
 description: "使用 GitHub CLI (gh) 修复 GitHub Actions CI 失败：检查运行/日志、识别根本原因、修复工作流/代码、重新运行作业并总结验证。在 GitHub Actions CI 失败或需要诊断时使用。"
 trigger: /hnx-gh-ac
 ---
