@@ -11,10 +11,14 @@ import {
 
 export type GeneratorCallbacks = {
   onChapterStart?: (chapterNum: number) => void;
-  onContentChunk?: (chunk: string) => void;
+  onContentChunk?: (chapterNum: number, chunk: string) => void;
   onValidationStart?: (chapterNum: number) => void;
-  onValidationResult?: (result: ValidationResult) => void;
-  onChapterComplete?: (chapterNum: number) => void;
+  onValidationResult?: (
+    chapterNum: number,
+    result: ValidationResult,
+    retryCount: number,
+  ) => void;
+  onChapterComplete?: (chapterNum: number, content: string) => void;
   onError?: (error: Error) => void;
   onNovelComplete?: () => void;
 };
@@ -95,7 +99,7 @@ export async function generateNovel(
         for await (const chunk of stream) {
           content += chunk;
           if (callbacks.onContentChunk) {
-            callbacks.onContentChunk(chunk);
+            callbacks.onContentChunk(chapter.chapterNumber, chunk);
           }
         }
 
@@ -103,13 +107,22 @@ export async function generateNovel(
           callbacks.onValidationStart(chapter.chapterNumber);
         }
 
+        await db
+          .update(chapters)
+          .set({ status: "validating" })
+          .where(eq(chapters.id, chapter.id));
+
         const validation = await validateChapter(
           content,
           chapter.chapterNumber,
         );
 
         if (callbacks.onValidationResult) {
-          callbacks.onValidationResult(validation);
+          callbacks.onValidationResult(
+            chapter.chapterNumber,
+            validation,
+            retryCount,
+          );
         }
 
         if (validation.passed) {
@@ -129,7 +142,7 @@ export async function generateNovel(
             content.length > 500 ? content.slice(-500) : content;
 
           if (callbacks.onChapterComplete) {
-            callbacks.onChapterComplete(chapter.chapterNumber);
+            callbacks.onChapterComplete(chapter.chapterNumber, content);
           }
           break;
         }
@@ -147,6 +160,11 @@ export async function generateNovel(
           .where(eq(chapters.id, chapter.id));
       }
     }
+
+    await db
+      .update(novels)
+      .set({ status: "completed" })
+      .where(eq(novels.id, novelId));
 
     if (callbacks.onNovelComplete) {
       callbacks.onNovelComplete();

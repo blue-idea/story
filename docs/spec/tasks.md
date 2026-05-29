@@ -271,9 +271,9 @@
   验收标准：REQ-002-AC-002c, REQ-002-AC-003, REQ-003-AC-001
   *测试类型: API
 
-- [ ] **TASK-011 · 实现流式写作启动及 SSE 接口**
-  - [ ] 编写 /api/novel/[id]/start-writing：启动并将章节初始化为 pending
-  - [ ] 编写 /api/novel/[id]/write/stream (GET)：初始化 SSE Header，保持长连接。绑定 generator.ts 的事件回调，流式推送：`chapter_start`, `content_chunk`, `validation_start`, `validation_result`, `chapter_complete`, `error`, `novel_complete`
+- [x] **TASK-011 · 实现流式写作启动及 SSE 接口**
+  - [x] 编写 /api/novel/[id]/start-writing：启动并将章节初始化为 pending
+  - [x] 编写 /api/novel/[id]/write/stream (GET)：初始化 SSE Header，保持长连接。绑定 generator.ts 的事件回调，流式推送：`chapter_start`, `content_chunk`, `validation_start`, `validation_result`, `chapter_complete`, `error`, `novel_complete`
 
   **验证方式：**
 
@@ -451,7 +451,7 @@
 | TASK-008R   | 重构 generator 对齐 Phase 3 写前上下文                     |   Unit   |          ✅ 已完成          | REQ-004, REQ-005    |
 | TASK-009    | 实现 /api/preferences (偏好与项目续写检测接口)             |   API    |          ✅ 已完成          | REQ-001             |
 | TASK-010    | 实现三层问答创建及大纲管理 API                             |   API    |          ✅ 已完成          | REQ-002, REQ-003    |
-| TASK-011    | 实现流式写作启动及 SSE 接口                                |   API    |          ⬜ 待开始          | REQ-004, REQ-005    |
+| TASK-011    | 实现流式写作启动及 SSE 接口                                |   API    |          ✅ 已完成          | REQ-004, REQ-005    |
 | TASK-012    | 实现阅读、保存修改与打包下载 API                           |   API    |          ⬜ 待开始          | REQ-006             |
 | TASK-013    | 首页与快捷续写卡片 UI 开发                                 |   E2E    |          ⬜ 待开始          | REQ-001             |
 | TASK-014    | 三层渐进式问答表单页面 UI 开发                             |   E2E    |          ⬜ 待开始          | REQ-002             |

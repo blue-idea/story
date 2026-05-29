@@ -224,3 +224,30 @@ export async function updateChapterOutline(input: {
 
   return updated.length > 0;
 }
+
+export async function resetNovelForWriting(novelId: string): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(novels)
+      .set({
+        status: "in_progress",
+        updatedAt: new Date(),
+      })
+      .where(eq(novels.id, novelId));
+
+    await tx
+      .update(chapters)
+      .set({
+        status: "pending",
+        content: "",
+        wordCount: 0,
+        wordCountValid: false,
+        suspenseValid: false,
+        passed: false,
+        retryCount: 0,
+        validationLog: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(chapters.novelId, novelId));
+  });
+}

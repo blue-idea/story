@@ -12,6 +12,7 @@ import type {
 import { createLLMClient } from "../llm";
 import { getSystem, renderInstruction } from "../prompts";
 import { generateCandidateTitles, runPhase2Planning } from "../writer/planner";
+import { NotFoundError, ValidationError } from "./errors";
 import {
   createNovelDraft,
   findOwnedNovel,
@@ -22,20 +23,6 @@ import {
   updateNovelCustomConfig,
   updateNovelTitleAndStatus,
 } from "./repository";
-
-export class ValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ValidationError";
-  }
-}
-
-export class NotFoundError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "NotFoundError";
-  }
-}
 
 function normalizeText(value: unknown): string {
   return typeof value === "string" ? value.trim() : "";

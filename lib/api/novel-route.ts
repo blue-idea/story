@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "../auth";
-import { NotFoundError, ValidationError } from "../novels/wizard-service";
+import { NotFoundError, ValidationError } from "../novels/errors";
 
 export type NovelRouteContext = {
   params: Promise<{
