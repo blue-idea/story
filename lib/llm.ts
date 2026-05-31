@@ -5,6 +5,7 @@ export interface LLMConfig {
   provider: "gemini" | "openai";
   apiKey?: string;
   model?: string;
+  baseUrl?: string;
 }
 
 export interface GenerateTextOptions {
@@ -65,7 +66,10 @@ class OpenAIClient implements LLMClient {
 
   constructor(config: LLMConfig) {
     const key = config.apiKey || process.env.OPENAI_API_KEY || "";
-    this.openai = new OpenAI({ apiKey: key });
+    this.openai = new OpenAI({
+      apiKey: key,
+      baseURL: config.baseUrl,
+    });
     this.modelName = config.model || "gpt-3.5-turbo";
   }
 

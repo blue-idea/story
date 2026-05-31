@@ -152,7 +152,7 @@
 
 ### 7. `POST /api/novel/[id]/start-writing`
 
-- **说明**：确认规划大纲并开启写作流程。小说状态置为 `in_progress`，并在 `chapters` 表中将所有章节置为 `pending`。
+- **说明**：确认规划大纲并开启写作流程。当小说状态为 `planning` 时，小说状态置为 `in_progress`，并在 `chapters` 表中将所有章节置为 `pending`；当小说状态为 `failed` 时，使用同一路由恢复写作，仅重置**未完成章节**并从失败章节继续串行生成。
 - **响应体**：
   ```json
   {
@@ -164,15 +164,15 @@
 ### 8. `GET /api/novel/[id]/write/stream`
 
 - **说明**：SSE 长连接，负责向客户端推送实时串行写作流状态、文字片段及校验结果。
-- **SSE 事件类型**：
-  - `chapter_start`：开始本章写作。`{ "chapterNumber": 1, "status": "writing" }`
-  - `content_chunk`：正文流式输出。`{ "chapterNumber": 1, "chunk": "林克吃力地推开舱盖..." }`
-  - `validation_start`：开始本章质量校验。`{ "chapterNumber": 1, "status": "validating" }`
-  - `validation_result`：推送字数/钩子检测报告与结果。
-    `{ "chapterNumber": 1, "passed": true, "wordCount": 3540, "hasSuspense": true, "retryCount": 0 }`
-  - `chapter_complete`：章节入库成功。`{ "chapterNumber": 1, "status": "completed", "content": "..." }`
-  - `error`：生成发生致命错误或连续 3 次校验失败，写作挂起。
-    `{ "chapterNumber": 1, "status": "failed", "message": "大模型调用超时或连续校验失败3次，写作已暂停。" }`
+  - **SSE 事件类型**：
+    - `chapter_start`：开始本章写作。`{ "chapterNumber": 1, "status": "writing" }`
+    - `content_chunk`：正文流式输出。`{ "chapterNumber": 1, "chunk": "林克吃力地推开舱盖..." }`
+    - `validation_start`：开始本章质量校验。`{ "chapterNumber": 1, "status": "validating" }`
+    - `validation_result`：推送字数/钩子检测报告与结果。
+      `{ "chapterNumber": 1, "passed": true, "wordCountValid": true, "suspenseValid": true, "retryCount": 0, "diagnosticLog": null }`
+    - `chapter_complete`：章节入库成功。`{ "chapterNumber": 1, "status": "completed", "content": "..." }`
+    - `error`：生成发生致命错误或连续 3 次校验失败，写作挂起。
+      `{ "chapterNumber": 1, "status": "failed", "message": "大模型调用超时或连续校验失败3次，写作已暂停。" }`
   - `novel_complete`：整部小说创作校验完毕。`{ "novelId": "e456c7d8-f9a8-4b7c-8d9e-0f1e2a3b4c5d", "status": "completed" }`
 
 ### 9. `GET /api/novel/[id]/chapters`
@@ -190,7 +190,8 @@
         "wordCount": 3540,
         "status": "completed",
         "passed": true,
-        "retryCount": 0
+        "retryCount": 0,
+        "content": "章节完整正文..."
       }
     ]
   }
@@ -233,4 +234,4 @@
 ### 12. `GET /api/novel/[id]/export`
 
 - **说明**：以 Markdown 文件形式打包小说下载。
-- **响应格式**：文件的 MIME 类型为 `text/markdown`。
+- **响应格式**：文件的 MIME 类型为 `text/markdown`，并通过 `Content-Disposition` 触发浏览器下载。

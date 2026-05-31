@@ -1,3 +1,9 @@
+import { redirect } from "next/navigation";
+
+import { WritingWorkspace } from "../../../../components/write/writing-workspace";
+import { auth } from "../../../../lib/auth";
+import { loadWritingWorkspace } from "../../../../lib/novels/writing-service";
+
 type WritePageProps = {
   params: Promise<{
     id: string;
@@ -5,18 +11,17 @@ type WritePageProps = {
 };
 
 export default async function WritePage({ params }: WritePageProps) {
-  const { id } = await params;
+  const session = await auth();
 
-  return (
-    <main className="write-placeholder-shell">
-      <section className="write-placeholder-card">
-        <p className="plan-kicker">PHASE 3</p>
-        <h1>Writing workspace is now armed.</h1>
-        <p>
-          Novel <strong>{id}</strong> has entered the automatic writing phase.
-          The live terminal workspace will be expanded in the next task.
-        </p>
-      </section>
-    </main>
-  );
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  const { id } = await params;
+  const workspace = await loadWritingWorkspace({
+    userId: session.user.id,
+    novelId: id,
+  });
+
+  return <WritingWorkspace initialWorkspace={workspace} novelId={id} />;
 }

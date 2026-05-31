@@ -4,7 +4,9 @@ import type { NovelStatus } from "../../db/schema";
 
 const repository = vi.hoisted(() => ({
   findOwnedNovel: vi.fn(),
+  getNovelWritingChapters: vi.fn(),
   resetNovelForWriting: vi.fn(),
+  resumeNovelWriting: vi.fn(),
 }));
 
 const writer = vi.hoisted(() => ({
@@ -54,6 +56,27 @@ describe("writing-service", () => {
     });
 
     expect(repository.resetNovelForWriting).toHaveBeenCalledWith("novel-1");
+    expect(result).toEqual({
+      novelId: "novel-1",
+      status: "in_progress",
+    });
+  });
+
+  it("startNovelWriting 在 failed 小说上恢复写作时只重置未完成章节", async () => {
+    repository.findOwnedNovel.mockResolvedValueOnce({
+      ...baseNovel,
+      status: "failed" as NovelStatus,
+    });
+    repository.resumeNovelWriting.mockResolvedValueOnce(undefined);
+
+    const { startNovelWriting } = await loadService();
+    const result = await startNovelWriting({
+      userId: "user-1",
+      novelId: "novel-1",
+    });
+
+    expect(repository.resumeNovelWriting).toHaveBeenCalledWith("novel-1");
+    expect(repository.resetNovelForWriting).not.toHaveBeenCalled();
     expect(result).toEqual({
       novelId: "novel-1",
       status: "in_progress",
@@ -124,5 +147,51 @@ describe("writing-service", () => {
     expect(body).toContain("event: error");
     expect(body).toContain("Upstream provider timeout");
     expect(body).toContain('"status":"failed"');
+  });
+
+  it("loadWritingWorkspace 返回标题、状态与章节工作台数据", async () => {
+    repository.findOwnedNovel.mockResolvedValueOnce({
+      ...baseNovel,
+      status: "in_progress" as NovelStatus,
+    });
+    repository.getNovelWritingChapters.mockResolvedValueOnce([
+      {
+        chapterNumber: 1,
+        title: "雨夜信号",
+        outlineSummary: "核心事件: 林夏锁定广播塔",
+        status: "pending",
+        content: "",
+        retryCount: 0,
+        passed: false,
+        wordCountValid: false,
+        suspenseValid: false,
+        validationLog: null,
+      },
+    ]);
+
+    const { loadWritingWorkspace } = await loadService();
+    const result = await loadWritingWorkspace({
+      userId: "user-1",
+      novelId: "novel-1",
+    });
+
+    expect(result).toEqual({
+      title: "星轨回声",
+      novelStatus: "in_progress",
+      chapters: [
+        {
+          chapterNumber: 1,
+          title: "雨夜信号",
+          outlineSummary: "核心事件: 林夏锁定广播塔",
+          status: "pending",
+          content: "",
+          retryCount: 0,
+          passed: false,
+          wordCountValid: false,
+          suspenseValid: false,
+          validationLog: null,
+        },
+      ],
+    });
   });
 });

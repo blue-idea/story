@@ -287,11 +287,11 @@
   验收标准：REQ-004-AC-001, REQ-005-AC-003
   *测试类型: API
 
-- [ ] **TASK-012 · 实现阅读、保存修改与打包下载 API**
-  - [ ] 编写 /api/novel/[id]/chapters：获取章节列表
-  - [ ] 编写 /api/novel/[id]/chapter/[chapterNumber] (PUT)：修改指定章节正文并重新计算字数落库
-  - [ ] 编写 /api/novel/[id]/chapter/[chapterNumber]/polish (POST)：选中片段润色（`lib/writer/polish.ts` + `phase3-chapter-polish.md`）
-  - [ ] 编写 /api/novel/[id]/export：按 Skill 结构组合 `01-大纲` / `00-人物档案` / 各章正文生成 Markdown 下载
+- [x] **TASK-012 · 实现阅读、保存修改与打包下载 API**
+  - [x] 编写 /api/novel/[id]/chapters：获取章节列表
+  - [x] 编写 /api/novel/[id]/chapter/[chapterNumber] (PUT)：修改指定章节正文并重新计算字数落库
+  - [x] 编写 /api/novel/[id]/chapter/[chapterNumber]/polish (POST)：选中片段润色（`lib/writer/polish.ts` + `phase3-chapter-polish.md`）
+  - [x] 编写 /api/novel/[id]/export：按 Skill 结构组合 `01-大纲` / `00-人物档案` / 各章正文生成 Markdown 下载
 
   **验证方式：**
 
@@ -361,11 +361,11 @@
   验收标准：REQ-003-AC-001, REQ-003-AC-003
   *测试类型: E2E
 
-- [ ] **TASK-016 · SSE 流式写作监控工作台开发**
-  - [ ] 编写 StreamTerminal.tsx 工作台，使用 EventSource 连接 /api/novel/[id]/write/stream
-  - [ ] 正文生成区域添加打字机逐字吐出动效，并有实时跳动的字数计数器
-  - [ ] 侧边栏展示章节校验面板（字数进度条、悬念钩子检测状态、重试轮次仪表盘）
-  - [ ] 发生 error 事件挂起时，终端红字打印故障，展现渐显发光的“重试本章写作”大按钮，点击后清除错误并向后重新建立 SSE 流恢复写作
+- [x] **TASK-016 · SSE 流式写作监控工作台开发**
+  - [x] 编写 StreamTerminal.tsx 工作台，使用 EventSource 连接 /api/novel/[id]/write/stream
+  - [x] 正文生成区域添加打字机逐字吐出动效，并有实时跳动的字数计数器
+  - [x] 侧边栏展示章节校验面板（字数进度条、悬念钩子检测状态、重试轮次仪表盘）
+  - [x] 发生 error 事件挂起时，终端红字打印故障，展现渐显发光的“重试本章写作”大按钮，点击后清除错误并向后重新建立 SSE 流恢复写作
 
   **验证方式：**
 
@@ -452,11 +452,11 @@
 | TASK-009    | 实现 /api/preferences (偏好与项目续写检测接口)             |   API    |          ✅ 已完成          | REQ-001             |
 | TASK-010    | 实现三层问答创建及大纲管理 API                             |   API    |          ✅ 已完成          | REQ-002, REQ-003    |
 | TASK-011    | 实现流式写作启动及 SSE 接口                                |   API    |          ✅ 已完成          | REQ-004, REQ-005    |
-| TASK-012    | 实现阅读、保存修改与打包下载 API                           |   API    |          ⬜ 待开始          | REQ-006             |
+| TASK-012    | 实现阅读、保存修改与打包下载 API                           |   API    |          ✅ 已完成          | REQ-006             |
 | TASK-013    | 首页与快捷续写卡片 UI 开发                                 |   E2E    |          ⬜ 待开始          | REQ-001             |
 | TASK-014    | 三层渐进式问答表单页面 UI 开发                             |   E2E    |          ⬜ 待开始          | REQ-002             |
 | TASK-015    | 大纲规划与人设调整确认页面开发                             |   E2E    |          ✅ 已完成          | REQ-003             |
-| TASK-016    | SSE 流式写作监控工作台开发                                 |   E2E    |          ⬜ 待开始          | REQ-004, REQ-005    |
+| TASK-016    | SSE 流式写作监控工作台开发                                 |   E2E    |          ✅ 已完成          | REQ-004, REQ-005    |
 | TASK-017    | 完稿阅读、内容修饰与打包导出页面开发                       |   E2E    |          ⬜ 待开始          | REQ-006             |
 | TASK-018    | 编写 Vitest 单元与 API 接口集成测试                        |   Unit   |          ⬜ 待开始          | `test_strategy.md`  |
 | TASK-019    | 编写 Playwright UI 端到端用户旅程测试                      |   E2E    |          ⬜ 待开始          | `test_strategy.md`  |

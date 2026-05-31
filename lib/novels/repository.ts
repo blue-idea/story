@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, ne } from "drizzle-orm";
 
 import { db } from "../../db";
 import {
@@ -6,6 +6,7 @@ import {
   novelProfiles,
   novels,
   userPreferences,
+  type ChapterStatus,
   type CharacterProfile,
   type CoreConfig,
   type CustomConfig,
@@ -30,6 +31,29 @@ export type NovelPlanPayload = {
 };
 
 export type NovelPlanRecord = NovelPlanPayload;
+
+export type WritingChapterRecord = {
+  chapterNumber: number;
+  title: string;
+  outlineSummary: string;
+  status: ChapterStatus;
+  content: string;
+  retryCount: number;
+  passed: boolean;
+  wordCountValid: boolean;
+  suspenseValid: boolean;
+  validationLog: string | null;
+};
+
+export type ReadableChapterRecord = {
+  chapterNumber: number;
+  title: string;
+  wordCount: number;
+  status: ChapterStatus;
+  passed: boolean;
+  retryCount: number;
+  content: string;
+};
 
 export async function getUserPreferences(
   userId: string,
@@ -225,6 +249,94 @@ export async function updateChapterOutline(input: {
   return updated.length > 0;
 }
 
+export async function getNovelWritingChapters(
+  novelId: string,
+): Promise<WritingChapterRecord[]> {
+  const chapterRecords = await db.query.chapters.findMany({
+    where: eq(chapters.novelId, novelId),
+    orderBy: (table, { asc }) => [asc(table.chapterNumber)],
+  });
+
+  return chapterRecords.map((chapter) => ({
+    chapterNumber: chapter.chapterNumber,
+    title: chapter.title,
+    outlineSummary: chapter.outlineSummary,
+    status: chapter.status,
+    content: chapter.content,
+    retryCount: chapter.retryCount,
+    passed: chapter.passed,
+    wordCountValid: chapter.wordCountValid,
+    suspenseValid: chapter.suspenseValid,
+    validationLog: chapter.validationLog,
+  }));
+}
+
+export async function getNovelReaderChapters(
+  novelId: string,
+): Promise<ReadableChapterRecord[]> {
+  const chapterRecords = await db.query.chapters.findMany({
+    where: eq(chapters.novelId, novelId),
+    orderBy: (table, { asc }) => [asc(table.chapterNumber)],
+  });
+
+  return chapterRecords.map((chapter) => ({
+    chapterNumber: chapter.chapterNumber,
+    title: chapter.title,
+    wordCount: chapter.wordCount,
+    status: chapter.status,
+    passed: chapter.passed,
+    retryCount: chapter.retryCount,
+    content: chapter.content,
+  }));
+}
+
+export async function updateChapterContent(input: {
+  novelId: string;
+  chapterNumber: number;
+  content: string;
+  wordCount: number;
+}): Promise<boolean> {
+  const updated = await db
+    .update(chapters)
+    .set({
+      content: input.content,
+      wordCount: input.wordCount,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(
+        eq(chapters.novelId, input.novelId),
+        eq(chapters.chapterNumber, input.chapterNumber),
+      ),
+    )
+    .returning({
+      id: chapters.id,
+    });
+
+  return updated.length > 0;
+}
+
+export async function findChapterByNumber(input: {
+  novelId: string;
+  chapterNumber: number;
+}) {
+  const chapter = await db.query.chapters.findFirst({
+    where: and(
+      eq(chapters.novelId, input.novelId),
+      eq(chapters.chapterNumber, input.chapterNumber),
+    ),
+  });
+
+  if (!chapter) {
+    return null;
+  }
+
+  return {
+    chapterNumber: chapter.chapterNumber,
+    title: chapter.title,
+  };
+}
+
 export async function resetNovelForWriting(novelId: string): Promise<void> {
   await db.transaction(async (tx) => {
     await tx
@@ -249,5 +361,34 @@ export async function resetNovelForWriting(novelId: string): Promise<void> {
         updatedAt: new Date(),
       })
       .where(eq(chapters.novelId, novelId));
+  });
+}
+
+export async function resumeNovelWriting(novelId: string): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx
+      .update(novels)
+      .set({
+        status: "in_progress",
+        updatedAt: new Date(),
+      })
+      .where(eq(novels.id, novelId));
+
+    await tx
+      .update(chapters)
+      .set({
+        status: "pending",
+        content: "",
+        wordCount: 0,
+        wordCountValid: false,
+        suspenseValid: false,
+        passed: false,
+        retryCount: 0,
+        validationLog: null,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(eq(chapters.novelId, novelId), ne(chapters.status, "completed")),
+      );
   });
 }

@@ -9,6 +9,13 @@ export type NovelRouteContext = {
   }>;
 };
 
+export type NovelChapterRouteContext = {
+  params: Promise<{
+    id: string;
+    chapterNumber: string;
+  }>;
+};
+
 export async function requireUserId(): Promise<string | null> {
   const session = await auth();
   return session?.user?.id ?? null;
@@ -17,6 +24,20 @@ export async function requireUserId(): Promise<string | null> {
 export async function readNovelId(context: NovelRouteContext): Promise<string> {
   const { id } = await context.params;
   return id;
+}
+
+export async function readNovelChapterParams(
+  context: NovelChapterRouteContext,
+): Promise<{
+  novelId: string;
+  chapterNumber: number;
+}> {
+  const { id, chapterNumber } = await context.params;
+
+  return {
+    novelId: id,
+    chapterNumber: Number(chapterNumber),
+  };
 }
 
 export function unauthorizedResponse() {

@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
 import { createLLMClient } from "./llm";
 
-// Mock the underlying SDKs
+const openAiConstructor = vi.hoisted(() => vi.fn());
+
 vi.mock("@google/generative-ai", () => {
   return {
     GoogleGenerativeAI: class {
@@ -25,6 +27,10 @@ vi.mock("@google/generative-ai", () => {
 vi.mock("openai", () => {
   return {
     default: class {
+      constructor(config: unknown) {
+        openAiConstructor(config);
+      }
+
       chat = {
         completions: {
           create: vi.fn().mockImplementation(async (opts) => {
@@ -82,5 +88,21 @@ describe("LLM Client Adapter", () => {
       result += chunk;
     }
     expect(result).toBe("openai-stream");
+  });
+
+  it("passes openai-compatible base URL to the sdk constructor", async () => {
+    const client = createLLMClient({
+      provider: "openai",
+      apiKey: "test-key",
+      baseUrl: "https://api.deepseek.com",
+      model: "deepseek-chat",
+    });
+
+    await client.generateText({ prompt: "Hello" });
+
+    expect(openAiConstructor).toHaveBeenCalledWith({
+      apiKey: "test-key",
+      baseURL: "https://api.deepseek.com",
+    });
   });
 });

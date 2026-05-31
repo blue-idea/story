@@ -331,9 +331,342 @@ textarea {
   padding: clamp(1.5rem, 3vw, 2.4rem);
 }
 
+.write-workspace-shell {
+  min-height: 100vh;
+  display: grid;
+  gap: 1.3rem;
+  padding: clamp(1.15rem, 2vw, 2rem);
+}
+
+.write-hero-card,
+.write-terminal-panel,
+.write-sidebar-panel {
+  border: 1px solid var(--page-border);
+  border-radius: 1.75rem;
+  background: var(--page-surface);
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.1);
+  backdrop-filter: blur(20px);
+}
+
+.write-hero-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(18rem, 0.9fr);
+  gap: 1.25rem;
+  padding: clamp(1.35rem, 2vw, 2rem);
+}
+
+.write-hero-copy h1,
+.write-panel-heading h2,
+.write-retry-panel h3,
+.write-chapter-card h3 {
+  margin: 0.35rem 0 0.8rem;
+  font-family: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  letter-spacing: -0.03em;
+}
+
+.write-hero-copy h1 {
+  font-size: clamp(2rem, 4.5vw, 3.6rem);
+  line-height: 0.98;
+}
+
+.write-hero-copy p,
+.write-retry-panel p,
+.write-chapter-outline,
+.write-validation-log {
+  margin: 0;
+  color: var(--page-muted);
+  line-height: 1.7;
+}
+
+.write-hero-meta {
+  display: grid;
+  gap: 0.85rem;
+  align-content: center;
+}
+
+.write-hero-stat {
+  padding: 0.95rem 1rem;
+  border-radius: 1.1rem;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.96),
+    rgba(219, 234, 254, 0.78)
+  );
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.write-hero-stat span,
+.write-draft-meta span,
+.write-progress-meta span,
+.write-chapter-metrics dt {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--page-muted);
+}
+
+.write-hero-stat strong,
+.write-draft-meta strong,
+.write-progress-meta strong,
+.write-chapter-metrics dd {
+  display: block;
+  margin-top: 0.28rem;
+  font-size: 1.02rem;
+}
+
+.write-main-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(20rem, 0.9fr);
+  gap: 1.25rem;
+}
+
+.write-terminal-panel,
+.write-sidebar-panel {
+  padding: 1.2rem;
+}
+
+.write-panel-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.write-panel-heading h2 {
+  font-size: clamp(1.55rem, 2vw, 2.05rem);
+}
+
+.write-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.38rem 0.74rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.write-status-pill-large {
+  min-width: 8.5rem;
+}
+
+.write-status-pending {
+  background: rgba(226, 232, 240, 0.92);
+  color: #334155;
+}
+
+.write-status-writing {
+  background: rgba(219, 234, 254, 0.96);
+  color: #1d4ed8;
+}
+
+.write-status-validating {
+  background: rgba(254, 240, 138, 0.98);
+  color: #854d0e;
+}
+
+.write-status-completed {
+  background: rgba(204, 251, 241, 0.98);
+  color: #0f766e;
+}
+
+.write-status-failed {
+  background: rgba(254, 226, 226, 0.98);
+  color: #b91c1c;
+}
+
+.write-draft-surface,
+.write-log-panel,
+.write-retry-panel,
+.write-chapter-card {
+  border-radius: 1.35rem;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.write-draft-surface {
+  padding: 1rem;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(30, 64, 175, 0.08),
+      transparent 24%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(248, 250, 252, 0.98),
+      rgba(255, 255, 255, 0.92)
+    );
+}
+
+.write-draft-meta,
+.write-progress-meta,
+.write-chapter-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.write-draft-text {
+  min-height: 20rem;
+  margin: 0.9rem 0 0;
+  white-space: pre-wrap;
+  line-height: 1.85;
+  font-family: "Cascadia Code", "Consolas", monospace;
+  font-size: 0.97rem;
+}
+
+.write-log-panel {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.92);
+}
+
+.write-log-entry {
+  margin: 0;
+  font-family: "Cascadia Code", "Consolas", monospace;
+  font-size: 0.9rem;
+}
+
+.write-log-entry-info {
+  color: #bfdbfe;
+}
+
+.write-log-entry-success {
+  color: #99f6e4;
+}
+
+.write-log-entry-error {
+  color: #fecaca;
+}
+
+.write-retry-panel {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  background:
+    radial-gradient(circle at center, rgba(185, 28, 28, 0.12), transparent 52%),
+    rgba(255, 245, 245, 0.95);
+}
+
+.write-retry-button {
+  border: 0;
+  border-radius: 999px;
+  padding: 1rem 1.35rem;
+  background: linear-gradient(135deg, #7f1d1d 0%, #ef4444 100%);
+  color: #fff7f7;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  box-shadow: 0 0 0 rgba(239, 68, 68, 0.28);
+  animation: write-retry-glow 1.8s ease-in-out infinite;
+}
+
+.write-retry-button:disabled {
+  cursor: progress;
+  opacity: 0.78;
+}
+
+.write-sidebar-panel {
+  display: grid;
+  align-content: start;
+}
+
+.write-chapter-stack {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.write-chapter-card {
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.84);
+}
+
+.write-chapter-card-active {
+  border-color: rgba(29, 78, 216, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(29, 78, 216, 0.12);
+}
+
+.write-chapter-card h3 {
+  font-size: 1.18rem;
+}
+
+.write-chapter-outline {
+  margin-bottom: 0.9rem;
+}
+
+.write-progress-rail {
+  height: 0.55rem;
+  margin: 0.6rem 0 0.95rem;
+  border-radius: 999px;
+  background: rgba(226, 232, 240, 0.92);
+  overflow: hidden;
+}
+
+.write-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #1d4ed8 0%, #0f766e 100%);
+}
+
+.write-chapter-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.write-chapter-metrics div {
+  padding: 0.7rem 0.78rem;
+  border-radius: 0.95rem;
+  background: rgba(248, 250, 252, 0.95);
+}
+
+.write-chapter-metrics dd {
+  margin: 0.3rem 0 0;
+}
+
+.write-validation-log {
+  margin-top: 0.9rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 0.95rem;
+  background: rgba(255, 247, 237, 0.92);
+}
+
+@keyframes write-retry-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 rgba(239, 68, 68, 0.22);
+    transform: translateY(0);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(239, 68, 68, 0.34);
+    transform: translateY(-1px);
+  }
+}
+
 @media (max-width: 960px) {
   .plan-hero-card,
-  .plan-main-grid {
+  .plan-main-grid,
+  .write-hero-card,
+  .write-main-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .write-draft-text {
+    min-height: 14rem;
+  }
+
+  .write-chapter-metrics {
     grid-template-columns: 1fr;
   }
 }

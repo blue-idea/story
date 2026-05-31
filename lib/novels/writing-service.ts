@@ -1,6 +1,31 @@
+import type { ChapterStatus, NovelStatus } from "../../db/schema";
 import { generateNovel } from "../writer/generator";
 import { NotFoundError, ValidationError } from "./errors";
-import { findOwnedNovel, resetNovelForWriting } from "./repository";
+import {
+  findOwnedNovel,
+  getNovelWritingChapters,
+  resetNovelForWriting,
+  resumeNovelWriting,
+} from "./repository";
+
+export type WritingWorkspaceChapter = {
+  chapterNumber: number;
+  title: string;
+  outlineSummary: string;
+  status: ChapterStatus;
+  content: string;
+  retryCount: number;
+  passed: boolean;
+  wordCountValid: boolean;
+  suspenseValid: boolean;
+  validationLog: string | null;
+};
+
+export type WritingWorkspacePayload = {
+  title: string;
+  novelStatus: NovelStatus;
+  chapters: WritingWorkspaceChapter[];
+};
 
 function formatSseEvent(event: string, data: Record<string, unknown>) {
   return `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
@@ -22,11 +47,13 @@ export async function startNovelWriting(input: {
 }) {
   const novel = await requireOwnedNovel(input.userId, input.novelId);
 
-  if (novel.status !== "planning") {
+  if (novel.status === "planning") {
+    await resetNovelForWriting(input.novelId);
+  } else if (novel.status === "failed") {
+    await resumeNovelWriting(input.novelId);
+  } else {
     throw new ValidationError("Novel is not ready for writing");
   }
-
-  await resetNovelForWriting(input.novelId);
 
   return {
     novelId: input.novelId,
@@ -127,4 +154,18 @@ export async function streamNovelWriting(input: {
       "X-Content-Type-Options": "nosniff",
     },
   });
+}
+
+export async function loadWritingWorkspace(input: {
+  userId: string;
+  novelId: string;
+}): Promise<WritingWorkspacePayload> {
+  const novel = await requireOwnedNovel(input.userId, input.novelId);
+  const chapters = await getNovelWritingChapters(input.novelId);
+
+  return {
+    title: novel.title,
+    novelStatus: novel.status,
+    chapters,
+  };
 }
