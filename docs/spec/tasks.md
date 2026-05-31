@@ -326,11 +326,11 @@
   验收标准：REQ-001-AC-003
   *测试类型: E2E
 
-- [ ] **TASK-014 · 渐进式披露创建向导 UI（对齐 phase1-layer\*.md）**
-  - [ ] 实现 `components/novel-wizard/`：Layer1 逐题 Q1→Q3（含追问）、Layer1 摘要、Layer2 逐题 Q4→Q8（跳过/🎲/直达 Q8）、创作配置确认卡、Layer3 标题选择
-  - [ ] **禁止**一屏展示全部 Q1-Q8；未确认 Layer2 前不展示标题候选
-  - [ ] 偏好⭐：选项排序与标记（`GET /api/preferences`）
-  - [ ] Phase 0 快捷入口：长文创意解析后三选一（可选，见 `prompts-design.md` §2.2）
+- [x] **TASK-014 · 渐进式披露创建向导 UI（对齐 phase1-layer\*.md）**
+  - [x] 实现 `components/novel-wizard/`：Layer1 逐题 Q1→Q3（含追问）、Layer1 摘要、Layer2 逐题 Q4→Q8（跳过/🎲/直达 Q8）、创作配置确认卡、Layer3 标题选择
+  - [x] **禁止**一屏展示全部 Q1-Q8；未确认 Layer2 前不展示标题候选
+  - [x] 偏好⭐：选项排序与标记（`GET /api/preferences`）
+  - [x] Phase 0 快捷入口：长文创意解析后三选一（可选，见 `prompts-design.md` §2.2）
 
   **验证方式：**
 
@@ -454,7 +454,7 @@
 | TASK-011    | 实现流式写作启动及 SSE 接口                                |   API    |          ✅ 已完成          | REQ-004, REQ-005    |
 | TASK-012    | 实现阅读、保存修改与打包下载 API                           |   API    |          ✅ 已完成          | REQ-006             |
 | TASK-013    | 首页与快捷续写卡片 UI 开发                                 |   E2E    |          ✅ 已完成          | REQ-001             |
-| TASK-014    | 三层渐进式问答表单页面 UI 开发                             |   E2E    |          ⬜ 待开始          | REQ-002             |
+| TASK-014    | 三层渐进式问答表单页面 UI 开发                             |   E2E    |          ✅ 已完成          | REQ-002             |
 | TASK-015    | 大纲规划与人设调整确认页面开发                             |   E2E    |          ✅ 已完成          | REQ-003             |
 | TASK-016    | SSE 流式写作监控工作台开发                                 |   E2E    |          ✅ 已完成          | REQ-004, REQ-005    |
 | TASK-017    | 完稿阅读、内容修饰与打包导出页面开发                       |   E2E    |          ✅ 已完成          | REQ-006             |
