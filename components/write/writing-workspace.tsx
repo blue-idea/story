@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import {
   useDeferredValue,
   useEffect,
@@ -65,6 +66,7 @@ export function WritingWorkspace({
   streamUrl,
   startUrl,
 }: WritingWorkspaceProps) {
+  const router = useRouter();
   const [workspaceState, setWorkspaceState] = useState(() =>
     createWritingWorkspaceState(initialWorkspace),
   );
@@ -179,6 +181,20 @@ export function WritingWorkspace({
       eventSource.close();
     };
   }, [resolvedStreamUrl, streamRun, workspaceState.novelStatus]);
+
+  useEffect(() => {
+    if (connectionState !== "completed") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      router.replace(`/novel/${novelId}/read`);
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [connectionState, novelId, router]);
 
   const renderedContent = deferredContent.slice(0, visibleCharacters);
 

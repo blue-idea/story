@@ -23,5 +23,9 @@ export default async function WritePage({ params }: WritePageProps) {
     novelId: id,
   });
 
+  if (workspace.novelStatus === "completed") {
+    redirect(`/novel/${id}/read`);
+  }
+
   return <WritingWorkspace initialWorkspace={workspace} novelId={id} />;
 }

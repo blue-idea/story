@@ -1,4 +1,5 @@
 import { interpolate, loadTemplate } from "../prompts";
+import type { NovelStatus } from "../../db/schema";
 import { polishSelectedText } from "../writer/polish";
 import { NotFoundError, ValidationError } from "./errors";
 import {
@@ -6,8 +7,15 @@ import {
   findOwnedNovel,
   getNovelPlan,
   getNovelReaderChapters,
+  type ReadableChapterRecord,
   updateChapterContent,
 } from "./repository";
+
+export type ReadableNovelPayload = {
+  novelTitle: string;
+  status: NovelStatus;
+  chapters: ReadableChapterRecord[];
+};
 
 function ensureChapterNumber(chapterNumber: number) {
   if (!Number.isInteger(chapterNumber) || chapterNumber <= 0) {
@@ -75,7 +83,7 @@ function sanitizeFilename(title: string): string {
 export async function loadReadableNovel(input: {
   userId: string;
   novelId: string;
-}) {
+}): Promise<ReadableNovelPayload> {
   const novel = await requireOwnedNovel(input.userId, input.novelId);
   const chapters = await getNovelReaderChapters(input.novelId);
 
