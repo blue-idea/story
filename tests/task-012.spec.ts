@@ -8,6 +8,7 @@ const service = vi.hoisted(() => ({
   saveChapterContent: vi.fn(),
   polishChapterSelection: vi.fn(),
   exportNovelMarkdown: vi.fn(),
+  NotFoundError: class NotFoundError extends Error {},
 }));
 
 vi.mock("../lib/auth", () => ({
@@ -198,5 +199,31 @@ describe("TASK-012 routes", () => {
     );
 
     expect(response.status).toBe(401);
+  });
+
+  it("已登录但非拥有者访问 /api/novel/[id]/chapters 时返回越权错误", async () => {
+    authMock.mockResolvedValueOnce({
+      user: { id: "user-2" },
+      expires: "9999-12-31T23:59:59.999Z",
+    });
+    service.loadReadableNovel.mockRejectedValueOnce(
+      new service.NotFoundError("Novel not found"),
+    );
+
+    const { GET } = await loadModule<
+      typeof import("../app/api/novel/[id]/chapters/route")
+    >("../app/api/novel/[id]/chapters/route");
+
+    const response = await GET(
+      new NextRequest("http://localhost/api/novel/novel-owner-a/chapters"),
+      {
+        params: Promise.resolve({ id: "novel-owner-a" }),
+      },
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      error: "Novel not found",
+    });
   });
 });

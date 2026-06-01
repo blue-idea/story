@@ -45,12 +45,37 @@ export function unauthorizedResponse() {
 }
 
 export function handleNovelRouteError(error: unknown) {
-  if (error instanceof ValidationError) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+  const errorName = error instanceof Error ? error.name : undefined;
+  const constructorName =
+    error &&
+    typeof error === "object" &&
+    "constructor" in error &&
+    typeof (error as { constructor?: { name?: unknown } }).constructor?.name ===
+      "string"
+      ? ((error as { constructor: { name: string } }).constructor
+          .name as string)
+      : undefined;
+
+  const isValidationError =
+    error instanceof ValidationError ||
+    errorName === "ValidationError" ||
+    constructorName === "ValidationError";
+  if (isValidationError) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Invalid request" },
+      { status: 400 },
+    );
   }
 
-  if (error instanceof NotFoundError) {
-    return NextResponse.json({ error: error.message }, { status: 404 });
+  const isNotFoundError =
+    error instanceof NotFoundError ||
+    errorName === "NotFoundError" ||
+    constructorName === "NotFoundError";
+  if (isNotFoundError) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Not found" },
+      { status: 404 },
+    );
   }
 
   throw error;

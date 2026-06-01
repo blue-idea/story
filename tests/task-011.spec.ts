@@ -123,4 +123,35 @@ describe("TASK-011 routes", () => {
 
     expect(response.status).toBe(401);
   });
+
+  it("已登录但非拥有者访问 /api/novel/[id]/start-writing 时返回越权错误", async () => {
+    authMock.mockResolvedValueOnce({
+      user: { id: "user-2" },
+      expires: "9999-12-31T23:59:59.999Z",
+    });
+    service.startNovelWriting.mockRejectedValueOnce(
+      new service.NotFoundError("Novel not found"),
+    );
+
+    const { POST } = await loadModule<
+      typeof import("../app/api/novel/[id]/start-writing/route")
+    >("../app/api/novel/[id]/start-writing/route");
+
+    const response = await POST(
+      new NextRequest(
+        "http://localhost/api/novel/novel-owner-a/start-writing",
+        {
+          method: "POST",
+        },
+      ),
+      {
+        params: Promise.resolve({ id: "novel-owner-a" }),
+      },
+    );
+
+    expect(response.status).toBe(404);
+    expect(await response.json()).toEqual({
+      error: "Novel not found",
+    });
+  });
 });

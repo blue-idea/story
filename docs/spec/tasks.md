@@ -401,9 +401,9 @@
 
 ### Module 6: 测试与质量验收
 
-- [ ] **TASK-018 · 编写 Vitest 单元与 API 接口集成测试**
-  - [ ] 编写 planner.test.ts、validator.test.ts、generator.test.ts 涵盖核心处理单元与故障重试挂起状态机
-  - [ ] 编写 Route Handlers 的 API 契约和数据过滤隔离单测，断言非拥有者访问小说接口返回越权
+- [x] **TASK-018 · 编写 Vitest 单元与 API 接口集成测试**
+  - [x] 编写 planner.test.ts、validator.test.ts、generator.test.ts 涵盖核心处理单元与故障重试挂起状态机
+  - [x] 编写 Route Handlers 的 API 契约和数据过滤隔离单测，断言非拥有者访问小说接口返回越权
 
   **验证方式：**
 
@@ -458,5 +458,5 @@
 | TASK-015    | 大纲规划与人设调整确认页面开发                             |   E2E    |          ✅ 已完成          | REQ-003             |
 | TASK-016    | SSE 流式写作监控工作台开发                                 |   E2E    |          ✅ 已完成          | REQ-004, REQ-005    |
 | TASK-017    | 完稿阅读、内容修饰与打包导出页面开发                       |   E2E    |          ✅ 已完成          | REQ-006             |
-| TASK-018    | 编写 Vitest 单元与 API 接口集成测试                        |   Unit   |          ⬜ 待开始          | `test_strategy.md`  |
+| TASK-018    | 编写 Vitest 单元与 API 接口集成测试                        |   Unit   |          ✅ 已完成          | `test_strategy.md`  |
 | TASK-019    | 编写 Playwright UI 端到端用户旅程测试                      |   E2E    |          ⬜ 待开始          | `test_strategy.md`  |
