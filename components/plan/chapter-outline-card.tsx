@@ -46,7 +46,35 @@ export function ChapterOutlineCard({
           }}
           type="button"
         >
-          {isEditing ? "Close" : "Edit Outline"}
+          {isEditing ? (
+            "Close"
+          ) : (
+            <>
+              <span aria-hidden="true" className="plan-text-button-icon">
+                <svg
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M4 20H8L18 10L14 6L4 16V20Z"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.7"
+                  />
+                  <path
+                    d="M12 8L16 12"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="1.7"
+                  />
+                </svg>
+              </span>
+              <span>Edit Outline</span>
+            </>
+          )}
         </button>
       </div>
 

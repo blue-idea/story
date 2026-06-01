@@ -57,7 +57,7 @@ export function PlanDashboard({
 
         <div className="plan-hero-actions">
           <button
-            className="plan-primary-button plan-primary-button-large"
+            className="plan-primary-button plan-primary-button-glow plan-primary-button-large"
             disabled={isPending}
             onClick={() => {
               startTransition(async () => {
