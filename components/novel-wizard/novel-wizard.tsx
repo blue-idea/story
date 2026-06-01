@@ -36,6 +36,7 @@ import {
 type NovelWizardProps = {
   initialPreferences: UserPreferencesPayload;
   qaMode?: boolean;
+  qaNextHref?: string;
 };
 
 type Layer2AnswerState = {
@@ -63,6 +64,7 @@ function requestFailedMessage() {
 export function NovelWizard({
   initialPreferences,
   qaMode = false,
+  qaNextHref,
 }: NovelWizardProps) {
   const router = useRouter();
   const [wizardState, setWizardState] = useState(createWizardUiState);
@@ -361,6 +363,11 @@ export function NovelWizard({
 
   function handleConfirmTitle() {
     if (qaMode) {
+      if (qaNextHref) {
+        router.push(qaNextHref);
+        return;
+      }
+
       setSuggestion(`Title confirmed: ${selectedTitle || "Neon Meridian"}`);
       return;
     }

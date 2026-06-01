@@ -8,6 +8,7 @@ export default function Task014PreviewPage() {
         defaultTone: "Noir",
         defaultChapterCount: 24,
       }}
+      qaNextHref="/qa/task-019/plan"
       qaMode
     />
   );

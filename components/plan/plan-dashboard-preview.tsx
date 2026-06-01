@@ -22,12 +22,14 @@ type PlanDashboardPreviewProps = {
   outline: string;
   characterProfiles: CharacterProfile[];
   chapters: ChapterPlan[];
+  nextWriteHref?: string;
 };
 
 export function PlanDashboardPreview({
   outline,
   characterProfiles,
   chapters,
+  nextWriteHref = "/qa/task-015/write",
 }: PlanDashboardPreviewProps) {
   const router = useRouter();
   const [draftChapters, setDraftChapters] = useState(chapters);
@@ -38,7 +40,7 @@ export function PlanDashboardPreview({
       characterProfiles={characterProfiles}
       novelId="qa-preview"
       onConfirmWrite={async () => {
-        router.push("/qa/task-015/write");
+        router.push(nextWriteHref);
       }}
       onSaveOutline={async ({ chapterNumber, outlineSummary }) => {
         setDraftChapters((current) =>

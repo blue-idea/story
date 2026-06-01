@@ -416,9 +416,9 @@
   *需求: `test_strategy.md`
   *测试类型: Unit
 
-- [ ] **TASK-019 · 编写 Playwright UI 端到端用户旅程测试**
-  - [ ] 编写 auth-and-planning.spec.ts 覆盖用户邮箱登录、偏好检测、新建小说、生成并修改大纲的全旅程
-  - [ ] 编写 writing-fault-retry.spec.ts 覆盖点击写作、模拟拦截报错使写作 failed 挂起、点击重试完成写作、最后导出打包下载的自愈用户旅程，并在运行中保存关键步骤截图
+- [x] **TASK-019 · 编写 Playwright UI 端到端用户旅程测试**
+  - [x] 编写 auth-and-planning.spec.ts 覆盖用户邮箱登录、偏好检测、新建小说、生成并修改大纲的全旅程
+  - [x] 编写 writing-fault-retry.spec.ts 覆盖点击写作、模拟拦截报错使写作 failed 挂起、点击重试完成写作、最后导出打包下载的自愈用户旅程，并在运行中保存关键步骤截图
 
   **验证方式：**
 
@@ -459,4 +459,4 @@
 | TASK-016    | SSE 流式写作监控工作台开发                                 |   E2E    |          ✅ 已完成          | REQ-004, REQ-005    |
 | TASK-017    | 完稿阅读、内容修饰与打包导出页面开发                       |   E2E    |          ✅ 已完成          | REQ-006             |
 | TASK-018    | 编写 Vitest 单元与 API 接口集成测试                        |   Unit   |          ✅ 已完成          | `test_strategy.md`  |
-| TASK-019    | 编写 Playwright UI 端到端用户旅程测试                      |   E2E    |          ⬜ 待开始          | `test_strategy.md`  |
+| TASK-019    | 编写 Playwright UI 端到端用户旅程测试                      |   E2E    |          ✅ 已完成          | `test_strategy.md`  |
