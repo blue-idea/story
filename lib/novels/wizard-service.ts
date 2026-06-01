@@ -9,7 +9,7 @@ import type {
   CustomConfig,
   UserPreferencesPayload,
 } from "../../db/schema";
-import { createLLMClient } from "../llm";
+import { createDefaultLLMClient } from "../llm";
 import { getSystem, renderInstruction } from "../prompts";
 import { generateCandidateTitles, runPhase2Planning } from "../writer/planner";
 import { NotFoundError, ValidationError } from "./errors";
@@ -237,7 +237,7 @@ export async function generateWizardSuggestion(input: {
       customConfig: novel.customConfig,
     }),
   });
-  const llm = createLLMClient({ provider: "gemini" });
+  const llm = createDefaultLLMClient();
   const suggestion = normalizeText(
     await llm.generateText({
       prompt,

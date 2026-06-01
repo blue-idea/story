@@ -1,5 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
+import {
+  DEFAULT_GEMINI_MODEL,
+  DEFAULT_OPENAI_MODEL,
+  resolveDefaultLLMConfig,
+} from "../config/llm";
 
 export interface LLMConfig {
   provider: "gemini" | "openai";
@@ -28,7 +33,7 @@ class GeminiClient implements LLMClient {
   constructor(config: LLMConfig) {
     const key = config.apiKey || process.env.GEMINI_API_KEY || "";
     this.genAI = new GoogleGenerativeAI(key);
-    this.modelName = config.model || "gemini-1.5-flash";
+    this.modelName = config.model || DEFAULT_GEMINI_MODEL;
   }
 
   async generateText(options: GenerateTextOptions): Promise<string> {
@@ -70,7 +75,7 @@ class OpenAIClient implements LLMClient {
       apiKey: key,
       baseURL: config.baseUrl,
     });
-    this.modelName = config.model || "gpt-3.5-turbo";
+    this.modelName = config.model || DEFAULT_OPENAI_MODEL;
   }
 
   async generateText(options: GenerateTextOptions): Promise<string> {
@@ -129,4 +134,8 @@ export function createLLMClient(config: LLMConfig): LLMClient {
     return new OpenAIClient(config);
   }
   throw new Error(`Unsupported provider: ${config.provider}`);
+}
+
+export function createDefaultLLMClient(): LLMClient {
+  return createLLMClient(resolveDefaultLLMConfig());
 }

@@ -4,7 +4,7 @@ import { validateChapter, parseSuspenseCheckResponse } from "./validator";
 const mockGenerateText = vi.fn();
 
 vi.mock("../llm", () => ({
-  createLLMClient: vi.fn(() => ({
+  createDefaultLLMClient: vi.fn(() => ({
     generateText: mockGenerateText,
   })),
 }));

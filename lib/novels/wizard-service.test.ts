@@ -37,7 +37,7 @@ vi.mock("./repository", () => repository);
 vi.mock("../writer/planner", () => planner);
 vi.mock("../prompts", () => prompts);
 vi.mock("../llm", () => ({
-  createLLMClient: vi.fn(() => llm),
+  createDefaultLLMClient: vi.fn(() => llm),
 }));
 
 const coreConfig: CoreConfig = {

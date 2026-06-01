@@ -3,7 +3,7 @@ import type {
   CoreConfig,
   CustomConfig,
 } from "../../db/schema";
-import { createLLMClient } from "../llm";
+import { createDefaultLLMClient } from "../llm";
 import { getSystem, renderInstruction } from "../prompts";
 import { parseChaptersFromOutline, type ParsedChapter } from "./parse-outline";
 
@@ -86,7 +86,7 @@ export function parseCharacterProfilesMarkdown(
 export async function generateCandidateTitles(
   input: PlannerInput,
 ): Promise<string[]> {
-  const llm = createLLMClient({ provider: "gemini" });
+  const llm = createDefaultLLMClient();
   const prompt = renderInstruction("phase1-title", buildTitleContext(input));
   const responseText = await llm.generateText({
     prompt,
@@ -99,7 +99,7 @@ export async function generateCandidateTitles(
 export async function generateOutline(
   input: PlannerInputWithTitle,
 ): Promise<string> {
-  const llm = createLLMClient({ provider: "gemini" });
+  const llm = createDefaultLLMClient();
   const prompt = renderInstruction(
     "phase2-outline",
     buildOutlineContext(input),
@@ -115,7 +115,7 @@ export async function generateCharacterProfiles(
   input: PlannerInputWithTitle,
   outline: string,
 ): Promise<CharacterProfile[]> {
-  const llm = createLLMClient({ provider: "gemini" });
+  const llm = createDefaultLLMClient();
   const prompt = renderInstruction("phase2-characters", {
     outlineSummary: outline,
     genre: input.coreConfig.genre,

@@ -2,7 +2,7 @@ import { db } from "../../db";
 import { chapters, novelProfiles, novels } from "../../db/schema";
 import type { CharacterProfile } from "../../db/schema";
 import { eq, and, asc } from "drizzle-orm";
-import { createLLMClient } from "../llm";
+import { createDefaultLLMClient } from "../llm";
 import { validateChapter, ValidationResult } from "./validator";
 import {
   buildChapterDraftPrompt,
@@ -43,7 +43,7 @@ export async function generateNovel(
   novelId: string,
   callbacks: GeneratorCallbacks,
 ): Promise<void> {
-  const llm = createLLMClient({ provider: "gemini" });
+  const llm = createDefaultLLMClient();
 
   try {
     const { characterProfiles } = await loadNovelProfile(novelId);

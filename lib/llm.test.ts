@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createLLMClient } from "./llm";
+import { createDefaultLLMClient, createLLMClient } from "./llm";
 
 const openAiConstructor = vi.hoisted(() => vi.fn());
 
@@ -54,6 +54,9 @@ describe("LLM Client Adapter", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
+    delete process.env.DEEPSEEK_API_KEY;
+    delete process.env.DEEPSEEK_API_URL;
+    delete process.env.DEEPSEEK_API_NAME;
   });
 
   it("generates text using gemini provider", async () => {
@@ -102,6 +105,20 @@ describe("LLM Client Adapter", () => {
 
     expect(openAiConstructor).toHaveBeenCalledWith({
       apiKey: "test-key",
+      baseURL: "https://api.deepseek.com",
+    });
+  });
+
+  it("createDefaultLLMClient 在配置 DeepSeek 时默认走 openai-compatible", async () => {
+    process.env.DEEPSEEK_API_KEY = "deepseek-key";
+    process.env.DEEPSEEK_API_URL = "https://api.deepseek.com";
+    process.env.DEEPSEEK_API_NAME = "deepseek-v4-flash";
+
+    const client = createDefaultLLMClient();
+    await client.generateText({ prompt: "Hello" });
+
+    expect(openAiConstructor).toHaveBeenCalledWith({
+      apiKey: "deepseek-key",
       baseURL: "https://api.deepseek.com",
     });
   });

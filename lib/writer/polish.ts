@@ -1,25 +1,8 @@
-import { createLLMClient } from "../llm";
+import { createDefaultLLMClient } from "../llm";
 import { getSystem, renderInstruction } from "../prompts";
 
 function createPolishClient() {
-  if (process.env.GEMINI_API_KEY) {
-    return createLLMClient({ provider: "gemini" });
-  }
-
-  if (process.env.DEEPSEEK_API_KEY) {
-    return createLLMClient({
-      provider: "openai",
-      apiKey: process.env.DEEPSEEK_API_KEY,
-      baseUrl: process.env.DEEPSEEK_API_URL,
-      model: process.env.DEEPSEEK_API_NAME,
-    });
-  }
-
-  if (process.env.OPENAI_API_KEY) {
-    return createLLMClient({ provider: "openai" });
-  }
-
-  return createLLMClient({ provider: "gemini" });
+  return createDefaultLLMClient();
 }
 
 export async function polishSelectedText(input: {

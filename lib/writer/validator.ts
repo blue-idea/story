@@ -1,4 +1,4 @@
-import { createLLMClient } from "../llm";
+import { createDefaultLLMClient } from "../llm";
 import { getSystem, renderInstruction } from "../prompts";
 
 export type ValidationResult = {
@@ -32,7 +32,7 @@ export async function validateChapter(
   const len = text.length;
   const wordCountValid = len >= 3000 && len <= 5000;
 
-  const llm = createLLMClient({ provider: "gemini" });
+  const llm = createDefaultLLMClient();
   const chapterEnding = text.slice(-300);
 
   const prompt = renderInstruction("phase4-suspense-check", {

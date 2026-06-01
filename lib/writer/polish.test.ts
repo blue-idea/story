@@ -9,11 +9,11 @@ const llm = vi.hoisted(() => ({
   generateText: vi.fn(),
 }));
 
-const createLLMClientMock = vi.hoisted(() => vi.fn(() => llm));
+const createDefaultLLMClientMock = vi.hoisted(() => vi.fn(() => llm));
 
 vi.mock("../prompts", () => prompts);
 vi.mock("../llm", () => ({
-  createLLMClient: createLLMClientMock,
+  createDefaultLLMClient: createDefaultLLMClientMock,
 }));
 
 async function loadModule() {
@@ -41,9 +41,7 @@ describe("polish", () => {
       surroundingContext: "前后文",
     });
 
-    expect(createLLMClientMock).toHaveBeenCalledWith({
-      provider: "gemini",
-    });
+    expect(createDefaultLLMClientMock).toHaveBeenCalledWith();
     expect(prompts.renderInstruction).toHaveBeenCalledWith(
       "phase3-chapter-polish",
       {
@@ -70,11 +68,6 @@ describe("polish", () => {
       surroundingContext: "前后文",
     });
 
-    expect(createLLMClientMock).toHaveBeenCalledWith({
-      provider: "openai",
-      apiKey: "deepseek-key",
-      baseUrl: "https://api.deepseek.com",
-      model: "deepseek-chat",
-    });
+    expect(createDefaultLLMClientMock).toHaveBeenCalledWith();
   });
 });

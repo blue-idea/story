@@ -37,7 +37,7 @@ const CHARACTERS_FIXTURE = `## 主角
 const mockGenerateText = vi.fn();
 
 vi.mock("../llm", () => ({
-  createLLMClient: vi.fn(() => ({
+  createDefaultLLMClient: vi.fn(() => ({
     generateText: mockGenerateText,
   })),
 }));

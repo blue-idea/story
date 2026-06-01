@@ -19,7 +19,7 @@ const { mockGenerateStream, mockValidateChapter, mockDb } = vi.hoisted(() => {
 });
 
 vi.mock("../llm", () => ({
-  createLLMClient: vi.fn(() => ({
+  createDefaultLLMClient: vi.fn(() => ({
     generateStream: mockGenerateStream,
   })),
 }));
