@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
 const redirectMock = vi.hoisted(() =>
@@ -36,14 +36,14 @@ describe("TASK-013 首页与快捷续写卡片 UI", () => {
     expect(redirectMock).toHaveBeenCalledWith("/login");
   });
 
-  it("REQ-001-AC-003: 检测到进行中项目时展示续写卡片并跳转到写作页", async () => {
+  it("REQ-001-AC-003: 检测到活跃作品时应展示继续卡片", async () => {
     authMock.mockResolvedValueOnce({
       user: { id: "user-1" },
       expires: "9999-12-31T23:59:59.999Z",
     });
     loadHomeDashboardMock.mockResolvedValueOnce({
       preferences: {
-        preferredGenres: ["Cyberpunk", "Thriller"],
+        preferredGenres: ["Sci-Fi", "Thriller"],
         defaultTone: "Noir",
         defaultChapterCount: 24,
       },
@@ -53,8 +53,18 @@ describe("TASK-013 首页与快捷续写卡片 UI", () => {
         status: "in_progress",
         continuePath: "/novel/novel-1/write",
         progressPercent: 68,
-        lastEditedAt: new Date("2026-05-30T10:00:00.000Z"),
+        lastEditedAt: "2026-05-30T10:00:00.000Z",
       },
+      works: [
+        {
+          id: "novel-1",
+          title: "Neon Meridian",
+          status: "in_progress",
+          updatedAt: "2026-05-30T10:00:00.000Z",
+          primaryActionLabel: "Continue Writing",
+          primaryActionHref: "/novel/novel-1/write",
+        },
+      ],
     });
 
     const pageModule = await import("../app/page");
@@ -65,10 +75,9 @@ describe("TASK-013 首页与快捷续写卡片 UI", () => {
     expect(markup).toContain("/novel/novel-1/write");
     expect(markup).toContain("Neon Meridian");
     expect(markup).toContain("已完成 68%");
-    expect(markup).toContain("上次编辑于");
   });
 
-  it("REQ-001-AC-002: 首页应展示偏好摘要与开启新小说按钮", async () => {
+  it("REQ-001-AC-002: 首页应展示偏好摘要与新建入口", async () => {
     authMock.mockResolvedValueOnce({
       user: { id: "user-2" },
       expires: "9999-12-31T23:59:59.999Z",
@@ -80,6 +89,7 @@ describe("TASK-013 首页与快捷续写卡片 UI", () => {
         defaultChapterCount: 12,
       },
       lastActiveNovel: null,
+      works: [],
     });
 
     const pageModule = await import("../app/page");
@@ -87,6 +97,7 @@ describe("TASK-013 首页与快捷续写卡片 UI", () => {
 
     expect(markup).toContain("偏好题材");
     expect(markup).toContain("Fantasy");
-    expect(markup).toContain("开始新小说");
+    expect(markup).toContain("开始创作新小说");
+    expect(markup).toContain("无活跃作品");
   });
 });

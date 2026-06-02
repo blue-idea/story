@@ -1,17 +1,16 @@
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 import {
   HOME_ACTIVE_NOVEL_STATUSES,
   HOME_PROGRESS_BY_STATUS,
+  type HomeActiveNovelStatus,
 } from "../../config/home";
 import { db } from "../../db";
 import {
-  novels,
   userPreferences,
+  type NovelStatus,
   type UserPreferencesPayload,
 } from "../../db/schema";
-
-type HomeActiveNovelStatus = (typeof HOME_ACTIVE_NOVEL_STATUSES)[number];
 
 export type HomeActiveNovel = {
   id: string;
@@ -19,12 +18,22 @@ export type HomeActiveNovel = {
   status: HomeActiveNovelStatus;
   continuePath: string;
   progressPercent: number;
-  lastEditedAt: Date;
+  lastEditedAt: string;
+};
+
+export type HomeWorkItem = {
+  id: string;
+  title: string;
+  status: NovelStatus;
+  updatedAt: string;
+  primaryActionLabel: "Edit" | "Continue Writing" | "Read";
+  primaryActionHref: string;
 };
 
 export type HomeDashboardData = {
   preferences: UserPreferencesPayload;
   lastActiveNovel: HomeActiveNovel | null;
+  works: HomeWorkItem[];
 };
 
 const FALLBACK_PREFERENCES: UserPreferencesPayload = {
@@ -33,54 +42,88 @@ const FALLBACK_PREFERENCES: UserPreferencesPayload = {
   defaultChapterCount: null,
 };
 
-function resolveContinuePath(input: {
-  novelId: string;
-  status: HomeActiveNovelStatus;
-}): string {
-  if (input.status === "planning") {
-    return `/novel/${input.novelId}/plan`;
+function resolvePrimaryAction(status: NovelStatus, novelId: string) {
+  switch (status) {
+    case "draft":
+    case "planning":
+      return {
+        label: "Edit" as const,
+        href: `/novel/${novelId}/plan`,
+      };
+    case "completed":
+      return {
+        label: "Read" as const,
+        href: `/novel/${novelId}/read`,
+      };
+    case "in_progress":
+    case "failed":
+      return {
+        label: "Continue Writing" as const,
+        href: `/novel/${novelId}/write`,
+      };
+    default: {
+      const neverStatus: never = status;
+      throw new Error(`Unsupported novel status: ${neverStatus}`);
+    }
   }
+}
 
-  return `/novel/${input.novelId}/write`;
+function isActiveNovelStatus(
+  status: NovelStatus,
+): status is HomeActiveNovelStatus {
+  return HOME_ACTIVE_NOVEL_STATUSES.includes(status as HomeActiveNovelStatus);
 }
 
 export async function loadHomeDashboard(
   userId: string,
 ): Promise<HomeDashboardData> {
-  const [preferencesRecord, activeNovel] = await Promise.all([
+  const [preferencesRecord, novelRecords] = await Promise.all([
     db.query.userPreferences.findFirst({
       where: eq(userPreferences.userId, userId),
     }),
-    db.query.novels.findFirst({
-      where: and(
-        eq(novels.userId, userId),
-        inArray(novels.status, HOME_ACTIVE_NOVEL_STATUSES),
-      ),
-      orderBy: [desc(novels.updatedAt)],
+    db.query.novels.findMany({
+      where: (table, { eq: equals }) => equals(table.userId, userId),
+      orderBy: (table, { desc: orderDesc }) => [orderDesc(table.updatedAt)],
     }),
   ]);
 
-  if (!activeNovel) {
-    return {
-      preferences: preferencesRecord?.preferences ?? FALLBACK_PREFERENCES,
-      lastActiveNovel: null,
-    };
-  }
+  const works = novelRecords.map((novel) => {
+    const primaryAction = resolvePrimaryAction(novel.status, novel.id);
 
-  const activeStatus = activeNovel.status as HomeActiveNovelStatus;
+    return {
+      id: novel.id,
+      title: novel.title,
+      status: novel.status,
+      updatedAt: novel.updatedAt.toISOString(),
+      primaryActionLabel: primaryAction.label,
+      primaryActionHref: primaryAction.href,
+    } satisfies HomeWorkItem;
+  });
+
+  const activeNovelRecord =
+    novelRecords.find(
+      (
+        novel,
+      ): novel is (typeof novelRecords)[number] & {
+        status: HomeActiveNovelStatus;
+      } => isActiveNovelStatus(novel.status),
+    ) ?? null;
 
   return {
     preferences: preferencesRecord?.preferences ?? FALLBACK_PREFERENCES,
-    lastActiveNovel: {
-      id: activeNovel.id,
-      title: activeNovel.title,
-      status: activeStatus,
-      continuePath: resolveContinuePath({
-        novelId: activeNovel.id,
-        status: activeStatus,
-      }),
-      progressPercent: HOME_PROGRESS_BY_STATUS[activeStatus],
-      lastEditedAt: activeNovel.updatedAt,
-    },
+    lastActiveNovel: activeNovelRecord
+      ? {
+          id: activeNovelRecord.id,
+          title: activeNovelRecord.title,
+          status: activeNovelRecord.status,
+          continuePath: resolvePrimaryAction(
+            activeNovelRecord.status,
+            activeNovelRecord.id,
+          ).href,
+          progressPercent: HOME_PROGRESS_BY_STATUS[activeNovelRecord.status],
+          lastEditedAt: activeNovelRecord.updatedAt.toISOString(),
+        }
+      : null,
+    works,
   };
 }

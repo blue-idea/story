@@ -114,6 +114,20 @@ export async function findOwnedNovel(
   };
 }
 
+export async function deleteOwnedNovel(input: {
+  userId: string;
+  novelId: string;
+}): Promise<boolean> {
+  const deleted = await db
+    .delete(novels)
+    .where(and(eq(novels.id, input.novelId), eq(novels.userId, input.userId)))
+    .returning({
+      id: novels.id,
+    });
+
+  return deleted.length > 0;
+}
+
 export async function updateNovelCustomConfig(
   novelId: string,
   customConfig: CustomConfig,

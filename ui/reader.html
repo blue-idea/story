@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -47,10 +48,21 @@
             text-align: justify;
         }
 
-        .font-serif { font-family: 'Noto Serif SC', serif; }
-        .font-sans { font-family: 'Noto Sans SC', sans-serif; }
-        .font-kai { font-family: 'Long Cang', cursive; }
-        .font-song { font-family: 'Ma Shan Zheng', cursive; }
+        .font-serif {
+            font-family: 'Noto Serif SC', serif;
+        }
+
+        .font-sans {
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        .font-kai {
+            font-family: 'Long Cang', cursive;
+        }
+
+        .font-song {
+            font-family: 'Ma Shan Zheng', cursive;
+        }
 
         .sidebar {
             width: 280px;
@@ -61,7 +73,7 @@
             overflow-y: auto;
             transition: transform 0.3s ease;
             z-index: 40;
-            border-right: 1px solid rgba(0,0,0,0.08);
+            border-right: 1px solid rgba(0, 0, 0, 0.08);
         }
 
         .sidebar::-webkit-scrollbar {
@@ -69,7 +81,7 @@
         }
 
         .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(0,0,0,0.2);
+            background: rgba(0, 0, 0, 0.2);
             border-radius: 3px;
         }
 
@@ -94,7 +106,7 @@
         }
 
         .chapter-item:hover {
-            background: rgba(0,0,0,0.03);
+            background: rgba(0, 0, 0, 0.03);
         }
 
         .chapter-item.active {
@@ -146,17 +158,17 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255,255,255,0.95);
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
             cursor: pointer;
             transition: all 0.2s ease;
-            border: 1px solid rgba(0,0,0,0.06);
+            border: 1px solid rgba(0, 0, 0, 0.06);
         }
 
         .toolbar-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
 
         .settings-panel {
@@ -166,7 +178,7 @@
             background: white;
             border-radius: 16px;
             padding: 20px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
             z-index: 60;
             min-width: 280px;
             display: none;
@@ -182,6 +194,7 @@
                 opacity: 0;
                 transform: translateY(-10px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -214,7 +227,7 @@
             font-size: 28px;
             cursor: pointer;
             transition: all 0.2s ease;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }
 
         .bookmark:hover {
@@ -226,7 +239,7 @@
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
+            background: rgba(0, 0, 0, 0.7);
             color: white;
             padding: 12px 24px;
             border-radius: 24px;
@@ -239,14 +252,14 @@
 
         .selection-toolbar {
             position: absolute;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0, 0, 0, 0.9);
             color: white;
             padding: 8px;
             border-radius: 8px;
             display: none;
             gap: 8px;
             z-index: 1000;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
         }
 
         .selection-toolbar button {
@@ -260,7 +273,7 @@
         }
 
         .selection-toolbar button:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .highlight {
@@ -312,11 +325,11 @@
         .theme-night .settings-panel {
             background: #2a2a2a;
             color: #b8b8b8;
-            border-color: rgba(255,255,255,0.1);
+            border-color: rgba(255, 255, 255, 0.1);
         }
 
         .theme-night .chapter-item:hover {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .theme-night .chapter-item.active {
@@ -324,6 +337,7 @@
         }
     </style>
 </head>
+
 <body class="theme-beige">
     <div class="progress-bar" id="progressBar"></div>
 
@@ -438,7 +452,8 @@
             <label class="block text-sm font-medium text-gray-700 mb-3">主题</label>
             <div class="flex gap-3">
                 <div class="theme-option active" data-theme="beige" style="background: #f5f1e8;" title="护眼米黄"></div>
-                <div class="theme-option" data-theme="white" style="background: #ffffff; border: 1px solid #e5e7eb;" title="纯白"></div>
+                <div class="theme-option" data-theme="white" style="background: #ffffff; border: 1px solid #e5e7eb;"
+                    title="纯白"></div>
                 <div class="theme-option" data-theme="green" style="background: #cce8cf;" title="淡雅绿"></div>
                 <div class="theme-option" data-theme="night" style="background: #1a1a1a;" title="夜间模式"></div>
             </div>
@@ -447,21 +462,31 @@
         <div class="mb-6">
             <label class="block text-sm font-medium text-gray-700 mb-3">字体</label>
             <div class="grid grid-cols-2 gap-2">
-                <button class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-serif" data-font="serif">宋体</button>
-                <button class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-sans" data-font="sans">黑体</button>
-                <button class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-kai" data-font="kai">楷体</button>
-                <button class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-song" data-font="song">行楷</button>
+                <button
+                    class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-serif"
+                    data-font="serif">宋体</button>
+                <button
+                    class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-sans"
+                    data-font="sans">黑体</button>
+                <button
+                    class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-kai"
+                    data-font="kai">楷体</button>
+                <button
+                    class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-song"
+                    data-font="song">行楷</button>
             </div>
         </div>
 
         <div class="mb-4">
             <label class="block text-sm font-medium text-gray-700 mb-3">字号</label>
             <div class="flex items-center gap-4">
-                <button id="decreaseFontSize" class="w-10 h-10 border border-gray-200 rounded-lg hover:border-blue-500 transition">
+                <button id="decreaseFontSize"
+                    class="w-10 h-10 border border-gray-200 rounded-lg hover:border-blue-500 transition">
                     <i class="fas fa-minus text-sm"></i>
                 </button>
                 <span id="fontSizeDisplay" class="text-sm font-medium min-w-[60px] text-center">18px</span>
-                <button id="increaseFontSize" class="w-10 h-10 border border-gray-200 rounded-lg hover:border-blue-500 transition">
+                <button id="increaseFontSize"
+                    class="w-10 h-10 border border-gray-200 rounded-lg hover:border-blue-500 transition">
                     <i class="fas fa-plus text-sm"></i>
                 </button>
             </div>
@@ -557,11 +582,14 @@
             </div>
 
             <div class="mt-16 pt-8 border-t border-gray-300 flex items-center justify-between">
-                <button class="px-6 py-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2" id="prevChapter">
+                <button class="px-6 py-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2"
+                    id="prevChapter">
                     <i class="fas fa-chevron-left"></i>
                     <span>上一章</span>
                 </button>
-                <button class="px-6 py-3 text-blue-600 hover:text-blue-700 transition flex items-center gap-2 font-medium" id="nextChapter">
+                <button
+                    class="px-6 py-3 text-blue-600 hover:text-blue-700 transition flex items-center gap-2 font-medium"
+                    id="nextChapter">
                     <span>下一章</span>
                     <i class="fas fa-chevron-right"></i>
                 </button>
@@ -617,7 +645,7 @@
         });
 
         document.querySelectorAll('.theme-option').forEach(option => {
-            option.addEventListener('click', function() {
+            option.addEventListener('click', function () {
                 document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
                 this.classList.add('active');
 
@@ -637,7 +665,7 @@
         });
 
         document.querySelectorAll('.font-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
+            btn.addEventListener('click', function () {
                 const font = this.dataset.font;
                 currentFont = font;
                 readerContent.className = `reader-content font-${font}`;
@@ -661,7 +689,7 @@
         });
 
         document.querySelectorAll('.chapter-item').forEach(item => {
-            item.addEventListener('click', function(e) {
+            item.addEventListener('click', function (e) {
                 if (this.classList.contains('sub-chapter-item')) {
                     document.querySelectorAll('.chapter-item').forEach(i => i.classList.remove('active'));
                     this.classList.add('active');
@@ -755,4 +783,5 @@
         });
     </script>
 </body>
+
 </html>

@@ -74,7 +74,18 @@ e:/NextCloud/coding/netx.js/story/
 
 ## 架构概览
 
-系统使用 **Next.js + Postgres + Drizzle ORM + NextAuth.js** 架构。所有页面默认由 NextAuth.js 中间件进行登录态保护，小说数据实现物理用户隔离。AI 小说创作模块使用纯串行执行控制流，并在后端生成中提供故障自愈校验；一旦遭遇物理异常，后端会将任务状态标记为挂起并输出日志，由前端展现重试控制。
+系统使用 **Next.js + Postgres + Drizzle ORM + NextAuth.js** 架构。所有页面默认由 NextAuth.js 中间件进行登录态保护，小说数据实现物理用户隔离。AI 小说创作模块使用纯串行执行控制流，并在后端生成中提供故障自愈校验；一旦遭遇物理异常，后端会将任务状态标记为挂起并输出日志，由前端展现重试控制。首页作品管理采用服务端聚合加载，首屏直接渲染全部作品列表；删除动作通过 Route Handler 执行，并依赖数据库外键级联删除清理 `novel_profiles` 与 `chapters` 关联数据。
+
+### 首页作品管理设计
+
+- `lib/home/home-service.ts` 负责聚合首页偏好、最近活跃作品与全部作品列表，统一输出给 `components/home/home-dashboard.tsx`。
+- 作品列表按 `novels.updatedAt DESC` 排序，确保最近修改的作品优先展示。
+- 作品卡片动作映射如下：
+  - `draft` / `planning` -> `Edit`，跳转 `/novel/[id]/plan`
+  - `in_progress` / `failed` -> `Continue Writing`，跳转 `/novel/[id]/write`
+  - `completed` -> `Read`，跳转 `/novel/[id]/read`
+- 删除交互由首页客户端发起确认后调用 `DELETE /api/novel/[id]`；成功后前端移除对应卡片，并同步处理“最近活跃作品”区域的展示状态。
+- 删除接口必须先校验作品归属，再执行删除，避免跨用户越权访问。
 
 ### 系统架构图
 

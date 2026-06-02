@@ -297,6 +297,80 @@
     http_status: 200
     body_schema:
       polishedText: "string"
+  side_effects:
+    - "不自动写入 chapters.content，除非用户随后点击保存"
+```
+
+---
+
+### 需求 REQ-007 · 作品管理与多状态入口
+
+**用户故事：** 作为创作者，我希望在首页一次看到我名下的全部作品，并且可以根据作品当前状态直接执行编辑、继续创作、阅读或删除操作，这样我不需要逐个记忆入口，也能更高效地管理草稿、规划中作品、写作中作品与已完成作品。
+
+#### 验收标准
+
+```yaml
+- id: REQ-007-AC-001
+  ears: >
+    When the authenticated user accesses the homepage,
+    the system shall render a work management list containing all novels owned by the user,
+    sorted by updatedAt descending, and each card shall display title, status, updated time, and the primary action entry.
+  test_type: E2E
+  expected:
+    ui_state: "首页显示作品管理列表；卡片按最近更新时间倒序排列；展示标题、状态、最近更新时间与主操作按钮"
+
+- id: REQ-007-AC-002
+  ears: >
+    While a work is in status 'draft' or 'planning', when the user clicks 'Edit',
+    the system shall redirect the user to the planning/editing workspace for that novel.
+  test_type: E2E
+  expected:
+    ui_state: "点击 Edit 后跳转到 /novel/[id]/plan"
+    url: "/novel/[id]/plan"
+
+- id: REQ-007-AC-003
+  ears: >
+    While a work is in status 'in_progress' or 'failed', when the user clicks 'Continue Writing',
+    the system shall redirect the user to the writing workspace for that novel.
+  test_type: E2E
+  expected:
+    ui_state: "点击 Continue Writing 后跳转到 /novel/[id]/write"
+    url: "/novel/[id]/write"
+
+- id: REQ-007-AC-004
+  ears: >
+    While a work is in status 'completed', when the user clicks 'Read',
+    the system shall redirect the user to the reading workspace for that novel.
+  test_type: E2E
+  expected:
+    ui_state: "点击 Read 后跳转到 /novel/[id]/read"
+    url: "/novel/[id]/read"
+
+- id: REQ-007-AC-005
+  ears: >
+    When the user confirms deleting one of their own works,
+    the system shall delete that novel and all dependent records, then remove the card from the homepage list.
+  test_type: API
+  expected:
+    http_status: 200
+    body_schema:
+      success: "boolean"
+      deletedNovelId: "string"
     side_effects:
-      - "不自动写入 chapters.content，除非用户随后点击保存"
+      - "删除 novels 主记录"
+      - "级联删除 novel_profiles 与 chapters 关联记录"
+      - "首页作品列表不再显示该作品"
+
+- id: REQ-007-AC-006
+  ears: >
+    While the user attempts to delete a novel that does not belong to them,
+    when the delete request reaches the backend,
+    the system shall reject the request and shall not delete any data.
+  test_type: API
+  expected:
+    http_status: 404
+    body_schema:
+      error: "string"
+    side_effects:
+      - "不删除任何非本人作品数据"
 ```
