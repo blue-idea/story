@@ -7,6 +7,7 @@ import {
   generateCharacterProfiles,
   runPhase2Planning,
   parseCandidateTitles,
+  parseCharacterProfilesMarkdown,
 } from "./planner";
 
 const OUTLINE_FIXTURE = `# 测试小说 大纲
@@ -32,6 +33,41 @@ const CHARACTERS_FIXTURE = `## 主角
 
 ### 黑衣人
 - **性格核心**：冷酷
+`;
+
+const CHARACTER_TEMPLATE_VARIANT_FIXTURE = `# 人物档案
+
+## 主角（核心视角）
+
+#### 林云
+- **年龄/职业**：18岁 / 没落家族少爷
+- **性格核心**：冷静果敢
+- **核心价值观**：宁可独行，也不愿失信
+- **最大恐惧**：再次失去唯一的亲人
+- **致命缺陷**：把所有责任都扛在自己身上
+- **内心渴望**：证明自己配得上家族旧名
+- **背景故事**：家族灭门后被迫流亡三年
+
+## 反派阵营
+
+### 黑衣人
+- **性格核心**：冷酷克制
+- **致命缺陷**：对“完美计划”有病态执念
+
+## 配角群像
+
+### 长老
+- **性格核心**：谨慎多疑
+`;
+
+const OUTLINE_VARIANT_FIXTURE = `# 测试小说大纲
+
+## 章节规划
+
+| 章节 | 标题 | 核心事件 | 承接上章 | 章首引子类型 | 悬念钩子 | 出场人物 | 场景列表 |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 风雪夜归人 | 林云在雪夜带回染血玉佩 | — | 异常闯入式 | 玉佩背面浮现陌生族徽 | 林云, 老仆 | 破庙, 山道 |
+| 第02章 | 旧城追踪 | 林云循着族徽线索潜入旧城 | 玉佩异动 | 信息差悬念式 | 黑衣人在暗巷提前设伏 | 林云, 黑衣人 | 旧城, 暗巷 |
 `;
 
 const mockGenerateText = vi.fn();
@@ -72,6 +108,50 @@ describe("parseChaptersFromOutline", () => {
     expect(chapters[1].chapterNumber).toBe(2);
     expect(chapters[1].title).toBe("拜入宗门");
     expect(chapters[1].outlineSummary).toContain("紧急危机");
+  });
+
+  it("兼容章节列为纯数字或带前导零的表格行", () => {
+    const chapters = parseChaptersFromOutline(OUTLINE_VARIANT_FIXTURE);
+
+    expect(chapters).toHaveLength(2);
+    expect(chapters[0]).toMatchObject({
+      chapterNumber: 1,
+      title: "风雪夜归人",
+    });
+    expect(chapters[0].outlineSummary).toContain(
+      "核心事件: 林云在雪夜带回染血玉佩",
+    );
+    expect(chapters[1]).toMatchObject({
+      chapterNumber: 2,
+      title: "旧城追踪",
+    });
+    expect(chapters[1].outlineSummary).toContain(
+      "悬念钩子: 黑衣人在暗巷提前设伏",
+    );
+  });
+});
+
+describe("parseCharacterProfilesMarkdown", () => {
+  it("兼容人物档案模板里的扩展角色标题与四级角色标题", () => {
+    const profiles = parseCharacterProfilesMarkdown(
+      CHARACTER_TEMPLATE_VARIANT_FIXTURE,
+    );
+
+    expect(profiles).toHaveLength(3);
+    expect(profiles[0]).toMatchObject({
+      name: "林云",
+      role: "主角",
+    });
+    expect(profiles[0].summary).toContain("年龄/职业");
+    expect(profiles[0].summary).toContain("背景故事");
+    expect(profiles[1]).toMatchObject({
+      name: "黑衣人",
+      role: "反派",
+    });
+    expect(profiles[2]).toMatchObject({
+      name: "长老",
+      role: "配角",
+    });
   });
 });
 

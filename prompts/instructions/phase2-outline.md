@@ -6,5 +6,9 @@
 - 包含「全书悬念线」与「章节摘要」占位区
 - 每章目标正文 3000-8000 字
 - 章首引子类型须从 hook-techniques 七式中选取；悬念钩子须具体可写
+- 输出结构必须严格对齐下方模板，不要改标题层级，不要省略章节表
+
+模板：
+{{outlineTemplate}}
 
 题材：{{genre}}；主角：{{protagonist}}；冲突：{{conflict}}；章节数：{{chapterCount}}

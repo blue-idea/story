@@ -4,7 +4,7 @@ import type {
   CustomConfig,
 } from "../../db/schema";
 import { createDefaultLLMClient } from "../llm";
-import { getSystem, renderInstruction } from "../prompts";
+import { getSystem, loadTemplate, renderInstruction } from "../prompts";
 import { parseChaptersFromOutline, type ParsedChapter } from "./parse-outline";
 
 /** Q1-Q8 配置（对齐 novels.core_config / custom_config） */
@@ -61,25 +61,105 @@ export function parseCharacterProfilesMarkdown(
   markdown: string,
 ): CharacterProfile[] {
   const profiles: CharacterProfile[] = [];
-  const sectionPattern = /##\s*(主角|反派|配角)\s*\n([\s\S]*?)(?=\n##\s|$)/g;
+  const lines = markdown.split(/\r?\n/);
+  let currentRole: CharacterProfile["role"] | null = null;
+  let currentName: string | null = null;
+  let currentSummary: string[] = [];
 
-  let sectionMatch: RegExpExecArray | null;
-  while ((sectionMatch = sectionPattern.exec(markdown)) !== null) {
-    const roleLabel = sectionMatch[1];
-    const body = sectionMatch[2];
-    const namePattern = /###\s*(.+?)\s*\n([\s\S]*?)(?=###\s*|\n##\s|$)/g;
-
-    let nameMatch: RegExpExecArray | null;
-    while ((nameMatch = namePattern.exec(body)) !== null) {
-      profiles.push({
-        name: nameMatch[1].trim(),
-        role: roleLabel,
-        summary: nameMatch[2].trim(),
-      });
+  const pushCurrentProfile = () => {
+    if (!currentRole || !currentName) {
+      currentSummary = [];
+      return;
     }
+
+    profiles.push({
+      name: currentName,
+      role: currentRole,
+      summary: currentSummary.join("\n").trim(),
+    });
+    currentSummary = [];
+  };
+
+  for (const line of lines) {
+    const headingMatch = line.match(/^(#{2,4})\s*(.+?)\s*$/);
+    if (!headingMatch) {
+      if (currentName) {
+        currentSummary.push(line);
+      }
+      continue;
+    }
+
+    const level = headingMatch[1].length;
+    const headingText = normalizeHeadingText(headingMatch[2]);
+
+    if (level === 2) {
+      pushCurrentProfile();
+      currentName = null;
+      currentRole = resolveRoleLabel(headingText);
+      continue;
+    }
+
+    const inlineRoleHeading = parseInlineRoleHeading(headingText);
+    const nextRole = inlineRoleHeading?.role ?? currentRole;
+    const nextName =
+      inlineRoleHeading?.name ?? sanitizeProfileName(headingText);
+
+    if (!nextRole || !nextName) {
+      continue;
+    }
+
+    pushCurrentProfile();
+    currentRole = nextRole;
+    currentName = nextName;
   }
 
+  pushCurrentProfile();
   return profiles;
+}
+
+function normalizeHeadingText(value: string): string {
+  return value.replace(/[*_`]/g, "").trim();
+}
+
+function resolveRoleLabel(value: string): CharacterProfile["role"] | null {
+  if (value.includes("主角")) {
+    return "主角";
+  }
+  if (value.includes("反派")) {
+    return "反派";
+  }
+  if (value.includes("配角")) {
+    return "配角";
+  }
+  return null;
+}
+
+function sanitizeProfileName(value: string): string {
+  return value
+    .replace(/^角色\s*/u, "")
+    .replace(/^\[([^\]]+)\]$/u, "$1")
+    .replace(/^\s*[【(（]\s*/u, "")
+    .replace(/\s*[】)）]\s*$/u, "")
+    .replace(/\s*[（(](主角|反派|配角)[)）]\s*$/u, "")
+    .replace(/\s*[/|｜·-]\s*(主角|反派|配角)\s*$/u, "")
+    .trim();
+}
+
+function parseInlineRoleHeading(
+  value: string,
+): { role: CharacterProfile["role"]; name: string } | null {
+  const match = value.match(/^(主角|反派|配角)\s*[:：-]\s*(.+)$/u);
+  if (!match?.[1] || !match[2]) {
+    return null;
+  }
+
+  const role = resolveRoleLabel(match[1]);
+  const name = sanitizeProfileName(match[2]);
+  if (!role || !name) {
+    return null;
+  }
+
+  return { role, name };
 }
 
 /** Phase 1 Layer 3：候选标题（phase1-title） */
@@ -100,10 +180,10 @@ export async function generateOutline(
   input: PlannerInputWithTitle,
 ): Promise<string> {
   const llm = createDefaultLLMClient();
-  const prompt = renderInstruction(
-    "phase2-outline",
-    buildOutlineContext(input),
-  );
+  const prompt = renderInstruction("phase2-outline", {
+    ...buildOutlineContext(input),
+    outlineTemplate: loadTemplate("outline"),
+  });
   return llm.generateText({
     prompt,
     systemInstruction: getSystem("editor"),
@@ -120,6 +200,7 @@ export async function generateCharacterProfiles(
     outlineSummary: outline,
     genre: input.coreConfig.genre,
     protagonist: input.coreConfig.protagonist,
+    characterTemplate: loadTemplate("character"),
   });
   const responseText = await llm.generateText({
     prompt,
