@@ -209,6 +209,59 @@ export async function generateCharacterProfiles(
   return parseCharacterProfilesMarkdown(responseText);
 }
 
+/** Phase 2 第 1 次 LLM：完整 7 列大纲的流式生成 */
+export async function* generateOutlineStream(
+  input: PlannerInputWithTitle,
+): AsyncGenerator<
+  { type: "chunk"; content: string } | { type: "done"; content: string },
+  void,
+  unknown
+> {
+  const llm = createDefaultLLMClient();
+  const prompt = renderInstruction("phase2-outline", {
+    ...buildOutlineContext(input),
+    outlineTemplate: loadTemplate("outline"),
+  });
+  let fullText = "";
+  for await (const chunk of llm.generateStream({
+    prompt,
+    systemInstruction: getSystem("editor"),
+  })) {
+    fullText += chunk;
+    yield { type: "chunk", content: chunk };
+  }
+  yield { type: "done", content: fullText };
+}
+
+/** Phase 2 第 2 次 LLM：人物档案的流式生成（依赖 outline） */
+export async function* generateCharacterProfilesStream(
+  input: PlannerInputWithTitle,
+  outline: string,
+): AsyncGenerator<
+  | { type: "chunk"; content: string }
+  | { type: "done"; content: CharacterProfile[] },
+  void,
+  unknown
+> {
+  const llm = createDefaultLLMClient();
+  const prompt = renderInstruction("phase2-characters", {
+    outlineSummary: outline,
+    genre: input.coreConfig.genre,
+    protagonist: input.coreConfig.protagonist,
+    characterTemplate: loadTemplate("character"),
+  });
+  let fullText = "";
+  for await (const chunk of llm.generateStream({
+    prompt,
+    systemInstruction: getSystem("editor"),
+  })) {
+    fullText += chunk;
+    yield { type: "chunk", content: chunk };
+  }
+  const profiles = parseCharacterProfilesMarkdown(fullText);
+  yield { type: "done", content: profiles };
+}
+
 /**
  * Phase 2 完整规划：先 outline → 再 characters → 解析 chapters
  */

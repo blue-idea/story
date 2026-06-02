@@ -1407,3 +1407,177 @@ textarea {
     box-shadow: 0 16px 34px rgba(56, 189, 248, 0.34);
   }
 }
+
+/* 规划大纲/人设终端自定义样式 */
+.wizard-planning-terminal {
+  display: grid;
+  gap: 1.5rem;
+  background: linear-gradient(
+    160deg,
+    rgba(15, 23, 42, 0.95),
+    rgba(30, 41, 59, 0.9)
+  );
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 0 0 40px rgba(56, 189, 248, 0.15);
+}
+
+.wizard-terminal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
+  padding-bottom: 1.1rem;
+}
+
+.terminal-progress-section {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.terminal-progress-bar-bg {
+  height: 0.7rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.terminal-progress-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #38bdf8 0%, #4f46e5 100%);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.6);
+}
+
+.terminal-progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.88rem;
+  color: rgba(148, 163, 184, 0.95);
+}
+
+.terminal-progress-labels strong {
+  color: #38bdf8;
+  text-shadow: 0 0 8px rgba(56, 189, 248, 0.3);
+}
+
+.terminal-workspace-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1.25rem;
+}
+
+.terminal-preview-surface {
+  border-radius: 1.15rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(2, 6, 23, 0.68);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.terminal-preview-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.85);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  padding-bottom: 0.45rem;
+}
+
+.terminal-preview-text {
+  margin: 0;
+  min-height: 18rem;
+  max-height: 24rem;
+  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.terminal-log-panel {
+  border-radius: 1.15rem;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(2, 6, 23, 0.8);
+  padding: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.terminal-log-header {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(148, 163, 184, 0.85);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  padding-bottom: 0.45rem;
+}
+
+.terminal-log-rows {
+  margin: 0;
+  min-height: 18rem;
+  max-height: 24rem;
+  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.terminal-log-row {
+  margin: 0;
+  word-break: break-all;
+}
+
+.log-time {
+  color: #64748b;
+}
+
+.log-info {
+  color: #e2e8f0;
+}
+
+.log-success {
+  color: #34d399;
+}
+
+.log-error {
+  color: #f87171;
+  text-shadow: 0 0 6px rgba(248, 113, 113, 0.2);
+}
+
+.log-blink {
+  color: #38bdf8;
+  opacity: 0.85;
+}
+
+.dot-blink {
+  display: inline-block;
+  animation: log-dot-blink 1.4s infinite;
+}
+
+@keyframes log-dot-blink {
+  0%,
+  100% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.terminal-error-retry {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+}

@@ -5,13 +5,20 @@ import {
   type WizardQuestionId,
 } from "../../config/novel";
 import type {
+  CharacterProfile,
   CoreConfig,
   CustomConfig,
   UserPreferencesPayload,
 } from "../../db/schema";
 import { createDefaultLLMClient } from "../llm";
 import { getSystem, renderInstruction } from "../prompts";
-import { generateCandidateTitles, runPhase2Planning } from "../writer/planner";
+import {
+  generateCandidateTitles,
+  runPhase2Planning,
+  generateOutlineStream,
+  generateCharacterProfilesStream,
+  parseChaptersFromOutline,
+} from "../writer/planner";
 import { NotFoundError, ValidationError } from "./errors";
 import {
   createNovelDraft,
@@ -317,6 +324,97 @@ export async function confirmWizardTitle(input: {
   return {
     novelId: updated.id,
     status: updated.status,
+  };
+}
+
+export async function* confirmWizardTitleStream(input: {
+  userId: string;
+  novelId: string;
+  title: string;
+}) {
+  const title = normalizeText(input.title);
+  if (!title) {
+    throw new ValidationError("Invalid title");
+  }
+
+  const novel = await requireOwnedNovel(input.userId, input.novelId);
+  ensureDraftStatus(novel.status);
+
+  yield { event: "init", data: { message: "开始规划故事结构..." } };
+
+  // 更新标题和状态
+  const updated = await updateNovelTitleAndStatus(
+    input.novelId,
+    title,
+    "planning",
+  );
+
+  yield {
+    event: "outline_start",
+    data: { message: "正在生成小说章节大纲..." },
+  };
+
+  let outline = "";
+  const outlineGen = generateOutlineStream({
+    coreConfig: novel.coreConfig,
+    customConfig: novel.customConfig,
+    title,
+  });
+
+  for await (const step of outlineGen) {
+    if (step.type === "chunk") {
+      outline += step.content;
+      yield { event: "outline_chunk", data: { chunk: step.content } };
+    }
+  }
+
+  yield {
+    event: "outline_complete",
+    data: { message: "大纲起草完成！", outline },
+  };
+  yield {
+    event: "characters_start",
+    data: { message: "正在根据大纲塑造人物档案..." },
+  };
+
+  let characterProfiles: CharacterProfile[] = [];
+  const charGen = generateCharacterProfilesStream(
+    {
+      coreConfig: novel.coreConfig,
+      customConfig: novel.customConfig,
+      title,
+    },
+    outline,
+  );
+
+  for await (const step of charGen) {
+    if (step.type === "chunk") {
+      yield { event: "characters_chunk", data: { chunk: step.content } };
+    } else if (step.type === "done") {
+      characterProfiles = step.content;
+    }
+  }
+
+  yield {
+    event: "characters_complete",
+    data: { message: "人物档案生成完毕！", characters: characterProfiles },
+  };
+  yield {
+    event: "save_start",
+    data: { message: "正在持久化故事大纲与人物档案..." },
+  };
+
+  const chapters = parseChaptersFromOutline(outline);
+  await saveNovelPlan(input.novelId, {
+    outline,
+    characterProfiles,
+    chapters,
+  });
+
+  yield { event: "save_complete", data: { message: "故事规划已成功落库！" } };
+  yield {
+    event: "complete",
+    data: { novelId: updated.id, status: updated.status },
   };
 }
 
