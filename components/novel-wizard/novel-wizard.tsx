@@ -5,19 +5,32 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  LAYER1_GENRE_OPTIONS,
-  LAYER2_AUDIENCE_OPTIONS,
-  LAYER2_CHAPTER_OPTIONS,
-  LAYER2_PERSPECTIVE_OPTIONS,
-  LAYER2_THEME_OPTIONS,
-  LAYER2_TONE_OPTIONS,
+  getProfessionOptionsByGenre,
+  getStyleReferenceOptionsByGenre,
+  getWorldDetailOptionsByGenre,
+  LAYER1_Q1_GENRE_OPTIONS,
+  LAYER1_Q2_PERSONALITY_OPTIONS,
+  LAYER1_Q2_TYPE_OPTIONS,
+  LAYER1_Q3_CONFLICT_OPTIONS,
+  LAYER1_Q3_DRIVE_OPTIONS,
+  LAYER2_Q4_WORLD_OPTIONS,
+  LAYER2_Q5_PERSPECTIVE_OPTIONS,
+  LAYER2_Q5_TONE_OPTIONS,
+  LAYER2_Q6_THEME_OPTIONS,
+  LAYER2_Q7_AUDIENCE_OPTIONS,
+  LAYER2_Q8_CHAPTER_OPTIONS,
+  LAYER2_Q8_SPECIAL_REQUIREMENT_OPTIONS,
+  QA_CANDIDATE_TITLES,
+  TITLE_RETRY_HINT_THRESHOLD,
+  WIZARD_CUSTOM_CHAPTER_VALUE,
+  WIZARD_FREE_TEXT_VALUE,
+  WIZARD_RANDOM_VALUE,
 } from "../../config/wizard-ui";
 import type { UserPreferencesPayload } from "../../db/schema";
 import {
   confirmWizardConfigRequest,
   confirmWizardTitleRequest,
   createWizardDraftRequest,
-  requestWizardSuggestion,
   requestWizardTitles,
   updateWizardDraftRequest,
 } from "../../lib/novels/wizard-api-client";
@@ -25,12 +38,16 @@ import {
   applyLayer1Answer,
   applyLayer2Answer,
   buildLayer1Summary,
+  buildReviewSummary,
+  buildCustomConfigFromLayer2Answers,
   createWizardUiState,
   enterLayer2,
   jumpToChapterCount,
   markConfigConfirmed,
   skipLayer2Question,
   sortOptionsByPreference,
+  type Layer1Answers,
+  type Layer2Answers,
 } from "../../lib/novels/wizard-ui-state";
 
 type NovelWizardProps = {
@@ -39,26 +56,157 @@ type NovelWizardProps = {
   qaNextHref?: string;
 };
 
-type Layer2AnswerState = {
-  q4: string;
-  q5Perspective: string;
-  q5Tone: string;
-  q6: string;
-  q7: string;
-  q8: string;
+type Layer1DraftState = Layer1Answers & {
+  q2TypeCustom: string;
+  q2PersonalityCustom: string;
+  q3ConflictCustom: string;
+  q3DriveCustom: string;
 };
 
-const INITIAL_LAYER2_ANSWERS: Layer2AnswerState = {
-  q4: "",
-  q5Perspective: "",
-  q5Tone: "",
-  q6: "",
-  q7: "",
-  q8: "",
+type Layer2DraftState = Layer2Answers & {
+  q4WorldCustom: string;
+  q5PerspectiveCustom: string;
+  q5ToneCustom: string;
+  q6ThemeCustom: string;
+  q7AudienceCustom: string;
+  q8ChapterCustom: string;
+  q8SpecialRequirementOption: string;
 };
+
+const INITIAL_LAYER1_DRAFT: Layer1DraftState = {
+  q1Genre: "",
+  q1Idea: "",
+  q2Type: "",
+  q2TypeCustom: "",
+  q2Profession: "",
+  q2Personality: "",
+  q2PersonalityCustom: "",
+  q2Supporting: "",
+  q3Conflict: "",
+  q3ConflictCustom: "",
+  q3Drive: "",
+  q3DriveCustom: "",
+};
+
+const INITIAL_LAYER2_DRAFT: Layer2DraftState = {
+  q4World: "",
+  q4WorldCustom: "",
+  q4Details: "",
+  q5Perspective: "",
+  q5PerspectiveCustom: "",
+  q5Tone: "",
+  q5ToneCustom: "",
+  q6Theme: "",
+  q6ThemeCustom: "",
+  q7Audience: "",
+  q7AudienceCustom: "",
+  q7StyleReference: "",
+  q8ChapterCount: "",
+  q8ChapterCustom: "",
+  q8SpecialRequirementOption: "",
+  q8SpecialRequirements: "",
+};
+
+const TITLE_TECHNIQUES = [
+  "意象锚点",
+  "冲突直指",
+  "悬念提问",
+  "命运反差",
+  "世界观切口",
+];
 
 function requestFailedMessage() {
-  return "请求失败，请重试。";
+  return "Request failed. Please try again.";
+}
+
+function requireAnswerMessage() {
+  return "Please answer the current question.";
+}
+
+function resolveSelectableValue(selectedValue: string, customValue = "") {
+  if (selectedValue === WIZARD_FREE_TEXT_VALUE) {
+    return customValue.trim();
+  }
+
+  return selectedValue.trim();
+}
+
+function parseCustomChapterCount(value: string) {
+  const parsed = Number.parseInt(value.trim(), 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+}
+
+function buildRandomChoice(
+  step: string,
+  draft: Layer1DraftState & Layer2DraftState,
+) {
+  const genre = draft.q1Genre;
+
+  if (step === "q4-world") {
+    if (genre.includes("科幻")) {
+      return "未来/科幻世界（科技水平、社会结构特殊）";
+    }
+    if (genre.includes("奇幻")) {
+      return "完全虚构世界（需自建规则体系，如魔法/修真体系）";
+    }
+    if (genre.includes("武侠") || genre.includes("历史")) {
+      return "架空历史（特定朝代或虚构朝代）";
+    }
+    return "现实世界（当代中国或其他现实背景）";
+  }
+
+  if (step === "q4-details") {
+    return getWorldDetailOptionsByGenre(genre)[0] ?? "社会规则如何运转";
+  }
+
+  if (step === "q5-perspective") {
+    return "第三人称限制视角（跟随主角的所见所感）";
+  }
+
+  if (step === "q5-tone") {
+    return draft.q5Tone || "紧张刺激（快节奏、高冲突、悬念驱动）";
+  }
+
+  if (step === "q6-theme") {
+    if (draft.q3Conflict.includes("复仇")) {
+      return "正义与复仇（善恶对决、伸张正义）";
+    }
+    if (draft.q3Conflict.includes("生死")) {
+      return "生存与希望（绝境中的人性光辉）";
+    }
+    return "成长与蜕变（主角的内在变化是核心）";
+  }
+
+  if (step === "q7-audience") {
+    if (genre.includes("科幻") || genre.includes("悬疑")) {
+      return "成熟读者（偏好深度、文学性、思想性）";
+    }
+    return "大众读者（番茄小说/网络文学受众，追求爽感和代入感）";
+  }
+
+  if (step === "q7-style-reference") {
+    return getStyleReferenceOptionsByGenre(genre)[0] ?? "东野圭吾";
+  }
+
+  if (step === "q8-chapter-count") {
+    return "20章（中篇，约6-10万字）⭐";
+  }
+
+  if (step === "q8-special-requirements") {
+    return "没有特殊要求，按标准来";
+  }
+
+  return "";
+}
+
+function buildTitleDescription(title: string, index: number, genre: string) {
+  const technique =
+    TITLE_TECHNIQUES[index % TITLE_TECHNIQUES.length] ?? "意象锚点";
+  return {
+    title,
+    technique,
+    explanation: `使用${technique}强化${genre || "故事"}识别度，让标题更容易承接已选冲突与基调。`,
+  };
 }
 
 export function NovelWizard({
@@ -71,14 +219,10 @@ export function NovelWizard({
   const [draftId, setDraftId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [suggestion, setSuggestion] = useState<string | null>(null);
-  const [coreAnswers, setCoreAnswers] = useState({
-    q1: "",
-    q2: "",
-    q3: "",
-  });
-  const [layer2Answers, setLayer2Answers] = useState<Layer2AnswerState>(
-    INITIAL_LAYER2_ANSWERS,
-  );
+  const [layer1Draft, setLayer1Draft] =
+    useState<Layer1DraftState>(INITIAL_LAYER1_DRAFT);
+  const [layer2Draft, setLayer2Draft] =
+    useState<Layer2DraftState>(INITIAL_LAYER2_DRAFT);
   const [candidateTitles, setCandidateTitles] = useState<string[]>([]);
   const [selectedTitle, setSelectedTitle] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -86,7 +230,7 @@ export function NovelWizard({
   const sortedGenreOptions = useMemo(
     () =>
       sortOptionsByPreference(
-        LAYER1_GENRE_OPTIONS,
+        LAYER1_Q1_GENRE_OPTIONS,
         initialPreferences.preferredGenres,
       ),
     [initialPreferences.preferredGenres],
@@ -94,45 +238,206 @@ export function NovelWizard({
 
   const sortedToneOptions = useMemo(() => {
     if (!initialPreferences.defaultTone) {
-      return LAYER2_TONE_OPTIONS.map((option) => ({
+      return LAYER2_Q5_TONE_OPTIONS.map((option) => ({
         ...option,
         starred: false,
       }));
     }
 
-    return sortOptionsByPreference(LAYER2_TONE_OPTIONS, [
+    return sortOptionsByPreference(LAYER2_Q5_TONE_OPTIONS, [
       initialPreferences.defaultTone,
     ]);
   }, [initialPreferences.defaultTone]);
 
   const sortedChapterOptions = useMemo(() => {
     if (!initialPreferences.defaultChapterCount) {
-      return LAYER2_CHAPTER_OPTIONS.map((option) => ({
+      return LAYER2_Q8_CHAPTER_OPTIONS.map((option) => ({
         ...option,
         starred: false,
       }));
     }
 
-    return sortOptionsByPreference(LAYER2_CHAPTER_OPTIONS, [
+    return sortOptionsByPreference(LAYER2_Q8_CHAPTER_OPTIONS, [
       String(initialPreferences.defaultChapterCount),
     ]);
   }, [initialPreferences.defaultChapterCount]);
 
-  const currentStep = wizardState.step;
+  const titleCards = useMemo(
+    () =>
+      candidateTitles.map((title, index) =>
+        buildTitleDescription(title, index, layer1Draft.q1Genre),
+      ),
+    [candidateTitles, layer1Draft.q1Genre],
+  );
 
-  function handleLayer1Submit(questionId: "q1" | "q2" | "q3", value: string) {
-    if (!value.trim()) {
-      setError("请填写答案。");
+  const professionOptions = useMemo(
+    () => getProfessionOptionsByGenre(layer1Draft.q1Genre),
+    [layer1Draft.q1Genre],
+  );
+
+  const worldDetailOptions = useMemo(
+    () => getWorldDetailOptionsByGenre(layer1Draft.q1Genre),
+    [layer1Draft.q1Genre],
+  );
+
+  const styleReferenceOptions = useMemo(
+    () => getStyleReferenceOptionsByGenre(layer1Draft.q1Genre),
+    [layer1Draft.q1Genre],
+  );
+
+  function updateLayer1Draft<K extends keyof Layer1DraftState>(
+    key: K,
+    value: Layer1DraftState[K],
+  ) {
+    setLayer1Draft((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  }
+
+  function updateLayer2Draft<K extends keyof Layer2DraftState>(
+    key: K,
+    value: Layer2DraftState[K],
+  ) {
+    setLayer2Draft((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  }
+
+  function applyRandomAnswer(step: string) {
+    const generated = buildRandomChoice(step, {
+      ...layer1Draft,
+      ...layer2Draft,
+    });
+
+    if (!generated) {
       return;
     }
 
+    setSuggestion(`已随机生成：${generated}`);
+
+    if (step === "q4-world") {
+      updateLayer2Draft("q4World", generated);
+    }
+    if (step === "q4-details") {
+      updateLayer2Draft("q4Details", generated);
+    }
+    if (step === "q5-perspective") {
+      updateLayer2Draft("q5Perspective", generated);
+    }
+    if (step === "q5-tone") {
+      updateLayer2Draft("q5Tone", generated);
+    }
+    if (step === "q6-theme") {
+      updateLayer2Draft("q6Theme", generated);
+    }
+    if (step === "q7-audience") {
+      updateLayer2Draft("q7Audience", generated);
+    }
+    if (step === "q7-style-reference") {
+      updateLayer2Draft("q7StyleReference", generated);
+    }
+    if (step === "q8-chapter-count") {
+      updateLayer2Draft("q8ChapterCount", generated);
+    }
+    if (step === "q8-special-requirements") {
+      updateLayer2Draft("q8SpecialRequirementOption", generated);
+      updateLayer2Draft("q8SpecialRequirements", generated);
+    }
+  }
+
+  function handleLayer1Submit() {
     setError(null);
     setSuggestion(null);
-    setCoreAnswers((prev) => ({
-      ...prev,
-      [questionId]: value,
-    }));
-    setWizardState((prev) => applyLayer1Answer(prev, questionId, value));
+
+    if (wizardState.step === "q1") {
+      const value = resolveSelectableValue(layer1Draft.q1Genre);
+      if (!value) {
+        setError(requireAnswerMessage());
+        return;
+      }
+      setWizardState((prev) => {
+        const next = applyLayer1Answer(prev, "q1", value);
+        next.layer1Answers.q1Idea = layer1Draft.q1Idea.trim();
+        next.coreConfig = {
+          ...next.coreConfig,
+          genre: `${value}${layer1Draft.q1Idea.trim() ? ` | 创意概要：${layer1Draft.q1Idea.trim()}` : ""}`,
+        };
+        return next;
+      });
+      return;
+    }
+
+    if (wizardState.step === "q2-type") {
+      const value = resolveSelectableValue(
+        layer1Draft.q2Type,
+        layer1Draft.q2TypeCustom,
+      );
+      if (!value) {
+        setError(requireAnswerMessage());
+        return;
+      }
+      setWizardState((prev) => applyLayer1Answer(prev, "q2-type", value));
+      return;
+    }
+
+    if (wizardState.step === "q2-profession") {
+      const value = layer1Draft.q2Profession.trim();
+      if (!value) {
+        setError(requireAnswerMessage());
+        return;
+      }
+      setWizardState((prev) => applyLayer1Answer(prev, "q2-profession", value));
+      return;
+    }
+
+    if (wizardState.step === "q2-personality") {
+      const value = resolveSelectableValue(
+        layer1Draft.q2Personality,
+        layer1Draft.q2PersonalityCustom,
+      );
+      if (!value) {
+        setError(requireAnswerMessage());
+        return;
+      }
+      setWizardState((prev) =>
+        applyLayer1Answer(prev, "q2-personality", value),
+      );
+      return;
+    }
+
+    if (wizardState.step === "q2-supporting") {
+      setWizardState((prev) =>
+        applyLayer1Answer(prev, "q2-supporting", layer1Draft.q2Supporting),
+      );
+      return;
+    }
+
+    if (wizardState.step === "q3-conflict") {
+      const value = resolveSelectableValue(
+        layer1Draft.q3Conflict,
+        layer1Draft.q3ConflictCustom,
+      );
+      if (!value) {
+        setError(requireAnswerMessage());
+        return;
+      }
+      setWizardState((prev) => applyLayer1Answer(prev, "q3-conflict", value));
+      return;
+    }
+
+    if (wizardState.step === "q3-drive") {
+      const value = resolveSelectableValue(
+        layer1Draft.q3Drive,
+        layer1Draft.q3DriveCustom,
+      );
+      if (!value) {
+        setError(requireAnswerMessage());
+        return;
+      }
+      setWizardState((prev) => applyLayer1Answer(prev, "q3-drive", value));
+    }
   }
 
   function handleEnterLayer2() {
@@ -149,11 +454,7 @@ export function NovelWizard({
         let activeDraftId = draftId;
 
         if (!activeDraftId) {
-          const draft = await createWizardDraftRequest({
-            genre: coreAnswers.q1,
-            protagonist: coreAnswers.q2,
-            conflict: coreAnswers.q3,
-          });
+          const draft = await createWizardDraftRequest(wizardState.coreConfig);
           activeDraftId = draft.novelId;
           setDraftId(activeDraftId);
         }
@@ -165,96 +466,172 @@ export function NovelWizard({
     });
   }
 
-  function handleSuggest() {
-    if (qaMode) {
-      setSuggestion("建议的写作方向：围绕一个紧迫的截止日期来强化冲突。");
+  async function persistLayer2Patch(step: string, value: string) {
+    if (!draftId) {
       return;
     }
 
-    if (!draftId || wizardState.phase !== "layer2") {
-      return;
-    }
-
-    const questionId = wizardState.step;
-    if (!["q4", "q5", "q6", "q7", "q8"].includes(questionId)) {
-      return;
-    }
-
-    startTransition(async () => {
-      setError(null);
-
-      try {
-        const response = await requestWizardSuggestion(draftId, questionId);
-        setSuggestion(response.suggestion);
-
-        if (questionId === "q4") {
-          setLayer2Answers((prev) => ({
-            ...prev,
-            q4: response.suggestion,
-          }));
-        }
-
-        if (questionId === "q6") {
-          setLayer2Answers((prev) => ({
-            ...prev,
-            q6: response.suggestion,
-          }));
-        }
-
-        if (questionId === "q7") {
-          setLayer2Answers((prev) => ({
-            ...prev,
-            q7: response.suggestion,
-          }));
-        }
-      } catch {
-        setError(requestFailedMessage());
+    if (step === "q4-world" || step === "q4-details") {
+      const customConfig = buildCustomConfigFromLayer2Answers({
+        ...wizardState.layer2Answers,
+        q4World:
+          step === "q4-world" ? value : wizardState.layer2Answers.q4World,
+        q4Details:
+          step === "q4-details" ? value : wizardState.layer2Answers.q4Details,
+      });
+      if (customConfig.worldbuilding) {
+        await updateWizardDraftRequest(draftId, {
+          worldbuilding: customConfig.worldbuilding,
+        });
       }
-    });
+      return;
+    }
+
+    if (step === "q5-perspective") {
+      await updateWizardDraftRequest(draftId, { perspective: value });
+      return;
+    }
+
+    if (step === "q5-tone") {
+      await updateWizardDraftRequest(draftId, { tone: value });
+      return;
+    }
+
+    if (step === "q6-theme") {
+      await updateWizardDraftRequest(draftId, { theme: value });
+      return;
+    }
+
+    if (step === "q7-audience" || step === "q7-style-reference") {
+      const customConfig = buildCustomConfigFromLayer2Answers({
+        ...wizardState.layer2Answers,
+        q7Audience:
+          step === "q7-audience" ? value : wizardState.layer2Answers.q7Audience,
+        q7StyleReference:
+          step === "q7-style-reference"
+            ? value
+            : wizardState.layer2Answers.q7StyleReference,
+      });
+      if (customConfig.audience) {
+        await updateWizardDraftRequest(draftId, {
+          audience: customConfig.audience,
+        });
+      }
+      return;
+    }
+
+    if (step === "q8-chapter-count") {
+      const matched = value.match(/\d+/);
+      const count = matched ? Number.parseInt(matched[0] ?? "", 10) : NaN;
+      if (Number.isFinite(count) && count > 0) {
+        await updateWizardDraftRequest(draftId, { chapterCount: count });
+      }
+    }
   }
 
   function handleLayer2Next() {
-    if (qaMode && wizardState.phase === "layer2") {
-      if (wizardState.step === "q4") {
-        setWizardState((prev) =>
-          applyLayer2Answer(prev, "q4", layer2Answers.q4),
-        );
-        return;
-      }
-
-      if (wizardState.step === "q5") {
-        setWizardState((prev) =>
-          applyLayer2Answer(
-            prev,
-            "q5",
-            layer2Answers.q5Perspective || layer2Answers.q5Tone,
-          ),
-        );
-        return;
-      }
-
-      if (wizardState.step === "q6") {
-        setWizardState((prev) =>
-          applyLayer2Answer(prev, "q6", layer2Answers.q6),
-        );
-        return;
-      }
-
-      if (wizardState.step === "q7") {
-        setWizardState((prev) =>
-          applyLayer2Answer(prev, "q7", layer2Answers.q7),
-        );
-        return;
-      }
-
-      if (wizardState.step === "q8") {
-        const chapterCount = Number.parseInt(layer2Answers.q8 || "20", 10);
-        setWizardState((prev) => applyLayer2Answer(prev, "q8", chapterCount));
-      }
+    if (wizardState.phase !== "layer2") {
       return;
     }
 
-    if (!draftId || wizardState.phase !== "layer2") {
+    const currentStep = wizardState.step;
+    let value = "";
+    let optional = false;
+
+    if (currentStep === "q4-world") {
+      value = resolveSelectableValue(
+        layer2Draft.q4World,
+        layer2Draft.q4WorldCustom,
+      );
+    }
+
+    if (currentStep === "q4-details") {
+      value = layer2Draft.q4Details.trim();
+      optional = true;
+    }
+
+    if (currentStep === "q5-perspective") {
+      value = resolveSelectableValue(
+        layer2Draft.q5Perspective,
+        layer2Draft.q5PerspectiveCustom,
+      );
+    }
+
+    if (currentStep === "q5-tone") {
+      value = resolveSelectableValue(
+        layer2Draft.q5Tone,
+        layer2Draft.q5ToneCustom,
+      );
+    }
+
+    if (currentStep === "q6-theme") {
+      value = resolveSelectableValue(
+        layer2Draft.q6Theme,
+        layer2Draft.q6ThemeCustom,
+      );
+    }
+
+    if (currentStep === "q7-audience") {
+      value = resolveSelectableValue(
+        layer2Draft.q7Audience,
+        layer2Draft.q7AudienceCustom,
+      );
+    }
+
+    if (currentStep === "q7-style-reference") {
+      value = layer2Draft.q7StyleReference.trim();
+      optional = true;
+    }
+
+    if (currentStep === "q8-chapter-count") {
+      if (layer2Draft.q8ChapterCount === WIZARD_CUSTOM_CHAPTER_VALUE) {
+        const count = parseCustomChapterCount(layer2Draft.q8ChapterCustom);
+        if (!count) {
+          setError("Please enter a valid chapter count.");
+          return;
+        }
+        value = `${count}章（自定义）`;
+      } else {
+        value = layer2Draft.q8ChapterCount.trim();
+      }
+    }
+
+    if (currentStep === "q8-special-requirements") {
+      value =
+        layer2Draft.q8SpecialRequirementOption === WIZARD_FREE_TEXT_VALUE
+          ? layer2Draft.q8SpecialRequirements.trim()
+          : layer2Draft.q8SpecialRequirements.trim() ||
+            layer2Draft.q8SpecialRequirementOption.trim();
+      optional = true;
+    }
+
+    if (!optional && !value) {
+      setError(requireAnswerMessage());
+      return;
+    }
+
+    if (qaMode) {
+      setError(null);
+      setWizardState((prev) =>
+        applyLayer2Answer(
+          prev,
+          currentStep as
+            | "q4-world"
+            | "q4-details"
+            | "q5-perspective"
+            | "q5-tone"
+            | "q6-theme"
+            | "q7-audience"
+            | "q7-style-reference"
+            | "q8-chapter-count"
+            | "q8-special-requirements",
+          value,
+        ),
+      );
+      return;
+    }
+
+    if (!draftId) {
       return;
     }
 
@@ -262,58 +639,23 @@ export function NovelWizard({
       setError(null);
 
       try {
-        if (wizardState.step === "q4") {
-          const value = layer2Answers.q4.trim();
-          if (value) {
-            await updateWizardDraftRequest(draftId, { worldbuilding: value });
-          }
-          setWizardState((prev) => applyLayer2Answer(prev, "q4", value));
-          return;
-        }
-
-        if (wizardState.step === "q5") {
-          const perspective = layer2Answers.q5Perspective.trim();
-          const tone = layer2Answers.q5Tone.trim();
-          await updateWizardDraftRequest(draftId, {
-            perspective,
-            tone,
-          });
-          setWizardState((prev) =>
-            applyLayer2Answer(prev, "q5", perspective || tone),
-          );
-          return;
-        }
-
-        if (wizardState.step === "q6") {
-          const value = layer2Answers.q6.trim();
-          if (value) {
-            await updateWizardDraftRequest(draftId, { theme: value });
-          }
-          setWizardState((prev) => applyLayer2Answer(prev, "q6", value));
-          return;
-        }
-
-        if (wizardState.step === "q7") {
-          const value = layer2Answers.q7.trim();
-          if (value) {
-            await updateWizardDraftRequest(draftId, { audience: value });
-          }
-          setWizardState((prev) => applyLayer2Answer(prev, "q7", value));
-          return;
-        }
-
-        if (wizardState.step === "q8") {
-          const chapterCount = Number.parseInt(layer2Answers.q8, 10);
-          if (Number.isFinite(chapterCount) && chapterCount > 0) {
-            await updateWizardDraftRequest(draftId, { chapterCount });
-            setWizardState((prev) =>
-              applyLayer2Answer(prev, "q8", chapterCount),
-            );
-            return;
-          }
-
-          setError("请输入有效的章节数。");
-        }
+        await persistLayer2Patch(currentStep, value);
+        setWizardState((prev) =>
+          applyLayer2Answer(
+            prev,
+            currentStep as
+              | "q4-world"
+              | "q4-details"
+              | "q5-perspective"
+              | "q5-tone"
+              | "q6-theme"
+              | "q7-audience"
+              | "q7-style-reference"
+              | "q8-chapter-count"
+              | "q8-special-requirements",
+            value,
+          ),
+        );
       } catch {
         setError(requestFailedMessage());
       }
@@ -326,8 +668,8 @@ export function NovelWizard({
       wizardState.phase === "layer2" &&
       wizardState.step === "config-review"
     ) {
-      setCandidateTitles(["霓虹子午线", "玻璃天空下的信号", "停电协议"]);
-      setSelectedTitle("霓虹子午线");
+      setCandidateTitles(QA_CANDIDATE_TITLES.slice(0, 3));
+      setSelectedTitle(QA_CANDIDATE_TITLES[0] ?? "");
       setWizardState((prev) => markConfigConfirmed(prev));
       return;
     }
@@ -355,6 +697,38 @@ export function NovelWizard({
     });
   }
 
+  function handleRegenerateTitles() {
+    if (qaMode) {
+      setCandidateTitles(QA_CANDIDATE_TITLES.slice(2, 5));
+      setSelectedTitle(QA_CANDIDATE_TITLES[2] ?? "");
+      setWizardState((prev) => ({
+        ...prev,
+        titleRegenerationCount: prev.titleRegenerationCount + 1,
+      }));
+      return;
+    }
+
+    if (!draftId) {
+      return;
+    }
+
+    startTransition(async () => {
+      setError(null);
+
+      try {
+        const titles = await requestWizardTitles(draftId);
+        setCandidateTitles(titles.candidateTitles);
+        setSelectedTitle(titles.candidateTitles[0] ?? "");
+        setWizardState((prev) => ({
+          ...prev,
+          titleRegenerationCount: prev.titleRegenerationCount + 1,
+        }));
+      } catch {
+        setError(requestFailedMessage());
+      }
+    });
+  }
+
   function handleConfirmTitle() {
     if (qaMode) {
       if (qaNextHref) {
@@ -367,7 +741,7 @@ export function NovelWizard({
     }
 
     if (!draftId || !selectedTitle.trim()) {
-      setError("请先选择或输入一个标题。");
+      setError("Please choose or enter a title.");
       return;
     }
 
@@ -383,6 +757,24 @@ export function NovelWizard({
     });
   }
 
+  function renderOptionButton(
+    option: { label: string; value: string; starred?: boolean },
+    currentValue: string,
+    onSelect: (value: string) => void,
+  ) {
+    return (
+      <button
+        className={`wizard-option ${currentValue === option.value ? "wizard-option-active" : ""}`}
+        key={option.label}
+        onClick={() => onSelect(option.value)}
+        type="button"
+      >
+        <span>{option.label}</span>
+        {option.starred ? <small>★ 偏好推荐</small> : null}
+      </button>
+    );
+  }
+
   return (
     <main className="wizard-shell">
       <section className="wizard-frame">
@@ -394,82 +786,29 @@ export function NovelWizard({
 
         {wizardState.phase === "layer1" ? (
           <section className="wizard-card">
-            {currentStep === "q1" ? (
+            {wizardState.step === "q1" ? (
               <>
                 <h2>问题 1 / 3</h2>
-                <p className="wizard-label">题材分类</p>
+                <p className="wizard-question">你想要创作什么题材的小说？</p>
                 <div className="wizard-option-grid">
-                  {sortedGenreOptions.map((option) => (
-                    <button
-                      className={`wizard-option ${coreAnswers.q1 === option.value ? "wizard-option-active" : ""}`}
-                      key={option.value}
-                      onClick={() =>
-                        setCoreAnswers((prev) => ({
-                          ...prev,
-                          q1: option.value,
-                        }))
-                      }
-                      type="button"
-                    >
-                      <span>{option.label}</span>
-                      {option.starred ? <small>★ 偏好推荐</small> : null}
-                    </button>
-                  ))}
+                  {sortedGenreOptions.map((option) =>
+                    renderOptionButton(option, layer1Draft.q1Genre, (value) =>
+                      updateLayer1Draft("q1Genre", value),
+                    ),
+                  )}
                 </div>
-                <button
-                  className="wizard-primary"
-                  onClick={() => handleLayer1Submit("q1", coreAnswers.q1)}
-                  type="button"
-                >
-                  继续
-                </button>
-              </>
-            ) : null}
-
-            {currentStep === "q2" ? (
-              <>
-                <h2>问题 2 / 3</h2>
-                <p className="wizard-label">主角是谁？</p>
-                <input
-                  className="wizard-input"
-                  onChange={(event) =>
-                    setCoreAnswers((prev) => ({
-                      ...prev,
-                      q2: event.target.value,
-                    }))
-                  }
-                  placeholder="姓名、角色与身份背景"
-                  value={coreAnswers.q2}
-                />
-                <button
-                  className="wizard-primary"
-                  onClick={() => handleLayer1Submit("q2", coreAnswers.q2)}
-                  type="button"
-                >
-                  继续
-                </button>
-              </>
-            ) : null}
-
-            {currentStep === "q3" ? (
-              <>
-                <h2>问题 3 / 3</h2>
-                <p className="wizard-label">核心冲突是什么？</p>
                 <textarea
                   className="wizard-textarea"
                   onChange={(event) =>
-                    setCoreAnswers((prev) => ({
-                      ...prev,
-                      q3: event.target.value,
-                    }))
+                    updateLayer1Draft("q1Idea", event.target.value)
                   }
-                  placeholder="主要矛盾、危机与利益攸关点"
-                  rows={4}
-                  value={coreAnswers.q3}
+                  placeholder="创意概要（可选，选择自由描述时建议填写）"
+                  rows={3}
+                  value={layer1Draft.q1Idea}
                 />
                 <button
                   className="wizard-primary"
-                  onClick={() => handleLayer1Submit("q3", coreAnswers.q3)}
+                  onClick={handleLayer1Submit}
                   type="button"
                 >
                   继续
@@ -477,19 +816,224 @@ export function NovelWizard({
               </>
             ) : null}
 
-            {currentStep === "summary" ? (
+            {wizardState.step === "q2-type" ? (
               <>
-                <h2>第一阶段摘要</h2>
+                <h2>问题 2 / 3</h2>
+                <p className="wizard-question">主角是什么设定？</p>
+                <div className="wizard-option-grid">
+                  {LAYER1_Q2_TYPE_OPTIONS.map((option) =>
+                    renderOptionButton(option, layer1Draft.q2Type, (value) =>
+                      updateLayer1Draft("q2Type", value),
+                    ),
+                  )}
+                </div>
+                {layer1Draft.q2Type === WIZARD_FREE_TEXT_VALUE ? (
+                  <input
+                    className="wizard-input"
+                    onChange={(event) =>
+                      updateLayer1Draft("q2TypeCustom", event.target.value)
+                    }
+                    placeholder="输入你的自定义主角设定"
+                    value={layer1Draft.q2TypeCustom}
+                  />
+                ) : null}
+                <button
+                  className="wizard-primary"
+                  onClick={handleLayer1Submit}
+                  type="button"
+                >
+                  继续
+                </button>
+              </>
+            ) : null}
+
+            {wizardState.step === "q2-profession" ? (
+              <>
+                <h2>Q2 追问 1</h2>
+                <p className="wizard-question">
+                  主角的职业或身份是？（简短回答即可）
+                </p>
+                <div className="wizard-option-grid">
+                  {professionOptions.map((option) =>
+                    renderOptionButton(
+                      { label: option, value: option },
+                      layer1Draft.q2Profession,
+                      (value) => updateLayer1Draft("q2Profession", value),
+                    ),
+                  )}
+                </div>
+                <input
+                  className="wizard-input"
+                  onChange={(event) =>
+                    updateLayer1Draft("q2Profession", event.target.value)
+                  }
+                  placeholder="自由输入职业或身份"
+                  value={layer1Draft.q2Profession}
+                />
+                <button
+                  className="wizard-primary"
+                  onClick={handleLayer1Submit}
+                  type="button"
+                >
+                  继续
+                </button>
+              </>
+            ) : null}
+
+            {wizardState.step === "q2-personality" ? (
+              <>
+                <h2>Q2 追问 2</h2>
+                <p className="wizard-question">主角的核心性格是？</p>
+                <div className="wizard-option-grid">
+                  {LAYER1_Q2_PERSONALITY_OPTIONS.map((option) =>
+                    renderOptionButton(
+                      option,
+                      layer1Draft.q2Personality,
+                      (value) => updateLayer1Draft("q2Personality", value),
+                    ),
+                  )}
+                </div>
+                {layer1Draft.q2Personality === WIZARD_FREE_TEXT_VALUE ? (
+                  <input
+                    className="wizard-input"
+                    onChange={(event) =>
+                      updateLayer1Draft(
+                        "q2PersonalityCustom",
+                        event.target.value,
+                      )
+                    }
+                    placeholder="输入自定义性格描述"
+                    value={layer1Draft.q2PersonalityCustom}
+                  />
+                ) : null}
+                <button
+                  className="wizard-primary"
+                  onClick={handleLayer1Submit}
+                  type="button"
+                >
+                  继续
+                </button>
+              </>
+            ) : null}
+
+            {wizardState.step === "q2-supporting" ? (
+              <>
+                <h2>Q2 追问 3</h2>
+                <p className="wizard-question">
+                  有没有已经想好的关键配角？比如对手、盟友、恋人？（可跳过）
+                </p>
+                <textarea
+                  className="wizard-textarea"
+                  onChange={(event) =>
+                    updateLayer1Draft("q2Supporting", event.target.value)
+                  }
+                  placeholder="可选填写关键配角或关系网络"
+                  rows={3}
+                  value={layer1Draft.q2Supporting}
+                />
+                <div className="wizard-action-row">
+                  <button
+                    className="wizard-ghost"
+                    onClick={() => updateLayer1Draft("q2Supporting", "")}
+                    type="button"
+                  >
+                    清空
+                  </button>
+                  <button
+                    className="wizard-primary"
+                    onClick={handleLayer1Submit}
+                    type="button"
+                  >
+                    继续
+                  </button>
+                </div>
+              </>
+            ) : null}
+
+            {wizardState.step === "q3-conflict" ? (
+              <>
+                <h2>问题 3 / 3</h2>
+                <p className="wizard-question">小说的核心冲突是什么？</p>
+                <div className="wizard-option-grid">
+                  {LAYER1_Q3_CONFLICT_OPTIONS.map((option) =>
+                    renderOptionButton(
+                      option,
+                      layer1Draft.q3Conflict,
+                      (value) => updateLayer1Draft("q3Conflict", value),
+                    ),
+                  )}
+                </div>
+                {layer1Draft.q3Conflict === WIZARD_FREE_TEXT_VALUE ? (
+                  <textarea
+                    className="wizard-textarea"
+                    onChange={(event) =>
+                      updateLayer1Draft("q3ConflictCustom", event.target.value)
+                    }
+                    placeholder="输入自定义核心冲突"
+                    rows={3}
+                    value={layer1Draft.q3ConflictCustom}
+                  />
+                ) : null}
+                <button
+                  className="wizard-primary"
+                  onClick={handleLayer1Submit}
+                  type="button"
+                >
+                  继续
+                </button>
+              </>
+            ) : null}
+
+            {wizardState.step === "q3-drive" ? (
+              <>
+                <h2>Q3 追问</h2>
+                <p className="wizard-question">
+                  是什么推动主角不断向前？主角的内在驱动力是什么？
+                </p>
+                <div className="wizard-option-grid">
+                  {LAYER1_Q3_DRIVE_OPTIONS.map((option) =>
+                    renderOptionButton(option, layer1Draft.q3Drive, (value) =>
+                      updateLayer1Draft("q3Drive", value),
+                    ),
+                  )}
+                </div>
+                {layer1Draft.q3Drive === WIZARD_FREE_TEXT_VALUE ? (
+                  <textarea
+                    className="wizard-textarea"
+                    onChange={(event) =>
+                      updateLayer1Draft("q3DriveCustom", event.target.value)
+                    }
+                    placeholder="输入自定义驱动力"
+                    rows={3}
+                    value={layer1Draft.q3DriveCustom}
+                  />
+                ) : null}
+                <button
+                  className="wizard-primary"
+                  onClick={handleLayer1Submit}
+                  type="button"
+                >
+                  完成第一层
+                </button>
+              </>
+            ) : null}
+
+            {wizardState.step === "summary" ? (
+              <>
+                <h2>第一层完成</h2>
                 <pre className="wizard-summary">
-                  {buildLayer1Summary(wizardState.coreConfig)}
+                  {buildLayer1Summary(wizardState.layer1Answers)}
                 </pre>
+                <p className="wizard-info">
+                  核心定位已完成！接下来是深度定制环节（世界观、视角基调、主题、读者定位、章节数量等），每个问题都可以跳过或随机生成。准备好了吗？
+                </p>
                 <button
                   className="wizard-primary"
                   disabled={isPending}
                   onClick={handleEnterLayer2}
                   type="button"
                 >
-                  进入深度定制
+                  进入第二层
                 </button>
               </>
             ) : null}
@@ -498,176 +1042,311 @@ export function NovelWizard({
 
         {wizardState.phase === "layer2" ? (
           <section className="wizard-card">
-            <h2>第二阶段</h2>
-            <p className="wizard-label">深度定制</p>
+            <h2>第二层：深度定制与创作规格</h2>
+            <p className="wizard-label">
+              每个问题都支持跳过、随机生成或直接跳转到 Q8。
+            </p>
 
-            {wizardState.step === "q4" ? (
+            {wizardState.step === "q4-world" ? (
               <>
-                <p className="wizard-question">Q4. 世界观细节</p>
+                <p className="wizard-question">Q4. 故事发生在什么样的世界？</p>
+                <div className="wizard-option-grid">
+                  {LAYER2_Q4_WORLD_OPTIONS.map((option) =>
+                    renderOptionButton(option, layer2Draft.q4World, (value) => {
+                      if (value === WIZARD_RANDOM_VALUE) {
+                        applyRandomAnswer("q4-world");
+                        return;
+                      }
+                      updateLayer2Draft("q4World", value);
+                    }),
+                  )}
+                </div>
+                {layer2Draft.q4World === WIZARD_FREE_TEXT_VALUE ? (
+                  <textarea
+                    className="wizard-textarea"
+                    onChange={(event) =>
+                      updateLayer2Draft("q4WorldCustom", event.target.value)
+                    }
+                    placeholder="输入你的世界观设定"
+                    rows={3}
+                    value={layer2Draft.q4WorldCustom}
+                  />
+                ) : null}
+              </>
+            ) : null}
+
+            {wizardState.step === "q4-details" ? (
+              <>
+                <p className="wizard-question">
+                  Q4 追问：这个世界有什么独特的规则或设定要素？
+                </p>
+                <div className="wizard-option-grid">
+                  {worldDetailOptions.map((option) =>
+                    renderOptionButton(
+                      { label: option, value: option },
+                      layer2Draft.q4Details,
+                      (value) => updateLayer2Draft("q4Details", value),
+                    ),
+                  )}
+                  {renderOptionButton(
+                    {
+                      label: "暂时没想到，后面再定",
+                      value: "暂时没想到，后面再定",
+                    },
+                    layer2Draft.q4Details,
+                    (value) => updateLayer2Draft("q4Details", value),
+                  )}
+                </div>
                 <textarea
                   className="wizard-textarea"
                   onChange={(event) =>
-                    setLayer2Answers((prev) => ({
-                      ...prev,
-                      q4: event.target.value,
-                    }))
+                    updateLayer2Draft("q4Details", event.target.value)
                   }
-                  placeholder="选填，世界观设定"
-                  rows={4}
-                  value={layer2Answers.q4}
+                  placeholder="简单描述规则、设定要素或留空"
+                  rows={3}
+                  value={layer2Draft.q4Details}
                 />
               </>
             ) : null}
 
-            {wizardState.step === "q5" ? (
+            {wizardState.step === "q5-perspective" ? (
               <>
-                <p className="wizard-question">Q5. 视角与基调</p>
+                <p className="wizard-question">Q5A. 你希望用什么视角讲故事？</p>
                 <div className="wizard-option-grid">
-                  {LAYER2_PERSPECTIVE_OPTIONS.map((option) => (
-                    <button
-                      className={`wizard-option ${layer2Answers.q5Perspective === option.value ? "wizard-option-active" : ""}`}
-                      key={option.value}
-                      onClick={() =>
-                        setLayer2Answers((prev) => ({
-                          ...prev,
-                          q5Perspective: option.value,
-                        }))
-                      }
-                      type="button"
-                    >
-                      <span>{option.label}</span>
-                    </button>
-                  ))}
+                  {LAYER2_Q5_PERSPECTIVE_OPTIONS.map((option) =>
+                    renderOptionButton(
+                      option,
+                      layer2Draft.q5Perspective,
+                      (value) => {
+                        if (value === WIZARD_RANDOM_VALUE) {
+                          applyRandomAnswer("q5-perspective");
+                          return;
+                        }
+                        updateLayer2Draft("q5Perspective", value);
+                      },
+                    ),
+                  )}
                 </div>
-                <div className="wizard-option-grid">
-                  {sortedToneOptions.map((option) => (
-                    <button
-                      className={`wizard-option ${layer2Answers.q5Tone === option.value ? "wizard-option-active" : ""}`}
-                      key={option.value}
-                      onClick={() =>
-                        setLayer2Answers((prev) => ({
-                          ...prev,
-                          q5Tone: option.value,
-                        }))
-                      }
-                      type="button"
-                    >
-                      <span>{option.label}</span>
-                      {option.starred ? <small>★ 偏好推荐</small> : null}
-                    </button>
-                  ))}
-                </div>
+                {layer2Draft.q5Perspective === WIZARD_FREE_TEXT_VALUE ? (
+                  <input
+                    className="wizard-input"
+                    onChange={(event) =>
+                      updateLayer2Draft(
+                        "q5PerspectiveCustom",
+                        event.target.value,
+                      )
+                    }
+                    placeholder="输入自定义叙事视角"
+                    value={layer2Draft.q5PerspectiveCustom}
+                  />
+                ) : null}
               </>
             ) : null}
 
-            {wizardState.step === "q6" ? (
+            {wizardState.step === "q5-tone" ? (
               <>
-                <p className="wizard-question">Q6. 主题</p>
+                <p className="wizard-question">Q5B. 故事的氛围风格是？</p>
                 <div className="wizard-option-grid">
-                  {LAYER2_THEME_OPTIONS.map((option) => (
-                    <button
-                      className={`wizard-option ${layer2Answers.q6 === option.value ? "wizard-option-active" : ""}`}
-                      key={option.value}
-                      onClick={() =>
-                        setLayer2Answers((prev) => ({
-                          ...prev,
-                          q6: option.value,
-                        }))
+                  {sortedToneOptions.map((option) =>
+                    renderOptionButton(option, layer2Draft.q5Tone, (value) => {
+                      if (value === WIZARD_RANDOM_VALUE) {
+                        applyRandomAnswer("q5-tone");
+                        return;
                       }
-                      type="button"
-                    >
-                      <span>{option.label}</span>
-                    </button>
-                  ))}
+                      updateLayer2Draft("q5Tone", value);
+                    }),
+                  )}
                 </div>
+                {layer2Draft.q5Tone === WIZARD_FREE_TEXT_VALUE ? (
+                  <input
+                    className="wizard-input"
+                    onChange={(event) =>
+                      updateLayer2Draft("q5ToneCustom", event.target.value)
+                    }
+                    placeholder="输入自定义整体基调"
+                    value={layer2Draft.q5ToneCustom}
+                  />
+                ) : null}
               </>
             ) : null}
 
-            {wizardState.step === "q7" ? (
+            {wizardState.step === "q6-theme" ? (
               <>
-                <p className="wizard-question">Q7. 目标读者</p>
+                <p className="wizard-question">
+                  Q6. 这部小说最想表达的核心主题是什么？
+                </p>
                 <div className="wizard-option-grid">
-                  {LAYER2_AUDIENCE_OPTIONS.map((option) => (
-                    <button
-                      className={`wizard-option ${layer2Answers.q7 === option.value ? "wizard-option-active" : ""}`}
-                      key={option.value}
-                      onClick={() =>
-                        setLayer2Answers((prev) => ({
-                          ...prev,
-                          q7: option.value,
-                        }))
+                  {LAYER2_Q6_THEME_OPTIONS.map((option) =>
+                    renderOptionButton(option, layer2Draft.q6Theme, (value) => {
+                      if (value === WIZARD_RANDOM_VALUE) {
+                        applyRandomAnswer("q6-theme");
+                        return;
                       }
-                      type="button"
-                    >
-                      <span>{option.label}</span>
-                    </button>
-                  ))}
+                      updateLayer2Draft("q6Theme", value);
+                    }),
+                  )}
                 </div>
+                {layer2Draft.q6Theme === WIZARD_FREE_TEXT_VALUE ? (
+                  <textarea
+                    className="wizard-textarea"
+                    onChange={(event) =>
+                      updateLayer2Draft("q6ThemeCustom", event.target.value)
+                    }
+                    placeholder="输入自定义主题"
+                    rows={3}
+                    value={layer2Draft.q6ThemeCustom}
+                  />
+                ) : null}
               </>
             ) : null}
 
-            {wizardState.step === "q8" ? (
+            {wizardState.step === "q7-audience" ? (
               <>
-                <p className="wizard-question">Q8. 章节数</p>
+                <p className="wizard-question">Q7A. 主要写给谁看？</p>
                 <div className="wizard-option-grid">
-                  {sortedChapterOptions.map((option) => (
-                    <button
-                      className={`wizard-option ${layer2Answers.q8 === option.value ? "wizard-option-active" : ""}`}
-                      key={option.value}
-                      onClick={() =>
-                        setLayer2Answers((prev) => ({
-                          ...prev,
-                          q8: option.value,
-                        }))
-                      }
-                      type="button"
-                    >
-                      <span>{option.label}</span>
-                      {option.starred ? <small>★ 偏好推荐</small> : null}
-                    </button>
-                  ))}
+                  {LAYER2_Q7_AUDIENCE_OPTIONS.map((option) =>
+                    renderOptionButton(
+                      option,
+                      layer2Draft.q7Audience,
+                      (value) => {
+                        if (value === WIZARD_RANDOM_VALUE) {
+                          applyRandomAnswer("q7-audience");
+                          return;
+                        }
+                        updateLayer2Draft("q7Audience", value);
+                      },
+                    ),
+                  )}
                 </div>
+                {layer2Draft.q7Audience === WIZARD_FREE_TEXT_VALUE ? (
+                  <input
+                    className="wizard-input"
+                    onChange={(event) =>
+                      updateLayer2Draft("q7AudienceCustom", event.target.value)
+                    }
+                    placeholder="输入自定义目标读者"
+                    value={layer2Draft.q7AudienceCustom}
+                  />
+                ) : null}
+              </>
+            ) : null}
+
+            {wizardState.step === "q7-style-reference" ? (
+              <>
+                <p className="wizard-question">
+                  Q7B. 有没有想模仿的作者或参考作品？（可跳过）
+                </p>
+                <div className="wizard-option-grid">
+                  {styleReferenceOptions.map((option) =>
+                    renderOptionButton(
+                      { label: option, value: option },
+                      layer2Draft.q7StyleReference,
+                      (value) => updateLayer2Draft("q7StyleReference", value),
+                    ),
+                  )}
+                  {renderOptionButton(
+                    { label: "没有 / 不确定", value: "没有 / 不确定" },
+                    layer2Draft.q7StyleReference,
+                    (value) => updateLayer2Draft("q7StyleReference", value),
+                  )}
+                  {renderOptionButton(
+                    { label: "🎲 随机生成", value: WIZARD_RANDOM_VALUE },
+                    layer2Draft.q7StyleReference,
+                    (value) => {
+                      if (value === WIZARD_RANDOM_VALUE) {
+                        applyRandomAnswer("q7-style-reference");
+                      }
+                    },
+                  )}
+                </div>
+                <input
+                  className="wizard-input"
+                  onChange={(event) =>
+                    updateLayer2Draft("q7StyleReference", event.target.value)
+                  }
+                  placeholder="自由输入作者或参考作品"
+                  value={layer2Draft.q7StyleReference}
+                />
+              </>
+            ) : null}
+
+            {wizardState.step === "q8-chapter-count" ? (
+              <>
+                <p className="wizard-question">Q8A. 你计划创作多少章？</p>
+                <div className="wizard-option-grid">
+                  {sortedChapterOptions.map((option) =>
+                    renderOptionButton(
+                      option,
+                      layer2Draft.q8ChapterCount,
+                      (value) => updateLayer2Draft("q8ChapterCount", value),
+                    ),
+                  )}
+                </div>
+                {layer2Draft.q8ChapterCount === WIZARD_CUSTOM_CHAPTER_VALUE ? (
+                  <input
+                    className="wizard-input"
+                    onChange={(event) =>
+                      updateLayer2Draft("q8ChapterCustom", event.target.value)
+                    }
+                    placeholder="输入具体章节数"
+                    value={layer2Draft.q8ChapterCustom}
+                  />
+                ) : null}
+              </>
+            ) : null}
+
+            {wizardState.step === "q8-special-requirements" ? (
+              <>
+                <p className="wizard-question">
+                  Q8B. 有没有特殊要求？（均可跳过）
+                </p>
+                <div className="wizard-option-grid">
+                  {LAYER2_Q8_SPECIAL_REQUIREMENT_OPTIONS.map((option) =>
+                    renderOptionButton(
+                      option,
+                      layer2Draft.q8SpecialRequirementOption,
+                      (value) => {
+                        updateLayer2Draft("q8SpecialRequirementOption", value);
+                        if (value !== WIZARD_FREE_TEXT_VALUE) {
+                          updateLayer2Draft("q8SpecialRequirements", value);
+                        }
+                      },
+                    ),
+                  )}
+                </div>
+                <textarea
+                  className="wizard-textarea"
+                  onChange={(event) =>
+                    updateLayer2Draft(
+                      "q8SpecialRequirements",
+                      event.target.value,
+                    )
+                  }
+                  placeholder="补充描述特殊要求，可留空"
+                  rows={3}
+                  value={layer2Draft.q8SpecialRequirements}
+                />
               </>
             ) : null}
 
             {wizardState.step === "config-review" ? (
               <>
-                <h3>配置确认</h3>
-                <dl className="wizard-review-list">
-                  <div>
-                    <dt>世界观</dt>
-                    <dd>{layer2Answers.q4 || "将使用默认值"}</dd>
-                  </div>
-                  <div>
-                    <dt>视角</dt>
-                    <dd>{layer2Answers.q5Perspective || "将使用默认值"}</dd>
-                  </div>
-                  <div>
-                    <dt>基调</dt>
-                    <dd>{layer2Answers.q5Tone || "将使用默认值"}</dd>
-                  </div>
-                  <div>
-                    <dt>主题</dt>
-                    <dd>{layer2Answers.q6 || "将使用默认值"}</dd>
-                  </div>
-                  <div>
-                    <dt>目标读者</dt>
-                    <dd>{layer2Answers.q7 || "将使用默认值"}</dd>
-                  </div>
-                  <div>
-                    <dt>章节数</dt>
-                    <dd>{layer2Answers.q8 || "将使用默认值"}</dd>
-                  </div>
-                </dl>
+                <h3>创作配置确认</h3>
+                <pre className="wizard-summary">
+                  {buildReviewSummary(
+                    wizardState.layer1Answers,
+                    wizardState.layer2Answers,
+                  )}
+                </pre>
                 <div className="wizard-action-row">
                   <button
                     className="wizard-ghost"
                     onClick={() =>
-                      setWizardState((prev) => ({ ...prev, step: "q4" }))
+                      setWizardState((prev) => ({ ...prev, step: "q4-world" }))
                     }
                     type="button"
                   >
-                    修改设置
+                    我想修改某些设置
                   </button>
                   <button
                     className="wizard-primary"
@@ -675,7 +1354,7 @@ export function NovelWizard({
                     onClick={handleConfirmConfigAndTitles}
                     type="button"
                   >
-                    确认配置
+                    确认，开始规划和创作！
                   </button>
                 </div>
               </>
@@ -692,7 +1371,7 @@ export function NovelWizard({
                 </button>
                 <button
                   className="wizard-ghost"
-                  onClick={handleSuggest}
+                  onClick={() => applyRandomAnswer(wizardState.step)}
                   type="button"
                 >
                   随机生成
@@ -704,7 +1383,7 @@ export function NovelWizard({
                   }
                   type="button"
                 >
-                  跳转到 Q8
+                  直接进 Q8
                 </button>
                 <button
                   className="wizard-primary"
@@ -721,19 +1400,25 @@ export function NovelWizard({
 
         {wizardState.phase === "layer3" ? (
           <section className="wizard-card">
-            <h2>候选标题</h2>
+            <h2>第三层：标题生成</h2>
             <p className="wizard-label">
-              选择一个标题，或者输入您自己的自定义标题。
+              基于您的故事元素，以下是为您生成的候选标题，请选择：
             </p>
+            {wizardState.titleRegenerationCount > TITLE_RETRY_HINT_THRESHOLD ? (
+              <p className="wizard-info">
+                您已尝试多轮选择，也可以直接在下方输入您心中的标题。
+              </p>
+            ) : null}
             <div className="wizard-option-grid">
-              {candidateTitles.map((title) => (
+              {titleCards.map((item) => (
                 <button
-                  className={`wizard-option ${selectedTitle === title ? "wizard-option-active" : ""}`}
-                  key={title}
-                  onClick={() => setSelectedTitle(title)}
+                  className={`wizard-option ${selectedTitle === item.title ? "wizard-option-active" : ""}`}
+                  key={item.title}
+                  onClick={() => setSelectedTitle(item.title)}
                   type="button"
                 >
-                  <span>{title}</span>
+                  <span>{`《${item.title}》`}</span>
+                  <small>{`${item.technique}，${item.explanation}`}</small>
                 </button>
               ))}
             </div>
@@ -744,6 +1429,14 @@ export function NovelWizard({
               value={selectedTitle}
             />
             <div className="wizard-action-row">
+              <button
+                className="wizard-ghost"
+                disabled={isPending}
+                onClick={handleRegenerateTitles}
+                type="button"
+              >
+                重新生成一组新的候选标题
+              </button>
               <button
                 className="wizard-primary"
                 disabled={isPending}

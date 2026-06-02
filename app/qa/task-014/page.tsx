@@ -4,9 +4,9 @@ export default function Task014PreviewPage() {
   return (
     <NovelWizard
       initialPreferences={{
-        preferredGenres: ["Sci-Fi", "Thriller"],
-        defaultTone: "Noir",
-        defaultChapterCount: 24,
+        preferredGenres: ["科幻未来", "悬疑推理"],
+        defaultTone: "轻松幽默",
+        defaultChapterCount: 20,
       }}
       qaNextHref="/qa/task-019/plan"
       qaMode

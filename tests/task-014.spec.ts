@@ -46,16 +46,18 @@ describe("TASK-014 渐进式披露向导 UI", () => {
       expires: "9999-12-31T23:59:59.999Z",
     });
     getUserPreferencesMock.mockResolvedValueOnce({
-      preferredGenres: ["Sci-Fi"],
-      defaultTone: "Noir",
-      defaultChapterCount: 24,
+      preferredGenres: ["科幻未来"],
+      defaultTone: "轻松幽默",
+      defaultChapterCount: 20,
     });
 
     const pageModule = await import("../app/novel/new/page");
     const markup = renderToStaticMarkup(await pageModule.default());
 
     expect(markup).toContain("问题 1 / 3");
-    expect(markup).toContain("题材分类");
+    expect(markup).toContain("你想要创作什么题材的小说？");
+    expect(markup).toContain("悬疑推理（侦探、破案、解谜）");
+    expect(markup).toContain("⭐自由描述（我有明确的想法，让我自己说）");
     expect(markup).not.toContain("第二阶段");
     expect(markup).not.toContain("候选标题");
   });
@@ -66,5 +68,6 @@ describe("TASK-014 渐进式披露向导 UI", () => {
 
     expect(markup).toContain("小说创作向导");
     expect(markup).toContain("问题 1 / 3");
+    expect(markup).toContain("科幻未来（科技、太空、末世）");
   });
 });
