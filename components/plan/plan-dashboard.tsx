@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { ChapterOutlineCard } from "./chapter-outline-card";
 import { CharacterCard } from "./character-card";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type CharacterProfile = {
   name: string;
@@ -99,7 +101,9 @@ export function PlanDashboard({
             <p className="plan-kicker">完整大纲</p>
             <h2>故事结构</h2>
           </div>
-          <pre className="plan-outline-markdown">{outline}</pre>
+          <div className="plan-outline-markdown-container">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{outline}</ReactMarkdown>
+          </div>
         </article>
 
         <aside className="plan-side-stack">

@@ -201,15 +201,100 @@ textarea {
   letter-spacing: -0.03em;
 }
 
-.plan-outline-markdown {
+.plan-outline-markdown-container {
   margin: 0;
-  padding: 1rem;
+  padding: 1.25rem;
   border-radius: 1.2rem;
   background: var(--page-surface-strong);
   border: 1px solid rgba(148, 163, 184, 0.16);
-  white-space: pre-wrap;
+  overflow-x: auto;
+  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.02);
   line-height: 1.75;
-  overflow: auto;
+  color: var(--page-ink);
+}
+
+.plan-outline-markdown-container p {
+  margin: 0 0 1rem;
+}
+
+.plan-outline-markdown-container h1,
+.plan-outline-markdown-container h2,
+.plan-outline-markdown-container h3,
+.plan-outline-markdown-container h4 {
+  font-family: "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  margin: 1.6rem 0 0.8rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.plan-outline-markdown-container h1 {
+  font-size: 1.75rem;
+}
+
+.plan-outline-markdown-container h2 {
+  font-size: 1.45rem;
+  border-bottom: 1px solid var(--page-border);
+  padding-bottom: 0.35rem;
+}
+
+.plan-outline-markdown-container h3 {
+  font-size: 1.2rem;
+}
+
+/* 现代精美表格样式 */
+.plan-outline-markdown-container table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 1.4rem 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04);
+}
+
+.plan-outline-markdown-container th,
+.plan-outline-markdown-container td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+
+.plan-outline-markdown-container th {
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #f8fafc;
+  font-weight: 700;
+  border-bottom: 2px solid rgba(15, 23, 42, 0.15);
+}
+
+.plan-outline-markdown-container td {
+  background: rgba(255, 255, 255, 0.75);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.plan-outline-markdown-container tr:nth-child(even) td {
+  background: rgba(248, 250, 252, 0.75);
+}
+
+.plan-outline-markdown-container tr:hover td {
+  background: rgba(239, 246, 255, 0.85);
+  transition: background 0.15s ease;
+}
+
+.plan-outline-markdown-container tr:last-child td {
+  border-bottom: none;
+}
+
+.plan-outline-markdown-container ul,
+.plan-outline-markdown-container ol {
+  margin: 0 0 1.2rem;
+  padding-left: 1.4rem;
+}
+
+.plan-outline-markdown-container li {
+  margin-bottom: 0.35rem;
 }
 
 .plan-side-stack,
@@ -267,7 +352,19 @@ textarea {
 }
 
 .plan-chapter-grid {
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1200px) {
+  .plan-chapter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .plan-chapter-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .plan-chapter-card {
