@@ -735,7 +735,7 @@ export function ReadingWorkspace({
                     value={activeChapter.content}
                     style={{
                       width: "100%",
-                      minHeight: "900px",
+                      minHeight: "1200px",
                       padding: "1.25rem 1.5rem",
                       borderRadius: "12px",
                       border: "1.5px solid rgba(0,0,0,0.12)",
@@ -859,7 +859,7 @@ export function ReadingWorkspace({
                         alignItems: "center",
                         gap: "8px",
                         padding: "10px 22px",
-                        borderRadius: "10px",
+                        borderRadius: "999px",
                         border: "none",
                         background: isPolishing
                           ? "linear-gradient(135deg, #a78bfa 0%, #818cf8 100%)"

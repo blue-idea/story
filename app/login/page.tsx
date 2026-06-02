@@ -28,7 +28,7 @@ export default function LoginPage() {
             color: "#334155",
           }}
         >
-          小说系统认证
+          墨语AI小说系统认证
         </p>
         <h1
           style={{
