@@ -9,11 +9,8 @@ export default function Task015PreviewWritePage() {
     <main className="write-placeholder-shell">
       <section className="write-placeholder-card">
         <p className="plan-kicker">TASK-015 QA</p>
-        <h1>Writing workspace preview reached.</h1>
-        <p>
-          This preview route confirms that the planning review action can hand
-          off into the next writing surface.
-        </p>
+        <h1>已到达写作工作台预览。</h1>
+        <p>此预览路由确认了大纲审查操作可以顺利过渡到下一个写作界面。</p>
       </section>
     </main>
   );

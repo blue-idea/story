@@ -125,7 +125,7 @@ export function applyWritingEvent<TEventName extends WritingEventName>(
         ),
         terminalEntries: appendTerminalEntry(state, {
           tone: "info",
-          message: `Chapter ${data.chapterNumber} started.`,
+          message: `第 ${data.chapterNumber} 章创作开始。`,
         }),
       };
     }
@@ -159,7 +159,7 @@ export function applyWritingEvent<TEventName extends WritingEventName>(
         ),
         terminalEntries: appendTerminalEntry(state, {
           tone: "info",
-          message: `Chapter ${data.chapterNumber} entered validation.`,
+          message: `第 ${data.chapterNumber} 章进入质量校验。`,
         }),
       };
     }
@@ -183,8 +183,8 @@ export function applyWritingEvent<TEventName extends WritingEventName>(
         terminalEntries: appendTerminalEntry(state, {
           tone: data.passed ? "success" : "info",
           message: data.passed
-            ? `Chapter ${data.chapterNumber} passed validation.`
-            : `Chapter ${data.chapterNumber} needs another pass.`,
+            ? `第 ${data.chapterNumber} 章通过质量校验。`
+            : `第 ${data.chapterNumber} 章未通过校验，需要重新处理。`,
         }),
       };
     }
@@ -207,7 +207,7 @@ export function applyWritingEvent<TEventName extends WritingEventName>(
         ),
         terminalEntries: appendTerminalEntry(state, {
           tone: "success",
-          message: `Chapter ${data.chapterNumber} completed.`,
+          message: `第 ${data.chapterNumber} 章创作完成。`,
         }),
       };
     }
@@ -241,7 +241,7 @@ export function applyWritingEvent<TEventName extends WritingEventName>(
         canRetry: false,
         terminalEntries: appendTerminalEntry(state, {
           tone: "success",
-          message: "Novel completed.",
+          message: "全书创作完成。",
         }),
       };
     }
@@ -258,7 +258,7 @@ export function resetWorkspaceError(
     canRetry: false,
     terminalEntries: appendTerminalEntry(state, {
       tone: "info",
-      message: "Retry requested. Reconnecting to the writing stream.",
+      message: "已请求重试。正在重新连接写作流。",
     }),
   };
 }

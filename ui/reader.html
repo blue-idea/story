@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时间的裂缝 - 墨语AI阅读器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Long+Cang&family=Ma+Shan+Zheng&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .theme-beige {
+            background: #f5f1e8;
+            color: #2d2520;
+        }
+
+        .theme-white {
+            background: #ffffff;
+            color: #262626;
+        }
+
+        .theme-green {
+            background: #cce8cf;
+            color: #1a3d20;
+        }
+
+        .theme-night {
+            background: #1a1a1a;
+            color: #b8b8b8;
+        }
+
+        .reader-content {
+            font-family: 'Noto Serif SC', serif;
+            line-height: 2;
+            letter-spacing: 0.05em;
+            text-align: justify;
+        }
+
+        .font-serif { font-family: 'Noto Serif SC', serif; }
+        .font-sans { font-family: 'Noto Sans SC', sans-serif; }
+        .font-kai { font-family: 'Long Cang', cursive; }
+        .font-song { font-family: 'Ma Shan Zheng', cursive; }
+
+        .sidebar {
+            width: 280px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: transform 0.3s ease;
+            z-index: 40;
+            border-right: 1px solid rgba(0,0,0,0.08);
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 3px;
+        }
+
+        .content-area {
+            margin-left: 280px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-280px);
+        }
+
+        .content-area.expanded {
+            margin-left: 0;
+        }
+
+        .chapter-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .chapter-item:hover {
+            background: rgba(0,0,0,0.03);
+        }
+
+        .chapter-item.active {
+            background: rgba(59, 130, 246, 0.08);
+            border-left-color: #3b82f6;
+            font-weight: 500;
+        }
+
+        .sub-chapter-item {
+            font-size: 0.9em;
+            padding-left: 2.5rem;
+        }
+
+        .sub-chapter-item.active {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .expand-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .expand-icon.expanded {
+            transform: rotate(90deg);
+        }
+
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+            z-index: 100;
+            transition: width 0.1s ease;
+        }
+
+        .toolbar {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 50;
+            display: flex;
+            gap: 8px;
+        }
+
+        .toolbar-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .toolbar-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .settings-panel {
+            position: fixed;
+            right: 20px;
+            top: 80px;
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            z-index: 60;
+            min-width: 280px;
+            display: none;
+        }
+
+        .settings-panel.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .theme-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .theme-option:hover {
+            transform: scale(1.1);
+        }
+
+        .theme-option.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .bookmark {
+            position: absolute;
+            right: 30px;
+            top: -5px;
+            color: #f59e0b;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .bookmark:hover {
+            transform: scale(1.15);
+        }
+
+        .page-turn-hint {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        .selection-toolbar {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 8px;
+            border-radius: 8px;
+            display: none;
+            gap: 8px;
+            z-index: 1000;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+
+        .selection-toolbar button {
+            background: none;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .selection-toolbar button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .highlight {
+            background: rgba(255, 235, 59, 0.3);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .highlight:hover {
+            background: rgba(255, 235, 59, 0.5);
+        }
+
+        .reading-time {
+            font-size: 12px;
+            color: #6b7280;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-280px);
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .content-area {
+                margin-left: 0;
+            }
+
+            .toolbar {
+                right: 10px;
+                top: 10px;
+            }
+        }
+
+        .chapter-paragraph {
+            margin-bottom: 1.5em;
+            text-indent: 2em;
+        }
+
+        .chapter-paragraph.no-indent {
+            text-indent: 0;
+        }
+
+        .theme-night .sidebar,
+        .theme-night .toolbar-btn,
+        .theme-night .settings-panel {
+            background: #2a2a2a;
+            color: #b8b8b8;
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .theme-night .chapter-item:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .theme-night .chapter-item.active {
+            background: rgba(59, 130, 246, 0.15);
+        }
+    </style>
+</head>
+<body class="theme-beige">
+    <div class="progress-bar" id="progressBar"></div>
+
+    <aside class="sidebar theme-white" id="sidebar">
+        <div class="p-6 border-b border-gray-200">
+            <a href="library.html" class="flex items-center text-gray-600 hover:text-gray-900 mb-4 transition">
+                <i class="fas fa-arrow-left mr-2"></i>
+                <span>返回作品库</span>
+            </a>
+            <h1 class="text-xl font-bold text-gray-900 mb-2">时间的裂缝</h1>
+            <p class="text-sm text-gray-500 mb-3">科幻悬疑剧本</p>
+            <div class="flex items-center justify-between text-xs text-gray-400">
+                <span><i class="fas fa-book-open mr-1"></i>已读 35%</span>
+                <span class="reading-time"><i class="far fa-clock mr-1"></i>约 45 分钟</span>
+            </div>
+        </div>
+
+        <nav class="py-4" id="chapterNav">
+            <div class="chapter-group">
+                <div class="chapter-item active px-6 py-3 flex items-center justify-between" data-chapter="chapter1">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-chevron-right expand-icon text-xs text-gray-400"></i>
+                        <span>第一幕：发现</span>
+                    </div>
+                    <span class="text-xs text-gray-400">2.3k</span>
+                </div>
+                <div class="sub-chapters" style="display: none;">
+                    <div class="sub-chapter-item chapter-item px-6 py-2" data-chapter="chapter1-1">
+                        <span>1.1 深夜实验</span>
+                    </div>
+                    <div class="sub-chapter-item chapter-item px-6 py-2" data-chapter="chapter1-2">
+                        <span>1.2 裂缝出现</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chapter-group">
+                <div class="chapter-item px-6 py-3 flex items-center justify-between" data-chapter="chapter2">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-chevron-right expand-icon text-xs text-gray-400"></i>
+                        <span>第二幕：探索</span>
+                    </div>
+                    <span class="text-xs text-gray-400">3.5k</span>
+                </div>
+                <div class="sub-chapters" style="display: none;">
+                    <div class="sub-chapter-item chapter-item px-6 py-2" data-chapter="chapter2-1">
+                        <span>2.1 清晨的发现</span>
+                    </div>
+                    <div class="sub-chapter-item chapter-item px-6 py-2" data-chapter="chapter2-2">
+                        <span>2.2 数据分析</span>
+                    </div>
+                    <div class="sub-chapter-item chapter-item px-6 py-2" data-chapter="chapter2-3">
+                        <span>2.3 再次尝试</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chapter-group">
+                <div class="chapter-item px-6 py-3 flex items-center justify-between" data-chapter="chapter3">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-chevron-right expand-icon text-xs text-gray-400"></i>
+                        <span>第三幕：真相</span>
+                    </div>
+                    <span class="text-xs text-gray-400">3.2k</span>
+                </div>
+                <div class="sub-chapters" style="display: none;">
+                    <div class="sub-chapter-item chapter-item px-6 py-2" data-chapter="chapter3-1">
+                        <span>3.1 穿越时空</span>
+                    </div>
+                    <div class="sub-chapter-item chapter-item px-6 py-2" data-chapter="chapter3-2">
+                        <span>3.2 揭开谜底</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chapter-group">
+                <div class="chapter-item px-6 py-3 flex items-center justify-between" data-chapter="chapter4">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-chevron-right expand-icon text-xs text-gray-400"></i>
+                        <span>第四幕：抉择</span>
+                    </div>
+                    <span class="text-xs text-gray-400">3.4k</span>
+                </div>
+                <div class="sub-chapters" style="display: none;">
+                    <div class="sub-chapter-item chapter-item px-6 py-2" data-chapter="chapter4-1">
+                        <span>4.1 艰难决定</span>
+                    </div>
+                    <div class="sub-chapter-item chapter-item px-6 py-2" data-chapter="chapter4-2">
+                        <span>4.2 最后时刻</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </aside>
+
+    <div class="toolbar">
+        <div class="toolbar-btn" id="toggleSidebar" title="目录">
+            <i class="fas fa-bars text-gray-700"></i>
+        </div>
+        <div class="toolbar-btn" id="settingsBtn" title="设置">
+            <i class="fas fa-cog text-gray-700"></i>
+        </div>
+        <div class="toolbar-btn" id="bookmarkBtn" title="书签">
+            <i class="far fa-bookmark text-gray-700"></i>
+        </div>
+    </div>
+
+    <div class="settings-panel" id="settingsPanel">
+        <h3 class="text-lg font-semibold mb-4 text-gray-800">阅读设置</h3>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3">主题</label>
+            <div class="flex gap-3">
+                <div class="theme-option active" data-theme="beige" style="background: #f5f1e8;" title="护眼米黄"></div>
+                <div class="theme-option" data-theme="white" style="background: #ffffff; border: 1px solid #e5e7eb;" title="纯白"></div>
+                <div class="theme-option" data-theme="green" style="background: #cce8cf;" title="淡雅绿"></div>
+                <div class="theme-option" data-theme="night" style="background: #1a1a1a;" title="夜间模式"></div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-3">字体</label>
+            <div class="grid grid-cols-2 gap-2">
+                <button class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-serif" data-font="serif">宋体</button>
+                <button class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-sans" data-font="sans">黑体</button>
+                <button class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-kai" data-font="kai">楷体</button>
+                <button class="font-btn px-4 py-2 text-sm border border-gray-200 rounded-lg hover:border-blue-500 transition font-song" data-font="song">行楷</button>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-3">字号</label>
+            <div class="flex items-center gap-4">
+                <button id="decreaseFontSize" class="w-10 h-10 border border-gray-200 rounded-lg hover:border-blue-500 transition">
+                    <i class="fas fa-minus text-sm"></i>
+                </button>
+                <span id="fontSizeDisplay" class="text-sm font-medium min-w-[60px] text-center">18px</span>
+                <button id="increaseFontSize" class="w-10 h-10 border border-gray-200 rounded-lg hover:border-blue-500 transition">
+                    <i class="fas fa-plus text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <main class="content-area" id="contentArea">
+        <article class="max-w-3xl mx-auto px-8 py-16 relative">
+            <div class="bookmark" id="chapterBookmark">
+                <i class="fas fa-bookmark"></i>
+            </div>
+
+            <header class="mb-16 text-center">
+                <h2 class="text-4xl font-bold mb-6" id="chapterTitle">第一幕：发现</h2>
+                <div class="flex items-center justify-center gap-6 text-sm text-gray-500">
+                    <span><i class="fas fa-file-alt mr-2"></i>2,345 字</span>
+                    <span><i class="far fa-clock mr-2"></i>约 8 分钟</span>
+                </div>
+            </header>
+
+            <div class="reader-content" id="readerContent">
+                <p class="chapter-paragraph no-indent">
+                    <strong>【场景：实验室 - 深夜】</strong>
+                </p>
+
+                <p class="chapter-paragraph">
+                    夜深了,整个研究中心只有陈默的实验室还亮着灯。这是他的第127次实验,桌上的咖啡早已冷透,屏幕上的数据如瀑布般流淌。他紧盯着量子振荡器的读数,手指悬停在启动按钮上方。
+                </p>
+
+                <p class="chapter-paragraph">
+                    "这次一定要成功。"他喃喃自语,按下了按钮。
+                </p>
+
+                <p class="chapter-paragraph">
+                    实验室的灯光开始闪烁,空气中弥漫着臭氧的刺鼻味道。量子场激活了,能量波在空间中荡漾开来。陈默盯着监测设备,心跳加速。能量场稳定,空间扭曲率正常,时间流速——
+                </p>
+
+                <p class="chapter-paragraph">
+                    "等等!"他猛地站起身,"这个数值不对!"
+                </p>
+
+                <p class="chapter-paragraph">
+                    时间流速的读数在疯狂跳动,从正常值1.0突然飙升到3.7,然后又跌到-2.1。负数?时间在倒流?这不可能!
+                </p>
+
+                <p class="chapter-paragraph">
+                    突然,实验室中央的空气开始扭曲,像是有一只看不见的手在撕裂空间。一道银色的裂缝凭空出现,裂缝中闪烁着诡异的光芒,如同极光般变幻着色彩。
+                </p>
+
+                <p class="chapter-paragraph">
+                    陈默呆立原地,目瞪口呆。这不是理论预测的结果,这是——
+                </p>
+
+                <p class="chapter-paragraph">
+                    "时间的裂缝……"他惊愕地低语。
+                </p>
+
+                <p class="chapter-paragraph">
+                    裂缝在缓缓扩大,透过裂缝,他看到了令人难以置信的景象:无数个场景在同时发生。他看到了同一个实验室,但处于不同的时间节点——有的是白天,有的是夜晚;有的实验室里空无一人,有的却挤满了人。
+                </p>
+
+                <p class="chapter-paragraph">
+                    最令他震惊的是,他看到了另一个自己。
+                </p>
+
+                <p class="chapter-paragraph">
+                    那个陈默正站在裂缝的另一边,做着完全相同的实验。但周围的一切又略有不同——墙上的钟表时间不对,桌上的咖啡杯位置也不一样。
+                </p>
+
+                <p class="chapter-paragraph">
+                    两个陈默隔着时间的裂缝,四目相对。
+                </p>
+
+                <p class="chapter-paragraph">
+                    "不要靠近!"另一个陈默的声音从裂缝中传来,声音扭曲而遥远,"这个裂缝会把你拉进时间乱流!我已经经历过了,你必须——"
+                </p>
+
+                <p class="chapter-paragraph">
+                    话音未落,裂缝突然剧烈收缩,发出刺耳的嗡鸣声。所有的仪器同时失控,红色的警报灯疯狂闪烁。陈默被一股无形的力量推开,重重摔在墙上。
+                </p>
+
+                <p class="chapter-paragraph">
+                    当他挣扎着爬起来时,裂缝已经消失了,实验室恢复了平静。只有散落一地的文件和冒着火花的仪器,证明刚才发生的一切不是幻觉。
+                </p>
+
+                <p class="chapter-paragraph">
+                    陈默颤抖着拿起记录本,用还在发抖的手写下:"时间不是线性的,它有裂缝。多重时间线可以交汇。我……看到了另一个我。"
+                </p>
+
+                <p class="chapter-paragraph no-indent">
+                    <strong>【幕落】</strong>
+                </p>
+            </div>
+
+            <div class="mt-16 pt-8 border-t border-gray-300 flex items-center justify-between">
+                <button class="px-6 py-3 text-gray-500 hover:text-gray-700 transition flex items-center gap-2" id="prevChapter">
+                    <i class="fas fa-chevron-left"></i>
+                    <span>上一章</span>
+                </button>
+                <button class="px-6 py-3 text-blue-600 hover:text-blue-700 transition flex items-center gap-2 font-medium" id="nextChapter">
+                    <span>下一章</span>
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </article>
+    </main>
+
+    <div class="page-turn-hint" id="pageTurnHint">
+        按 ← → 键翻页
+    </div>
+
+    <div class="selection-toolbar" id="selectionToolbar">
+        <button id="highlightBtn" title="高亮"><i class="fas fa-highlighter"></i></button>
+        <button id="noteBtn" title="笔记"><i class="fas fa-sticky-note"></i></button>
+        <button id="copyBtn" title="复制"><i class="fas fa-copy"></i></button>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const supabaseUrl = 'https://0ec90b57d6e95fcbda19832f.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJib2x0IiwicmVmIjoiMGVjOTBiNTdkNmU5NWZjYmRhMTk4MzJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4ODE1NzQsImV4cCI6MTc1ODg4MTU3NH0.9I8-U0x86Ak8t2DGaIk0HfvTSLsAyzdnz-Nw00mMkKw';
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        const sidebar = document.getElementById('sidebar');
+        const contentArea = document.getElementById('contentArea');
+        const toggleSidebarBtn = document.getElementById('toggleSidebar');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const progressBar = document.getElementById('progressBar');
+        const readerContent = document.getElementById('readerContent');
+        const selectionToolbar = document.getElementById('selectionToolbar');
+
+        let currentFontSize = 18;
+        let currentTheme = 'beige';
+        let currentFont = 'serif';
+
+        toggleSidebarBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            contentArea.classList.toggle('expanded');
+            const icon = toggleSidebarBtn.querySelector('i');
+            icon.className = sidebar.classList.contains('collapsed') ? 'fas fa-bars text-gray-700' : 'fas fa-times text-gray-700';
+        });
+
+        settingsBtn.addEventListener('click', () => {
+            settingsPanel.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!settingsPanel.contains(e.target) && !settingsBtn.contains(e.target)) {
+                settingsPanel.classList.remove('active');
+            }
+        });
+
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.theme-option').forEach(o => o.classList.remove('active'));
+                this.classList.add('active');
+
+                const theme = this.dataset.theme;
+                currentTheme = theme;
+                document.body.className = `theme-${theme}`;
+
+                if (theme === 'night') {
+                    document.querySelectorAll('.toolbar-btn i').forEach(i => i.classList.add('text-gray-300'));
+                } else {
+                    document.querySelectorAll('.toolbar-btn i').forEach(i => {
+                        i.classList.remove('text-gray-300');
+                        i.classList.add('text-gray-700');
+                    });
+                }
+            });
+        });
+
+        document.querySelectorAll('.font-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const font = this.dataset.font;
+                currentFont = font;
+                readerContent.className = `reader-content font-${font}`;
+            });
+        });
+
+        document.getElementById('increaseFontSize').addEventListener('click', () => {
+            if (currentFontSize < 28) {
+                currentFontSize += 2;
+                readerContent.style.fontSize = currentFontSize + 'px';
+                document.getElementById('fontSizeDisplay').textContent = currentFontSize + 'px';
+            }
+        });
+
+        document.getElementById('decreaseFontSize').addEventListener('click', () => {
+            if (currentFontSize > 14) {
+                currentFontSize -= 2;
+                readerContent.style.fontSize = currentFontSize + 'px';
+                document.getElementById('fontSizeDisplay').textContent = currentFontSize + 'px';
+            }
+        });
+
+        document.querySelectorAll('.chapter-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (this.classList.contains('sub-chapter-item')) {
+                    document.querySelectorAll('.chapter-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    return;
+                }
+
+                const subChapters = this.nextElementSibling;
+                if (subChapters && subChapters.classList.contains('sub-chapters')) {
+                    const icon = this.querySelector('.expand-icon');
+                    const isExpanded = subChapters.style.display === 'block';
+
+                    subChapters.style.display = isExpanded ? 'none' : 'block';
+                    icon.classList.toggle('expanded', !isExpanded);
+                }
+
+                if (!this.classList.contains('sub-chapter-item')) {
+                    document.querySelectorAll('.chapter-item:not(.sub-chapter-item)').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                }
+            });
+        });
+
+        window.addEventListener('scroll', () => {
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+            const scrollTop = window.scrollY;
+            const scrollPercent = (scrollTop / (documentHeight - windowHeight)) * 100;
+
+            progressBar.style.width = scrollPercent + '%';
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                console.log('Previous chapter');
+            } else if (e.key === 'ArrowRight') {
+                console.log('Next chapter');
+            }
+        });
+
+        const pageTurnHint = document.getElementById('pageTurnHint');
+        let hintTimeout;
+
+        window.addEventListener('load', () => {
+            pageTurnHint.style.opacity = '1';
+            hintTimeout = setTimeout(() => {
+                pageTurnHint.style.opacity = '0';
+            }, 3000);
+        });
+
+        document.addEventListener('mouseup', () => {
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+
+            if (selectedText.length > 0) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+
+                selectionToolbar.style.display = 'flex';
+                selectionToolbar.style.left = rect.left + (rect.width / 2) - 75 + 'px';
+                selectionToolbar.style.top = rect.top - 50 + window.scrollY + 'px';
+            } else {
+                selectionToolbar.style.display = 'none';
+            }
+        });
+
+        document.getElementById('highlightBtn').addEventListener('click', () => {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                const span = document.createElement('span');
+                span.className = 'highlight';
+                span.textContent = range.toString();
+                range.deleteContents();
+                range.insertNode(span);
+                selection.removeAllRanges();
+                selectionToolbar.style.display = 'none';
+            }
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const selection = window.getSelection();
+            navigator.clipboard.writeText(selection.toString());
+            selectionToolbar.style.display = 'none';
+            alert('已复制到剪贴板');
+        });
+
+        document.getElementById('bookmarkBtn').addEventListener('click', () => {
+            const bookmarkIcon = document.getElementById('chapterBookmark');
+            bookmarkIcon.style.display = bookmarkIcon.style.display === 'none' ? 'block' : 'none';
+            alert('书签已保存');
+        });
+    </script>
+</body>
+</html>

@@ -54,17 +54,17 @@ describe("TASK-014 渐进式披露向导 UI", () => {
     const pageModule = await import("../app/novel/new/page");
     const markup = renderToStaticMarkup(await pageModule.default());
 
-    expect(markup).toContain("Question 1 of 3");
-    expect(markup).toContain("Genre");
-    expect(markup).not.toContain("Layer 2");
-    expect(markup).not.toContain("Title candidates");
+    expect(markup).toContain("问题 1 / 3");
+    expect(markup).toContain("题材分类");
+    expect(markup).not.toContain("第二阶段");
+    expect(markup).not.toContain("候选标题");
   });
 
   it("应提供 TASK-014 的 QA 预览页用于视觉回归", async () => {
     const qaModule = await import("../app/qa/task-014/page");
     const markup = renderToStaticMarkup(await qaModule.default());
 
-    expect(markup).toContain("Novel Creation Wizard");
-    expect(markup).toContain("Question 1 of 3");
+    expect(markup).toContain("小说创作向导");
+    expect(markup).toContain("问题 1 / 3");
   });
 });

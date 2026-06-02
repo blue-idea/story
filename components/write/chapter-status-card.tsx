@@ -22,6 +22,21 @@ function getStatusTone(status: WritingWorkspaceChapterState["status"]) {
   }
 }
 
+function getStatusLabel(status: WritingWorkspaceChapterState["status"]) {
+  switch (status) {
+    case "completed":
+      return "已完成";
+    case "failed":
+      return "失败";
+    case "writing":
+      return "写作中";
+    case "validating":
+      return "校验中";
+    default:
+      return "等待中";
+  }
+}
+
 function getLengthProgress(content: string) {
   return Math.min(100, Math.round((content.length / 3000) * 100));
 }
@@ -35,9 +50,9 @@ export function ChapterStatusCard({
       className={`write-chapter-card ${isActive ? "write-chapter-card-active" : ""}`}
     >
       <div className="write-chapter-topline">
-        <span className="plan-chip">Chapter {chapter.chapterNumber}</span>
+        <span className="plan-chip">第 {chapter.chapterNumber} 章</span>
         <span className={`write-status-pill ${getStatusTone(chapter.status)}`}>
-          {chapter.status.replace("_", " ")}
+          {getStatusLabel(chapter.status)}
         </span>
       </div>
 
@@ -45,7 +60,7 @@ export function ChapterStatusCard({
       <p className="write-chapter-outline">{chapter.outlineSummary}</p>
 
       <div className="write-progress-meta">
-        <span>Live Count</span>
+        <span>当前字数</span>
         <strong>{chapter.content.length}</strong>
       </div>
       <div className="write-progress-rail" aria-hidden="true">
@@ -57,15 +72,15 @@ export function ChapterStatusCard({
 
       <dl className="write-chapter-metrics">
         <div>
-          <dt>Word Target</dt>
-          <dd>{chapter.wordCountValid ? "Ready" : "Growing"}</dd>
+          <dt>字数目标</dt>
+          <dd>{chapter.wordCountValid ? "达标" : "未达标"}</dd>
         </div>
         <div>
-          <dt>Suspense</dt>
-          <dd>{chapter.suspenseValid ? "Detected" : "Pending"}</dd>
+          <dt>悬念钩子</dt>
+          <dd>{chapter.suspenseValid ? "已检测到" : "等待检测"}</dd>
         </div>
         <div>
-          <dt>Retries</dt>
+          <dt>重试次数</dt>
           <dd>{chapter.retryCount}</dd>
         </div>
       </dl>

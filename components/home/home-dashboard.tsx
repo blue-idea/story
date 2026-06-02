@@ -7,15 +7,15 @@ type HomeDashboardProps = {
   startHref?: string;
 };
 
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
+const dateFormatter = new Intl.DateTimeFormat("zh-CN", {
   year: "numeric",
+  month: "long",
+  day: "numeric",
 });
 
 function formatPreferredGenres(genres: string[]): string {
   if (genres.length === 0) {
-    return "No preference";
+    return "无偏好";
   }
 
   return genres.join(" · ");
@@ -32,35 +32,32 @@ export function HomeDashboard({
       <section className="home-page-frame">
         <header className="home-hero-card">
           <div>
-            <p className="home-kicker">WELCOME BACK</p>
-            <h1>Continue your story orbit.</h1>
-            <p>
-              Keep momentum with your last project, or spin up a brand-new
-              universe in one click.
-            </p>
+            <p className="home-kicker">欢迎回来</p>
+            <h1>继续您的故事轨道</h1>
+            <p>继续上一个项目，或一键开启一个全新的故事世界。</p>
           </div>
           <Link className="home-start-button" href={startHref}>
-            Start New Novel
+            开始新小说
           </Link>
         </header>
 
         <section className="home-meta-grid">
           <article className="home-meta-card">
-            <span>Preferred genres</span>
+            <span>偏好题材</span>
             <strong>
               {formatPreferredGenres(dashboard.preferences.preferredGenres)}
             </strong>
           </article>
           <article className="home-meta-card">
-            <span>Default tone</span>
-            <strong>{dashboard.preferences.defaultTone ?? "Not set"}</strong>
+            <span>默认基调</span>
+            <strong>{dashboard.preferences.defaultTone ?? "未设置"}</strong>
           </article>
           <article className="home-meta-card">
-            <span>Chapter target</span>
+            <span>章节目标</span>
             <strong>
               {dashboard.preferences.defaultChapterCount
-                ? `${dashboard.preferences.defaultChapterCount} chapters`
-                : "Not set"}
+                ? `${dashboard.preferences.defaultChapterCount} 章`
+                : "未设置"}
             </strong>
           </article>
         </section>
@@ -68,10 +65,10 @@ export function HomeDashboard({
         {activeNovel ? (
           <section className="home-continue-card">
             <div className="home-continue-headline">
-              <p className="home-kicker">ACTIVE PROJECT</p>
+              <p className="home-kicker">进行中的项目</p>
               <h2>{activeNovel.title}</h2>
               <p>
-                {activeNovel.progressPercent}% complete · Last edited{" "}
+                已完成 {activeNovel.progressPercent}% · 上次编辑于{" "}
                 {dateFormatter.format(activeNovel.lastEditedAt)}
               </p>
             </div>
@@ -85,14 +82,14 @@ export function HomeDashboard({
               className="home-continue-button"
               href={activeNovel.continuePath}
             >
-              Continue Writing
+              继续创作
             </Link>
           </section>
         ) : (
           <section className="home-empty-card">
-            <p className="home-kicker">NO ACTIVE PROJECT</p>
-            <h2>Fresh canvas is ready.</h2>
-            <p>Start a new story when inspiration hits.</p>
+            <p className="home-kicker">暂无进行中的项目</p>
+            <h2>空白画布已就绪</h2>
+            <p>灵感降临时，开启一个新故事吧。</p>
           </section>
         )}
       </section>

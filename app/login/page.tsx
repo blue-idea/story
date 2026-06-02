@@ -28,7 +28,7 @@ export default function LoginPage() {
             color: "#334155",
           }}
         >
-          STORY AUTH
+          小说系统认证
         </p>
         <h1
           style={{
@@ -38,7 +38,7 @@ export default function LoginPage() {
             color: "#0f172a",
           }}
         >
-          Sign in to keep writing.
+          登录以继续创作
         </h1>
         <p
           style={{
@@ -49,8 +49,7 @@ export default function LoginPage() {
             color: "#334155",
           }}
         >
-          Use any valid email and a non-empty password during development. The
-          first sign-in creates the account automatically.
+          在开发过程中，使用任何有效的邮箱和非空密码即可登录。首次登录将自动创建账号。
         </p>
       </section>
 

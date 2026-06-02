@@ -110,12 +110,11 @@ export function ReadingWorkspace({
     <main className="read-page-shell">
       <section className="read-hero-card">
         <div className="read-hero-copy">
-          <p className="plan-kicker">PHASE 4</p>
+          <p className="plan-kicker">第四阶段</p>
           <h1>{initialNovel.novelTitle}</h1>
           <p>
-            Review the completed manuscript, refine the exact lines you want,
-            and export a clean Markdown package when the revision pass feels
-            right.
+            审查已完成的手稿，精细修改所需文本段落，并在修稿完成后导出 Markdown
+            打包文件。
           </p>
         </div>
 
@@ -124,14 +123,14 @@ export function ReadingWorkspace({
             className="read-export-button"
             href={`/api/novel/${novelId}/export`}
           >
-            Export Markdown
+            导出 Markdown
           </a>
           <div className="read-hero-meta">
-            <span>Status</span>
+            <span>状态</span>
             <strong>{initialNovel.status}</strong>
           </div>
           <div className="read-hero-meta">
-            <span>Chapters</span>
+            <span>章节数</span>
             <strong>{chapters.length}</strong>
           </div>
         </div>
@@ -140,8 +139,8 @@ export function ReadingWorkspace({
       <section className="read-main-grid">
         <aside className="read-chapter-rail">
           <div className="read-section-heading">
-            <p className="plan-kicker">MANUSCRIPT MAP</p>
-            <h2>Chapter stack</h2>
+            <p className="plan-kicker">手稿地图</p>
+            <h2>章节列表</h2>
           </div>
 
           <div className="read-chapter-list">
@@ -163,10 +162,10 @@ export function ReadingWorkspace({
                   type="button"
                 >
                   <span className="read-chapter-number">
-                    Chapter {chapter.chapterNumber}
+                    第 {chapter.chapterNumber} 章
                   </span>
                   <strong>{chapter.title}</strong>
-                  <small>{chapter.wordCount} chars</small>
+                  <small>{chapter.wordCount} 字</small>
                 </button>
               );
             })}
@@ -178,7 +177,7 @@ export function ReadingWorkspace({
             <>
               <div className="read-panel-header">
                 <div>
-                  <p className="plan-kicker">ACTIVE CHAPTER</p>
+                  <p className="plan-kicker">当前章节</p>
                   <h2>{activeChapter.title}</h2>
                 </div>
 
@@ -190,7 +189,7 @@ export function ReadingWorkspace({
                     onClick={() => setMode("read")}
                     type="button"
                   >
-                    Read Mode
+                    阅读模式
                   </button>
                   <button
                     className={`read-mode-button ${
@@ -199,7 +198,7 @@ export function ReadingWorkspace({
                     onClick={() => setMode("edit")}
                     type="button"
                   >
-                    Edit Mode
+                    编辑模式
                   </button>
                 </div>
               </div>
@@ -214,16 +213,15 @@ export function ReadingWorkspace({
                 <div className="read-editor-panel">
                   <div className="read-editor-toolbar">
                     <span>
-                      Live Count:{" "}
-                      <strong>{activeChapter.content.length}</strong>
+                      实时字数: <strong>{activeChapter.content.length}</strong>
                     </span>
                     <span>
-                      Saved Count: <strong>{activeChapter.wordCount}</strong>
+                      已保存字数: <strong>{activeChapter.wordCount}</strong>
                     </span>
                     {hasUnsavedChanges ? (
-                      <span className="read-dirty-pill">Unsaved changes</span>
+                      <span className="read-dirty-pill">未保存修改</span>
                     ) : (
-                      <span className="read-clean-pill">Saved</span>
+                      <span className="read-clean-pill">已保存</span>
                     )}
                   </div>
 
@@ -261,7 +259,7 @@ export function ReadingWorkspace({
                           );
 
                           if (!response.ok) {
-                            setErrorMessage("Failed to save chapter.");
+                            setErrorMessage("保存章节失败。");
                             return;
                           }
 
@@ -272,12 +270,12 @@ export function ReadingWorkspace({
                             activeChapter.content,
                             result.newWordCount,
                           );
-                          setMessage("Changes saved.");
+                          setMessage("修改已保存。");
                         });
                       }}
                       type="button"
                     >
-                      {isSaving ? "Saving..." : "Save Changes"}
+                      {isSaving ? "保存中..." : "保存修改"}
                     </button>
 
                     <button
@@ -289,7 +287,7 @@ export function ReadingWorkspace({
                           setErrorMessage(null);
 
                           if (!editorRef.current) {
-                            setErrorMessage("Editor is unavailable.");
+                            setErrorMessage("编辑器不可用。");
                             return;
                           }
 
@@ -316,7 +314,7 @@ export function ReadingWorkspace({
                             );
 
                             if (!response.ok) {
-                              setErrorMessage("Failed to polish selection.");
+                              setErrorMessage("润色选中内容失败。");
                               return;
                             }
 
@@ -331,17 +329,15 @@ export function ReadingWorkspace({
                               originalText: payload.selectedText,
                               polishedText: result.polishedText,
                             });
-                            setMessage("Polish preview is ready.");
+                            setMessage("润色预览已就绪。");
                           } catch {
-                            setErrorMessage(
-                              "Select some text before polishing.",
-                            );
+                            setErrorMessage("请在润色前先选择一段文本。");
                           }
                         });
                       }}
                       type="button"
                     >
-                      {isPolishing ? "Polishing..." : "Polish Selection"}
+                      {isPolishing ? "润色中..." : "润色选中内容"}
                     </button>
                   </div>
 
@@ -359,18 +355,18 @@ export function ReadingWorkspace({
 
         <aside className="read-preview-panel">
           <div className="read-section-heading">
-            <p className="plan-kicker">POLISH PREVIEW</p>
-            <h2>Replace only if it feels right</h2>
+            <p className="plan-kicker">润色预览</p>
+            <h2>满意后再替换</h2>
           </div>
 
           {polishPreview ? (
             <div className="read-preview-card">
               <div className="read-preview-block">
-                <span>Selected Text</span>
+                <span>所选文本</span>
                 <p>{polishPreview.originalText}</p>
               </div>
               <div className="read-preview-block">
-                <span>Polished Result</span>
+                <span>润色结果</span>
                 <p>{polishPreview.polishedText}</p>
               </div>
 
@@ -396,12 +392,12 @@ export function ReadingWorkspace({
                     );
                     setPolishPreview(null);
                     setMode("edit");
-                    setMessage("Preview applied locally. Save when ready.");
+                    setMessage("预览已应用于本地，请在准备好后点击保存。");
                     setErrorMessage(null);
                   }}
                   type="button"
                 >
-                  Apply Polish
+                  应用润色
                 </button>
 
                 <button
@@ -412,16 +408,13 @@ export function ReadingWorkspace({
                   }}
                   type="button"
                 >
-                  Discard Preview
+                  放弃预览
                 </button>
               </div>
             </div>
           ) : (
             <div className="read-preview-empty">
-              <p>
-                Select a non-empty range in Edit Mode, then request a polish
-                preview here before replacing anything.
-              </p>
+              <p>在编辑模式下选择一段非空文本，然后在此处请求润色预览。</p>
             </div>
           )}
         </aside>

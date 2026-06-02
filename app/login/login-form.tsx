@@ -40,7 +40,7 @@ export function LoginForm() {
           });
 
           if (!result || result.error) {
-            setState({ error: "Invalid credentials." });
+            setState({ error: "邮箱或密码错误。" });
             return;
           }
 
@@ -53,7 +53,7 @@ export function LoginForm() {
       }}
     >
       <label style={{ display: "grid", gap: "0.45rem" }}>
-        <span style={{ fontSize: "0.92rem", fontWeight: 600 }}>Email</span>
+        <span style={{ fontSize: "0.92rem", fontWeight: 600 }}>邮箱</span>
         <input
           autoComplete="email"
           name="email"
@@ -65,11 +65,11 @@ export function LoginForm() {
       </label>
 
       <label style={{ display: "grid", gap: "0.45rem" }}>
-        <span style={{ fontSize: "0.92rem", fontWeight: 600 }}>Password</span>
+        <span style={{ fontSize: "0.92rem", fontWeight: 600 }}>密码</span>
         <input
           autoComplete="current-password"
           name="password"
-          placeholder="Password"
+          placeholder="请输入密码"
           required
           style={inputStyle}
           type="password"
@@ -104,7 +104,7 @@ export function LoginForm() {
         }}
         type="submit"
       >
-        {isPending ? "Signing in..." : "Sign in"}
+        {isPending ? "登录中..." : "登录"}
       </button>
     </form>
   );

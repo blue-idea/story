@@ -40,7 +40,7 @@ describe("writing-workspace-state", () => {
     expect(updated.chapters[0]?.status).toBe("writing");
     expect(updated.chapters[0]?.content).toBe("Signal one.");
     expect(updated.terminalEntries.at(-1)?.message).toContain(
-      "Chapter 1 started",
+      "第 1 章创作开始。",
     );
   });
 
@@ -112,8 +112,6 @@ describe("writing-workspace-state", () => {
     expect(resumed.errorMessage).toBeNull();
     expect(resumed.canRetry).toBe(false);
     expect(resumed.novelStatus).toBe("in_progress");
-    expect(resumed.terminalEntries.at(-1)?.message).toContain(
-      "Retry requested",
-    );
+    expect(resumed.terminalEntries.at(-1)?.message).toContain("已请求重试");
   });
 });

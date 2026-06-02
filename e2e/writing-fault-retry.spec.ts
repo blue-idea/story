@@ -8,7 +8,7 @@ test("writing-fault-retry：故障暂停、重试恢复与导出下载", async (
 }, testInfo) => {
   await page.goto("/qa/task-019/plan");
   await page
-    .getByRole("button", { name: "Confirm and Write" })
+    .getByRole("button", { name: "确认并开始写作" })
     .click({ force: true });
 
   if (!page.url().includes("/qa/task-016")) {
@@ -18,7 +18,7 @@ test("writing-fault-retry：故障暂停、重试恢复与导出下载", async (
   await expect(page).toHaveURL(/\/qa\/task-016$/);
   await expect(
     page.getByRole("heading", {
-      name: "Writing paused on a recoverable error.",
+      name: "因可恢复错误已暂停写作。",
     }),
   ).toBeVisible();
   await expect(
@@ -26,12 +26,12 @@ test("writing-fault-retry：故障暂停、重试恢复与导出下载", async (
   ).toBeVisible();
 
   await page
-    .getByRole("button", { name: "Retry Chapter Writing" })
+    .getByRole("button", { name: "重试本章写作" })
     .click({ force: true });
   await expect(
-    page.getByText("Retry requested. Reconnecting to the writing stream."),
+    page.getByText("已请求重试。正在重新连接写作流。"),
   ).toBeVisible();
-  await expect(page.getByText("Novel completed.")).toBeVisible();
+  await expect(page.getByText("全书创作完成。")).toBeVisible();
 
   await page.screenshot({
     path: testInfo.outputPath("task-019-retry-complete.png"),
@@ -40,7 +40,7 @@ test("writing-fault-retry：故障暂停、重试恢复与导出下载", async (
 
   await page.goto("/qa/task-019/export");
   const downloadPromise = page.waitForEvent("download");
-  await page.getByRole("link", { name: "Export Markdown" }).click();
+  await page.getByRole("link", { name: "导出 Markdown" }).click();
   const download = await downloadPromise;
   const targetFile = testInfo.outputPath("qa-task-019.md");
   await download.saveAs(targetFile);

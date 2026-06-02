@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>作品库 - AI创作平台</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    .work-card {
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .work-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    }
+
+    .tab-btn {
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #2E86AB;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      z-index: 50;
+    }
+
+    .dropdown-menu.show {
+      display: block;
+    }
+
+    /* Brand Logo Styles */
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .brand-logo:hover {
+      transform: translateY(-1px);
+    }
+
+    .logo-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .brand-logo:hover .logo-icon {
+      transform: scale(1.05);
+    }
+
+    .logo-icon i {
+      font-size: 1.5rem; /* 24px - 缩小20% */
+      color: #3b82f6; /* blue-600 - 与文字颜色统一 */
+      transition: all 0.3s ease;
+    }
+
+    .brand-logo:hover .logo-icon i {
+      color: #2563eb; /* blue-700 - 悬停时加深，与文字一致 */
+    }
+
+    .brand-name {
+      font-size: 1.5rem; /* 24px - 缩小20%，与图标大小匹配 */
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #3b82f6; /* blue-600 - 与图标颜色统一 */
+      transition: all 0.3s ease;
+    }
+
+    .brand-logo:hover .brand-name {
+      color: #2563eb; /* blue-700 - 悬停时加深 */
+    }
+  </style>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <a href="home.html" class="brand-logo">
+          <div class="logo-icon">
+            <i class="fas fa-feather-alt"></i>
+          </div>
+          <span class="brand-name">墨语AI</span>
+        </a>
+
+        <div class="hidden md:flex items-center space-x-8">
+          <a href="home.html" class="text-gray-700 hover:text-blue-600 font-medium">首页</a>
+          <a href="library.html" class="text-blue-600 font-medium">作品库</a>
+          <a href="home.html#pricing" class="text-gray-700 hover:text-blue-600 font-medium">定价</a>
+          <a href="profile.html" class="text-gray-700 hover:text-blue-600 font-medium">设置</a>
+        </div>
+
+        <div class="flex items-center space-x-4">
+          <button class="text-gray-700 hover:text-blue-600">
+            <i class="fas fa-bell text-xl"></i>
+          </button>
+          <div class="relative">
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop"
+                 class="w-10 h-10 rounded-full cursor-pointer">
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="flex items-center justify-between mb-8">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">我的作品库</h1>
+        <p class="text-gray-600">管理您的所有创作内容</p>
+      </div>
+
+      <a href="create.html" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition inline-flex items-center">
+        <i class="fas fa-plus mr-2"></i>
+        新建作品
+      </a>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+      <div class="p-6 border-b border-gray-200">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+          <div class="flex items-center space-x-4">
+            <div class="relative">
+              <input type="text"
+                     placeholder="搜索作品..."
+                     class="w-64 border border-gray-300 rounded-lg px-4 py-2 pl-10 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+            </div>
+
+            <select class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option>所有体裁</option>
+              <option>小说</option>
+              <option>诗歌</option>
+              <option>剧本</option>
+              <option>散文</option>
+              <option>论文</option>
+            </select>
+
+            <select class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option>所有状态</option>
+              <option>草稿</option>
+              <option>进行中</option>
+              <option>已完成</option>
+              <option>已发布</option>
+            </select>
+          </div>
+
+          <div class="flex items-center space-x-3">
+            <button class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded hover:bg-gray-100">
+              <i class="fas fa-th-large text-lg"></i>
+            </button>
+            <button class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded hover:bg-gray-100">
+              <i class="fas fa-list text-lg"></i>
+            </button>
+            <button class="text-gray-600 hover:text-gray-900 px-3 py-2 rounded hover:bg-gray-100">
+              <i class="fas fa-sort-amount-down text-lg"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6 border-b border-gray-200 bg-gray-50">
+        <div class="flex items-center space-x-6">
+          <button class="tab-btn active text-blue-600 font-medium pb-2">
+            全部作品 (12)
+          </button>
+          <button class="tab-btn text-gray-600 hover:text-gray-900 font-medium pb-2">
+            最近编辑 (5)
+          </button>
+          <button class="tab-btn text-gray-600 hover:text-gray-900 font-medium pb-2">
+            收藏 (3)
+          </button>
+          <button class="tab-btn text-gray-600 hover:text-gray-900 font-medium pb-2">
+            已发布 (2)
+          </button>
+        </div>
+      </div>
+
+      <div class="p-6">
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-start">
+          <i class="fas fa-info-circle text-blue-600 mt-1 mr-3"></i>
+          <div class="flex-1">
+            <p class="text-sm text-blue-900 font-medium mb-1">免费版限制</p>
+            <p class="text-sm text-blue-700">您已使用 3/3 个作品配额。升级到标准版以创建无限作品。</p>
+          </div>
+          <button class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+            立即升级
+          </button>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="work-card bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div class="h-48 bg-gradient-to-br from-blue-400 to-blue-600 relative">
+              <img src="https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=300&fit=crop"
+                   class="w-full h-full object-cover opacity-50">
+              <div class="absolute top-4 right-4">
+                <button class="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100 shadow-lg">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+              <div class="absolute bottom-4 left-4">
+                <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                  已完成
+                </span>
+              </div>
+            </div>
+
+            <div class="p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs text-gray-500">
+                  <i class="fas fa-feather mr-1"></i>诗歌
+                </span>
+                <span class="text-xs text-gray-500">3天前</span>
+              </div>
+
+              <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1">月光下的诗人</h3>
+              <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                在一个寂静的秋夜，诗人独自徘徊在城市的街头。月光如水，洒落在青石板上...
+              </p>
+
+              <div class="mb-4">
+                <div class="flex items-center justify-between text-xs text-gray-600 mb-2">
+                  <span>创作进度</span>
+                  <span class="font-medium text-gray-900">85%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-blue-600 h-2 rounded-full" style="width: 85%"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <div class="flex items-center space-x-3 text-gray-600">
+                  <span><i class="fas fa-file-word mr-1"></i>8.5k</span>
+                  <span><i class="fas fa-book mr-1"></i>8章</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <a href="editor.html" class="text-blue-600 hover:text-blue-700 font-medium">
+                    继续编辑
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="work-card bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div class="h-48 bg-gradient-to-br from-purple-400 to-purple-600 relative">
+              <img src="https://images.unsplash.com/photo-1519791883288-dc8bd696e667?w=400&h=300&fit=crop"
+                   class="w-full h-full object-cover opacity-50">
+              <div class="absolute top-4 right-4">
+                <button class="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100 shadow-lg">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+              <div class="absolute bottom-4 left-4">
+                <span class="bg-yellow-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                  进行中
+                </span>
+              </div>
+            </div>
+
+            <div class="p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs text-gray-500">
+                  <i class="fas fa-book mr-1"></i>小说
+                </span>
+                <span class="text-xs text-gray-500">1周前</span>
+              </div>
+
+              <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1">星际迷航：第七维度</h3>
+              <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                在遥远的未来，人类发现了通往第七维度的秘密通道。船长李航带领探险队...
+              </p>
+
+              <div class="mb-4">
+                <div class="flex items-center justify-between text-xs text-gray-600 mb-2">
+                  <span>创作进度</span>
+                  <span class="font-medium text-gray-900">45%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-blue-600 h-2 rounded-full" style="width: 45%"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <div class="flex items-center space-x-3 text-gray-600">
+                  <span><i class="fas fa-file-word mr-1"></i>23k</span>
+                  <span><i class="fas fa-book mr-1"></i>12章</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <a href="editor.html" class="text-blue-600 hover:text-blue-700 font-medium">
+                    继续编辑
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="work-card bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div class="h-48 bg-gradient-to-br from-red-400 to-red-600 relative">
+              <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop"
+                   class="w-full h-full object-cover opacity-50">
+              <div class="absolute top-4 right-4">
+                <button class="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100 shadow-lg">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+              <div class="absolute bottom-4 left-4">
+                <span class="bg-gray-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                  草稿
+                </span>
+              </div>
+            </div>
+
+            <div class="p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs text-gray-500">
+                  <i class="fas fa-mask mr-1"></i>剧本
+                </span>
+                <span class="text-xs text-gray-500">2周前</span>
+              </div>
+
+              <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1">午夜档案</h3>
+              <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                一个被遗忘的档案室，一段封存的历史。侦探陈默在调查连环失踪案时...
+              </p>
+
+              <div class="mb-4">
+                <div class="flex items-center justify-between text-xs text-gray-600 mb-2">
+                  <span>创作进度</span>
+                  <span class="font-medium text-gray-900">15%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-blue-600 h-2 rounded-full" style="width: 15%"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <div class="flex items-center space-x-3 text-gray-600">
+                  <span><i class="fas fa-file-word mr-1"></i>5.2k</span>
+                  <span><i class="fas fa-book mr-1"></i>3章</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <a href="editor.html" class="text-blue-600 hover:text-blue-700 font-medium">
+                    继续编辑
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="work-card bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div class="h-48 bg-gradient-to-br from-green-400 to-green-600 relative">
+              <img src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop"
+                   class="w-full h-full object-cover opacity-50">
+              <div class="absolute top-4 right-4">
+                <button class="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100 shadow-lg">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+              <div class="absolute bottom-4 left-4 flex items-center space-x-2">
+                <span class="bg-green-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                  已完成
+                </span>
+                <span class="bg-blue-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                  已发布
+                </span>
+              </div>
+            </div>
+
+            <div class="p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs text-gray-500">
+                  <i class="fas fa-scroll mr-1"></i>散文
+                </span>
+                <span class="text-xs text-gray-500">1个月前</span>
+              </div>
+
+              <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1">春日随想</h3>
+              <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                春天的脚步总是轻盈的，它悄悄地来到，带来温暖和希望...
+              </p>
+
+              <div class="mb-4">
+                <div class="flex items-center justify-between text-xs text-gray-600 mb-2">
+                  <span>创作进度</span>
+                  <span class="font-medium text-green-600">100%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-green-600 h-2 rounded-full" style="width: 100%"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <div class="flex items-center space-x-3 text-gray-600">
+                  <span><i class="fas fa-file-word mr-1"></i>3.8k</span>
+                  <span><i class="fas fa-heart text-red-500 mr-1"></i>456</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <a href="editor.html" class="text-blue-600 hover:text-blue-700 font-medium">
+                    查看
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="work-card bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div class="h-48 bg-gradient-to-br from-yellow-400 to-yellow-600 relative">
+              <img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=300&fit=crop"
+                   class="w-full h-full object-cover opacity-50">
+              <div class="absolute top-4 right-4">
+                <button class="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100 shadow-lg">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+              <div class="absolute bottom-4 left-4">
+                <span class="bg-yellow-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                  进行中
+                </span>
+              </div>
+            </div>
+
+            <div class="p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs text-gray-500">
+                  <i class="fas fa-graduation-cap mr-1"></i>论文
+                </span>
+                <span class="text-xs text-gray-500">3天前</span>
+              </div>
+
+              <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1">人工智能在文学创作中的应用</h3>
+              <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                本文探讨了人工智能技术在文学创作领域的应用现状与发展趋势...
+              </p>
+
+              <div class="mb-4">
+                <div class="flex items-center justify-between text-xs text-gray-600 mb-2">
+                  <span>创作进度</span>
+                  <span class="font-medium text-gray-900">60%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-blue-600 h-2 rounded-full" style="width: 60%"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <div class="flex items-center space-x-3 text-gray-600">
+                  <span><i class="fas fa-file-word mr-1"></i>12k</span>
+                  <span><i class="fas fa-book mr-1"></i>5章</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <a href="editor.html" class="text-blue-600 hover:text-blue-700 font-medium">
+                    继续编辑
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="work-card bg-white border border-gray-200 rounded-xl overflow-hidden">
+            <div class="h-48 bg-gradient-to-br from-indigo-400 to-indigo-600 relative">
+              <img src="https://images.unsplash.com/photo-1476357471311-43c0db9fb2b4?w=400&h=300&fit=crop"
+                   class="w-full h-full object-cover opacity-50">
+              <div class="absolute top-4 right-4">
+                <button class="bg-white text-gray-700 p-2 rounded-full hover:bg-gray-100 shadow-lg">
+                  <i class="fas fa-ellipsis-v"></i>
+                </button>
+              </div>
+              <div class="absolute bottom-4 left-4">
+                <span class="bg-gray-500 text-white text-xs px-3 py-1 rounded-full font-medium">
+                  草稿
+                </span>
+              </div>
+            </div>
+
+            <div class="p-5">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs text-gray-500">
+                  <i class="fas fa-book mr-1"></i>小说
+                </span>
+                <span class="text-xs text-gray-500">1个月前</span>
+              </div>
+
+              <h3 class="text-lg font-bold text-gray-900 mb-2 line-clamp-1">江湖夜雨</h3>
+              <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+                江湖恩怨，情仇交织。一把剑，一壶酒，一段传奇...
+              </p>
+
+              <div class="mb-4">
+                <div class="flex items-center justify-between text-xs text-gray-600 mb-2">
+                  <span>创作进度</span>
+                  <span class="font-medium text-gray-900">8%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div class="bg-blue-600 h-2 rounded-full" style="width: 8%"></div>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between text-sm">
+                <div class="flex items-center space-x-3 text-gray-600">
+                  <span><i class="fas fa-file-word mr-1"></i>2.1k</span>
+                  <span><i class="fas fa-book mr-1"></i>2章</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <a href="editor.html" class="text-blue-600 hover:text-blue-700 font-medium">
+                    继续编辑
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 flex justify-center">
+          <div class="flex items-center space-x-2">
+            <button class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50">
+              <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="px-4 py-2 bg-blue-600 text-white rounded font-medium">1</button>
+            <button class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">2</button>
+            <button class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">3</button>
+            <span class="px-3 py-2">...</span>
+            <button class="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50">10</button>
+            <button class="px-3 py-2 border border-gray-300 rounded hover:bg-gray-50">
+              <i class="fas fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-900">批量操作</h2>
+        <span class="text-sm text-gray-600">已选择 0 个作品</span>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <button class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+          <i class="fas fa-download mr-2"></i>
+          批量导出
+        </button>
+        <button class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+          <i class="fas fa-share-alt mr-2"></i>
+          批量分享
+        </button>
+        <button class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+          <i class="fas fa-archive mr-2"></i>
+          归档
+        </button>
+        <button class="border border-red-300 text-red-600 px-4 py-2 rounded-lg hover:bg-red-50 transition disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+          <i class="fas fa-trash mr-2"></i>
+          批量删除
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active', 'text-blue-600'));
+        this.classList.add('active', 'text-blue-600');
+      });
+    });
+  </script>
+</body>
+</html>

@@ -65,6 +65,6 @@ describe("TASK-003 NextAuth.js 配置与轻量邮箱登录/注册", () => {
 
     expect(markup).toContain('name="email"');
     expect(markup).toContain('type="password"');
-    expect(markup).toContain("Sign in");
+    expect(markup).toContain("登录");
   });
 });

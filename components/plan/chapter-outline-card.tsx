@@ -37,7 +37,7 @@ export function ChapterOutlineCard({
   return (
     <article className="plan-chapter-card">
       <div className="plan-chapter-topline">
-        <span className="plan-chip">Chapter {chapterNumber}</span>
+        <span className="plan-chip">第 {chapterNumber} 章</span>
         <button
           className="plan-text-button"
           onClick={() => {
@@ -47,7 +47,7 @@ export function ChapterOutlineCard({
           type="button"
         >
           {isEditing ? (
-            "Close"
+            "关闭"
           ) : (
             <>
               <span aria-hidden="true" className="plan-text-button-icon">
@@ -72,7 +72,7 @@ export function ChapterOutlineCard({
                   />
                 </svg>
               </span>
-              <span>Edit Outline</span>
+              <span>编辑大纲</span>
             </>
           )}
         </button>
@@ -80,7 +80,7 @@ export function ChapterOutlineCard({
 
       <h3 className="plan-chapter-title">{title}</h3>
       <p className="plan-chapter-lead">{lead}</p>
-      {saved ? <p className="plan-success-text">Saved.</p> : null}
+      {saved ? <p className="plan-success-text">保存成功。</p> : null}
 
       {isEditing ? (
         <div className="plan-editor-block">
@@ -88,7 +88,7 @@ export function ChapterOutlineCard({
             className="plan-editor-label"
             htmlFor={`chapter-${chapterNumber}`}
           >
-            Outline Summary
+            章节大纲概要
           </label>
           <textarea
             className="plan-editor-textarea"
@@ -139,13 +139,13 @@ export function ChapterOutlineCard({
                     setSaved(true);
                     setIsEditing(false);
                   } catch {
-                    setError("Failed to save chapter outline.");
+                    setError("保存章节大纲失败。");
                   }
                 });
               }}
               type="button"
             >
-              {isPending ? "Saving..." : "Save Outline"}
+              {isPending ? "保存中..." : "保存大纲"}
             </button>
             {error ? <span className="plan-error-text">{error}</span> : null}
           </div>

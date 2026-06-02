@@ -58,7 +58,7 @@ const INITIAL_LAYER2_ANSWERS: Layer2AnswerState = {
 };
 
 function requestFailedMessage() {
-  return "Request failed. Please try again.";
+  return "请求失败，请重试。";
 }
 
 export function NovelWizard({
@@ -122,7 +122,7 @@ export function NovelWizard({
 
   function handleLayer1Submit(questionId: "q1" | "q2" | "q3", value: string) {
     if (!value.trim()) {
-      setError("Please fill in the answer.");
+      setError("请填写答案。");
       return;
     }
 
@@ -167,9 +167,7 @@ export function NovelWizard({
 
   function handleSuggest() {
     if (qaMode) {
-      setSuggestion(
-        "Suggested direction: tighten the conflict around a ticking deadline.",
-      );
+      setSuggestion("建议的写作方向：围绕一个紧迫的截止日期来强化冲突。");
       return;
     }
 
@@ -314,7 +312,7 @@ export function NovelWizard({
             return;
           }
 
-          setError("Please provide a valid chapter count.");
+          setError("请输入有效的章节数。");
         }
       } catch {
         setError(requestFailedMessage());
@@ -328,12 +326,8 @@ export function NovelWizard({
       wizardState.phase === "layer2" &&
       wizardState.step === "config-review"
     ) {
-      setCandidateTitles([
-        "Neon Meridian",
-        "Signal Beneath the Glass Sky",
-        "Blackout Protocol",
-      ]);
-      setSelectedTitle("Neon Meridian");
+      setCandidateTitles(["霓虹子午线", "玻璃天空下的信号", "停电协议"]);
+      setSelectedTitle("霓虹子午线");
       setWizardState((prev) => markConfigConfirmed(prev));
       return;
     }
@@ -368,12 +362,12 @@ export function NovelWizard({
         return;
       }
 
-      setSuggestion(`Title confirmed: ${selectedTitle || "Neon Meridian"}`);
+      setSuggestion(`已确认标题：${selectedTitle || "霓虹子午线"}`);
       return;
     }
 
     if (!draftId || !selectedTitle.trim()) {
-      setError("Please choose a title first.");
+      setError("请先选择或输入一个标题。");
       return;
     }
 
@@ -393,17 +387,17 @@ export function NovelWizard({
     <main className="wizard-shell">
       <section className="wizard-frame">
         <header className="wizard-hero">
-          <p className="wizard-kicker">PHASE 1</p>
-          <h1>Novel Creation Wizard</h1>
-          <p>Progressive disclosure mode. One question at a time.</p>
+          <p className="wizard-kicker">第一阶段</p>
+          <h1>小说创作向导</h1>
+          <p>渐进式问答模式，每次仅显示一道问题。</p>
         </header>
 
         {wizardState.phase === "layer1" ? (
           <section className="wizard-card">
             {currentStep === "q1" ? (
               <>
-                <h2>Question 1 of 3</h2>
-                <p className="wizard-label">Genre</p>
+                <h2>问题 1 / 3</h2>
+                <p className="wizard-label">题材分类</p>
                 <div className="wizard-option-grid">
                   {sortedGenreOptions.map((option) => (
                     <button
@@ -418,7 +412,7 @@ export function NovelWizard({
                       type="button"
                     >
                       <span>{option.label}</span>
-                      {option.starred ? <small>★ Preferred</small> : null}
+                      {option.starred ? <small>★ 偏好推荐</small> : null}
                     </button>
                   ))}
                 </div>
@@ -427,15 +421,15 @@ export function NovelWizard({
                   onClick={() => handleLayer1Submit("q1", coreAnswers.q1)}
                   type="button"
                 >
-                  Continue
+                  继续
                 </button>
               </>
             ) : null}
 
             {currentStep === "q2" ? (
               <>
-                <h2>Question 2 of 3</h2>
-                <p className="wizard-label">Who is the protagonist?</p>
+                <h2>问题 2 / 3</h2>
+                <p className="wizard-label">主角是谁？</p>
                 <input
                   className="wizard-input"
                   onChange={(event) =>
@@ -444,7 +438,7 @@ export function NovelWizard({
                       q2: event.target.value,
                     }))
                   }
-                  placeholder="Name, role, and identity"
+                  placeholder="姓名、角色与身份背景"
                   value={coreAnswers.q2}
                 />
                 <button
@@ -452,15 +446,15 @@ export function NovelWizard({
                   onClick={() => handleLayer1Submit("q2", coreAnswers.q2)}
                   type="button"
                 >
-                  Continue
+                  继续
                 </button>
               </>
             ) : null}
 
             {currentStep === "q3" ? (
               <>
-                <h2>Question 3 of 3</h2>
-                <p className="wizard-label">What is the core conflict?</p>
+                <h2>问题 3 / 3</h2>
+                <p className="wizard-label">核心冲突是什么？</p>
                 <textarea
                   className="wizard-textarea"
                   onChange={(event) =>
@@ -469,7 +463,7 @@ export function NovelWizard({
                       q3: event.target.value,
                     }))
                   }
-                  placeholder="Main tension, risk, and stakes"
+                  placeholder="主要矛盾、危机与利益攸关点"
                   rows={4}
                   value={coreAnswers.q3}
                 />
@@ -478,14 +472,14 @@ export function NovelWizard({
                   onClick={() => handleLayer1Submit("q3", coreAnswers.q3)}
                   type="button"
                 >
-                  Continue
+                  继续
                 </button>
               </>
             ) : null}
 
             {currentStep === "summary" ? (
               <>
-                <h2>Layer 1 Summary</h2>
+                <h2>第一阶段摘要</h2>
                 <pre className="wizard-summary">
                   {buildLayer1Summary(wizardState.coreConfig)}
                 </pre>
@@ -495,7 +489,7 @@ export function NovelWizard({
                   onClick={handleEnterLayer2}
                   type="button"
                 >
-                  Enter Layer 2
+                  进入深度定制
                 </button>
               </>
             ) : null}
@@ -504,12 +498,12 @@ export function NovelWizard({
 
         {wizardState.phase === "layer2" ? (
           <section className="wizard-card">
-            <h2>Layer 2</h2>
-            <p className="wizard-label">Deep customization</p>
+            <h2>第二阶段</h2>
+            <p className="wizard-label">深度定制</p>
 
             {wizardState.step === "q4" ? (
               <>
-                <p className="wizard-question">Q4. Worldbuilding details</p>
+                <p className="wizard-question">Q4. 世界观细节</p>
                 <textarea
                   className="wizard-textarea"
                   onChange={(event) =>
@@ -518,7 +512,7 @@ export function NovelWizard({
                       q4: event.target.value,
                     }))
                   }
-                  placeholder="Optional world setup"
+                  placeholder="选填，世界观设定"
                   rows={4}
                   value={layer2Answers.q4}
                 />
@@ -527,7 +521,7 @@ export function NovelWizard({
 
             {wizardState.step === "q5" ? (
               <>
-                <p className="wizard-question">Q5. Perspective and tone</p>
+                <p className="wizard-question">Q5. 视角与基调</p>
                 <div className="wizard-option-grid">
                   {LAYER2_PERSPECTIVE_OPTIONS.map((option) => (
                     <button
@@ -559,7 +553,7 @@ export function NovelWizard({
                       type="button"
                     >
                       <span>{option.label}</span>
-                      {option.starred ? <small>★ Preferred</small> : null}
+                      {option.starred ? <small>★ 偏好推荐</small> : null}
                     </button>
                   ))}
                 </div>
@@ -568,7 +562,7 @@ export function NovelWizard({
 
             {wizardState.step === "q6" ? (
               <>
-                <p className="wizard-question">Q6. Theme</p>
+                <p className="wizard-question">Q6. 主题</p>
                 <div className="wizard-option-grid">
                   {LAYER2_THEME_OPTIONS.map((option) => (
                     <button
@@ -591,7 +585,7 @@ export function NovelWizard({
 
             {wizardState.step === "q7" ? (
               <>
-                <p className="wizard-question">Q7. Audience</p>
+                <p className="wizard-question">Q7. 目标读者</p>
                 <div className="wizard-option-grid">
                   {LAYER2_AUDIENCE_OPTIONS.map((option) => (
                     <button
@@ -614,7 +608,7 @@ export function NovelWizard({
 
             {wizardState.step === "q8" ? (
               <>
-                <p className="wizard-question">Q8. Chapter count</p>
+                <p className="wizard-question">Q8. 章节数</p>
                 <div className="wizard-option-grid">
                   {sortedChapterOptions.map((option) => (
                     <button
@@ -629,7 +623,7 @@ export function NovelWizard({
                       type="button"
                     >
                       <span>{option.label}</span>
-                      {option.starred ? <small>★ Preferred</small> : null}
+                      {option.starred ? <small>★ 偏好推荐</small> : null}
                     </button>
                   ))}
                 </div>
@@ -638,36 +632,31 @@ export function NovelWizard({
 
             {wizardState.step === "config-review" ? (
               <>
-                <h3>Configuration Review</h3>
+                <h3>配置确认</h3>
                 <dl className="wizard-review-list">
                   <div>
-                    <dt>Worldbuilding</dt>
-                    <dd>{layer2Answers.q4 || "Default value will be used"}</dd>
+                    <dt>世界观</dt>
+                    <dd>{layer2Answers.q4 || "将使用默认值"}</dd>
                   </div>
                   <div>
-                    <dt>Perspective</dt>
-                    <dd>
-                      {layer2Answers.q5Perspective ||
-                        "Default value will be used"}
-                    </dd>
+                    <dt>视角</dt>
+                    <dd>{layer2Answers.q5Perspective || "将使用默认值"}</dd>
                   </div>
                   <div>
-                    <dt>Tone</dt>
-                    <dd>
-                      {layer2Answers.q5Tone || "Default value will be used"}
-                    </dd>
+                    <dt>基调</dt>
+                    <dd>{layer2Answers.q5Tone || "将使用默认值"}</dd>
                   </div>
                   <div>
-                    <dt>Theme</dt>
-                    <dd>{layer2Answers.q6 || "Default value will be used"}</dd>
+                    <dt>主题</dt>
+                    <dd>{layer2Answers.q6 || "将使用默认值"}</dd>
                   </div>
                   <div>
-                    <dt>Audience</dt>
-                    <dd>{layer2Answers.q7 || "Default value will be used"}</dd>
+                    <dt>目标读者</dt>
+                    <dd>{layer2Answers.q7 || "将使用默认值"}</dd>
                   </div>
                   <div>
-                    <dt>Chapter count</dt>
-                    <dd>{layer2Answers.q8 || "Default value will be used"}</dd>
+                    <dt>章节数</dt>
+                    <dd>{layer2Answers.q8 || "将使用默认值"}</dd>
                   </div>
                 </dl>
                 <div className="wizard-action-row">
@@ -678,7 +667,7 @@ export function NovelWizard({
                     }
                     type="button"
                   >
-                    Edit Settings
+                    修改设置
                   </button>
                   <button
                     className="wizard-primary"
@@ -686,7 +675,7 @@ export function NovelWizard({
                     onClick={handleConfirmConfigAndTitles}
                     type="button"
                   >
-                    Confirm Configuration
+                    确认配置
                   </button>
                 </div>
               </>
@@ -699,14 +688,14 @@ export function NovelWizard({
                   }
                   type="button"
                 >
-                  Skip This Question
+                  跳过此题
                 </button>
                 <button
                   className="wizard-ghost"
                   onClick={handleSuggest}
                   type="button"
                 >
-                  Random Suggestion
+                  随机生成
                 </button>
                 <button
                   className="wizard-ghost"
@@ -715,7 +704,7 @@ export function NovelWizard({
                   }
                   type="button"
                 >
-                  Jump to Q8
+                  跳转到 Q8
                 </button>
                 <button
                   className="wizard-primary"
@@ -723,7 +712,7 @@ export function NovelWizard({
                   onClick={handleLayer2Next}
                   type="button"
                 >
-                  Continue
+                  继续
                 </button>
               </div>
             )}
@@ -732,9 +721,9 @@ export function NovelWizard({
 
         {wizardState.phase === "layer3" ? (
           <section className="wizard-card">
-            <h2>Title candidates</h2>
+            <h2>候选标题</h2>
             <p className="wizard-label">
-              Choose one title or type your own custom title.
+              选择一个标题，或者输入您自己的自定义标题。
             </p>
             <div className="wizard-option-grid">
               {candidateTitles.map((title) => (
@@ -751,7 +740,7 @@ export function NovelWizard({
             <input
               className="wizard-input"
               onChange={(event) => setSelectedTitle(event.target.value)}
-              placeholder="Custom title"
+              placeholder="自定义标题"
               value={selectedTitle}
             />
             <div className="wizard-action-row">
@@ -761,15 +750,13 @@ export function NovelWizard({
                 onClick={handleConfirmTitle}
                 type="button"
               >
-                Confirm Title
+                确认标题
               </button>
             </div>
           </section>
         ) : null}
 
-        {suggestion ? (
-          <p className="wizard-info">Suggestion: {suggestion}</p>
-        ) : null}
+        {suggestion ? <p className="wizard-info">建议：{suggestion}</p> : null}
         {error ? <p className="wizard-error">{error}</p> : null}
       </section>
     </main>

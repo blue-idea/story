@@ -48,15 +48,15 @@ function buildStreamUrl(baseUrl: string, streamRun: number) {
 function getConnectionLabel(connectionState: ConnectionState) {
   switch (connectionState) {
     case "connecting":
-      return "Connecting";
+      return "连接中";
     case "connected":
-      return "Streaming";
+      return "生成中";
     case "completed":
-      return "Completed";
+      return "已完成";
     case "failed":
-      return "Paused";
+      return "已暂停";
     default:
-      return "Standing By";
+      return "就绪";
   }
 }
 
@@ -202,25 +202,22 @@ export function WritingWorkspace({
     <main className="write-workspace-shell">
       <section className="write-hero-card">
         <div className="write-hero-copy">
-          <p className="plan-kicker">PHASE 3</p>
+          <p className="plan-kicker">第三阶段</p>
           <h1>{workspaceState.title}</h1>
-          <p>
-            Serial writing is now streaming chapter by chapter, with validation
-            checkpoints and fault recovery visible in one workspace.
-          </p>
+          <p>小说串行写作正在逐章流式生成，校验检查点与故障恢复实时可见。</p>
         </div>
 
         <div className="write-hero-meta">
           <div className="write-hero-stat">
-            <span>Status</span>
+            <span>状态</span>
             <strong>{getConnectionLabel(connectionState)}</strong>
           </div>
           <div className="write-hero-stat">
-            <span>Active Chapter</span>
-            <strong>{workspaceState.activeChapterNumber ?? "Waiting"}</strong>
+            <span>当前写作章节</span>
+            <strong>{workspaceState.activeChapterNumber ?? "等待中"}</strong>
           </div>
           <div className="write-hero-stat">
-            <span>Visible Count</span>
+            <span>已显示字数</span>
             <strong>{renderedContent.length}</strong>
           </div>
         </div>
@@ -230,8 +227,8 @@ export function WritingWorkspace({
         <article className="write-terminal-panel">
           <div className="write-panel-heading">
             <div>
-              <p className="plan-kicker">LIVE TERMINAL</p>
-              <h2>Typewriter drafting stream</h2>
+              <p className="plan-kicker">实时终端</p>
+              <h2>打字机写作流</h2>
             </div>
             <span
               className={`write-status-pill write-status-pill-large ${
@@ -250,14 +247,14 @@ export function WritingWorkspace({
             <div className="write-draft-meta">
               <span>
                 {activeChapter
-                  ? `Chapter ${activeChapter.chapterNumber} · ${activeChapter.title}`
-                  : "Awaiting first chapter event"}
+                  ? `第 ${activeChapter.chapterNumber} 章 · ${activeChapter.title}`
+                  : "等待首章生成事件"}
               </span>
-              <strong>{renderedContent.length} chars</strong>
+              <strong>{renderedContent.length} 字</strong>
             </div>
             <pre className="write-draft-text">
               {renderedContent ||
-                "The writing engine is warming up. Incoming prose will render here in real time."}
+                "写作引擎正在准备中。生成的正文将实时渲染在此处。"}
             </pre>
           </div>
 
@@ -275,8 +272,8 @@ export function WritingWorkspace({
           {workspaceState.errorMessage ? (
             <section className="write-retry-panel">
               <div>
-                <p className="plan-kicker">FAULT HOLD</p>
-                <h3>Writing paused on a recoverable error.</h3>
+                <p className="plan-kicker">故障暂挂</p>
+                <h3>因可恢复错误已暂停写作。</h3>
                 <p>{workspaceState.errorMessage}</p>
               </div>
 
@@ -292,7 +289,7 @@ export function WritingWorkspace({
                     });
 
                     if (!response.ok) {
-                      setRetryMessage("Failed to restart writing.");
+                      setRetryMessage("重启写作失败。");
                       return;
                     }
 
@@ -305,7 +302,7 @@ export function WritingWorkspace({
                 }}
                 type="button"
               >
-                {isRetryPending ? "Restarting..." : "Retry Chapter Writing"}
+                {isRetryPending ? "重启中..." : "重试本章写作"}
               </button>
 
               {retryMessage ? (
@@ -318,8 +315,8 @@ export function WritingWorkspace({
         <aside className="write-sidebar-panel">
           <div className="write-panel-heading">
             <div>
-              <p className="plan-kicker">CHAPTER RADAR</p>
-              <h2>Validation and retry board</h2>
+              <p className="plan-kicker">章节雷达</p>
+              <h2>校验与重试面板</h2>
             </div>
           </div>
 

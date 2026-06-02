@@ -61,11 +61,11 @@ describe("TASK-013 首页与快捷续写卡片 UI", () => {
     const markup = renderToStaticMarkup(await pageModule.default());
 
     expect(loadHomeDashboardMock).toHaveBeenCalledWith("user-1");
-    expect(markup).toContain("Continue Writing");
+    expect(markup).toContain("继续创作");
     expect(markup).toContain("/novel/novel-1/write");
     expect(markup).toContain("Neon Meridian");
-    expect(markup).toContain("68% complete");
-    expect(markup).toContain("Last edited");
+    expect(markup).toContain("已完成 68%");
+    expect(markup).toContain("上次编辑于");
   });
 
   it("REQ-001-AC-002: 首页应展示偏好摘要与开启新小说按钮", async () => {
@@ -85,8 +85,8 @@ describe("TASK-013 首页与快捷续写卡片 UI", () => {
     const pageModule = await import("../app/page");
     const markup = renderToStaticMarkup(await pageModule.default());
 
-    expect(markup).toContain("Preferred genres");
+    expect(markup).toContain("偏好题材");
     expect(markup).toContain("Fantasy");
-    expect(markup).toContain("Start New Novel");
+    expect(markup).toContain("开始新小说");
   });
 });

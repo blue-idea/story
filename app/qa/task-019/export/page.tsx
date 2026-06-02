@@ -9,13 +9,12 @@ export default function Task019ExportPreviewPage() {
     <main className="write-placeholder-shell">
       <section className="write-placeholder-card">
         <p className="plan-kicker">TASK-019 QA</p>
-        <h1>Export package is ready.</h1>
+        <h1>导出包已就绪。</h1>
         <p>
-          This route is used by Playwright journey tests to validate download
-          behavior after retry-based writing recovery.
+          此路由用于 Playwright 旅程测试，以验证基于重试的写作恢复后的下载行为。
         </p>
         <a className="read-export-button" href="/qa/task-019/export/download">
-          Export Markdown
+          导出 Markdown
         </a>
       </section>
     </main>
