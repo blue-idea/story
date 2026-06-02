@@ -112,6 +112,7 @@ describe("Generator", () => {
 
     const firstCall = mockGenerateStream.mock.calls[0][0];
     expect(firstCall.prompt).toContain("3000");
+    expect(firstCall.prompt).toContain("8000");
     expect(firstCall.prompt).toContain("悬念");
     expect(firstCall.prompt).toContain("家族惊变");
     expect(firstCall.prompt).toContain("林云");

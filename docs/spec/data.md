@@ -124,7 +124,7 @@
 | `content`          | `text`         | DEFAULT ''                              | 生成的正文 Markdown 内容                                                                                     |
 | `word_count`       | `integer`      | NOT NULL, DEFAULT 0                     | 字符数                                                                                                       |
 | `status`           | `varchar(32)`  | NOT NULL, DEFAULT 'pending'             | 状态：`pending` (待生成), `writing` (生成中), `validating` (校验中), `completed` (完成), `failed` (生成失败) |
-| `word_count_valid` | `boolean`      | DEFAULT false                           | 字数检测是否通过 (3000-5000)                                                                                 |
+| `word_count_valid` | `boolean`      | DEFAULT false                           | 字数检测是否通过 (3000-8000)                                                                                 |
 | `suspense_valid`   | `boolean`      | DEFAULT false                           | 结尾悬念钩子是否检测通过                                                                                     |
 | `passed`           | `boolean`      | DEFAULT false                           | 综合质量校验是否通过                                                                                         |
 | `retry_count`      | `integer`      | NOT NULL, DEFAULT 0                     | 校验失败重试轮数 (上限 3)                                                                                    |

@@ -1,6 +1,9 @@
 import type { CustomConfig } from "../db/schema";
 
 export const DRAFT_TITLE_PLACEHOLDER = "Untitled Draft";
+export const CHAPTER_WORD_COUNT_MIN = 3000;
+export const CHAPTER_WORD_COUNT_MAX = 8000;
+export const CHAPTER_WORD_COUNT_HARD_MIN = 2500;
 
 export const DEFAULT_CUSTOM_CONFIG: CustomConfig = {
   worldbuilding: "现实世界",

@@ -41,7 +41,7 @@ describe("prompt loader", () => {
       previousChapterSummary: "（首章无上文）",
     });
     expect(output).toContain("3000");
-    expect(output).toContain("5000");
+    expect(output).toContain("8000");
     expect(output).toMatch(/悬念|钩子/);
   });
 

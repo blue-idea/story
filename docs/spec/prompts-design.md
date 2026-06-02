@@ -390,7 +390,7 @@ sequenceDiagram
 1. 从 `novel_profiles.outline` 解析的本章 **7 列完整规划行**（非简化摘要）
 2. 出场人物档案摘录（来自 `character_profiles`，字段与 `character-template.md` 一致）
 3. 上一章正文末尾或 `01-大纲.md` 中该章摘要区（串行连贯性）
-4. `templates/chapter.md` 结构（章首引子 50-150 字、正文 3000-5000、章节备注区）
+4. `templates/chapter.md` 结构（章首引子 50-150 字、正文 3000-8000、章节备注区）
 
 正文 Prompt 必须包含 Skill 质量约束（写入 `fragments/chapter-quality-checklist.md`）：
 
@@ -420,7 +420,7 @@ sequenceDiagram
 
 | 检查项         | 实现                                          | Prompt 需求                                   |
 | -------------- | --------------------------------------------- | --------------------------------------------- |
-| 字数 3000-5000 | 代码计数（与 Python 脚本规则一致）            | 无需 LLM                                      |
+| 字数 3000-8000 | 代码计数（与 Python 脚本规则一致）            | 无需 LLM                                      |
 | 悬念钩子       | LLM 读末尾 300 字                             | `phase4-suspense-check.md`，仅返回 true/false |
 | 失败重写       | `phase3-chapter-rewrite.md` + `diagnosticLog` | 最多 3 轮（REQ-005）                          |
 

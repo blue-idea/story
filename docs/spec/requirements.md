@@ -183,7 +183,7 @@
 
 **用户故事：** 作为创作者，我希望 AI 能够按照串行机制依次生成各个章节，并在写作工作台上以打字机流式渲染正在创作的正文，让我直观感受创作状态。
 
-> **Novelist 对齐说明**：自动写作流遵循 `phase3-writing.md` 的写前分析 → 撰写 3000～5000 字 → 悬念钩子；**深度润色不在自动流中执行**，由 REQ-006 的手动选区润色承担。提示词外置在 `prompts/instructions/`。不实现 Skill 中的并行写作模式。
+> **Novelist 对齐说明**：自动写作流遵循 `phase3-writing.md` 的写前分析 → 撰写 3000～8000 字 → 悬念钩子；**深度润色不在自动流中执行**，由 REQ-006 的手动选区润色承担。提示词外置在 `prompts/instructions/`。不实现 Skill 中的并行写作模式。
 
 #### 验收标准
 
@@ -212,7 +212,7 @@
 
 ### 需求 REQ-005 · 质量自动校验与故障暂停重试
 
-**用户故事：** 作为创作者，我希望系统自动检测每章生成的字数（3000-5000字）和悬念钩子，当不合格时能自动重试扩写（最多 3 轮）；而当大模型发生网络故障或 3 轮重试均失败时，系统能够自动暂停写作并允许我点击按钮“重试本章”。
+**用户故事：** 作为创作者，我希望系统自动检测每章生成的字数（3000-8000字）和悬念钩子，当不合格时能自动重试扩写（最多 3 轮）；而当大模型发生网络故障或 3 轮重试均失败时，系统能够自动暂停写作并允许我点击按钮“重试本章”。
 
 #### 验收标准
 
@@ -220,7 +220,7 @@
 - id: REQ-005-AC-001
   ears: >
     When the chapter text generation is completed,
-    the validator shall check if character count is between 3000 and 5000, and parse the end of the text to detect if suspense hooks exist.
+    the validator shall check if character count is between 3000 and 8000, and parse the end of the text to detect if suspense hooks exist.
   test_type: Unit
   expected:
     return_value: "object"

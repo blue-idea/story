@@ -1,8 +1,8 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { buildChapterDraftPrompt } from "./chapter-prompt";
 
 describe("chapter-prompt", () => {
-  it("buildChapterDraftPrompt 注入 7 列规划、人物与上文", () => {
+  it("injects outline rows, character data, and chapter constraints", () => {
     const { prompt, systemInstruction } = buildChapterDraftPrompt({
       chapterNumber: 1,
       chapterTitle: "启程",
@@ -15,6 +15,7 @@ describe("chapter-prompt", () => {
     expect(prompt).toContain("突然揭示");
     expect(prompt).toContain("林云");
     expect(prompt).toContain("3000");
+    expect(prompt).toContain("8000");
     expect(prompt).toContain("悬念");
     expect(systemInstruction).toMatch(/作者|创作/);
   });

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { validateChapter, parseSuspenseCheckResponse } from "./validator";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { parseSuspenseCheckResponse, validateChapter } from "./validator";
 
 const mockGenerateText = vi.fn();
 
@@ -10,23 +10,23 @@ vi.mock("../llm", () => ({
 }));
 
 describe("parseSuspenseCheckResponse", () => {
-  it("解析 JSON hasHook", () => {
+  it("parses JSON hasHook", () => {
     expect(parseSuspenseCheckResponse('{ "hasHook": true }')).toBe(true);
     expect(parseSuspenseCheckResponse('{ "hasHook": false }')).toBe(false);
   });
 
-  it("兼容纯文本 true/false", () => {
+  it("supports plain text true/false responses", () => {
     expect(parseSuspenseCheckResponse("true")).toBe(true);
     expect(parseSuspenseCheckResponse("false")).toBe(false);
   });
 });
 
-describe("Validator", () => {
+describe("validateChapter", () => {
   beforeEach(() => {
     mockGenerateText.mockReset();
   });
 
-  it("当字数不足且无悬念时，返回失败状态及详细诊断建议", async () => {
+  it("returns diagnostics when the chapter is too short and has no suspense hook", async () => {
     mockGenerateText.mockResolvedValue('{ "hasHook": false }');
     const shortText = "字".repeat(100);
 
@@ -40,7 +40,7 @@ describe("Validator", () => {
     expect(result.diagnosticLog).toContain("末尾缺乏悬念或钩子");
   });
 
-  it("当字数达标且包含悬念时，验证通过", async () => {
+  it("passes when the chapter stays within the range and includes suspense", async () => {
     mockGenerateText.mockResolvedValue('{ "hasHook": true }');
     const longText = "字".repeat(3500);
 
@@ -52,7 +52,31 @@ describe("Validator", () => {
     expect(result.diagnosticLog).toBeUndefined();
   });
 
-  it("使用 phase4-suspense-check 外置 prompt", async () => {
+  it("accepts chapters at the 8000 character upper bound", async () => {
+    mockGenerateText.mockResolvedValue('{ "hasHook": true }');
+    const boundaryText = "字".repeat(8000);
+
+    const result = await validateChapter(boundaryText, 2);
+
+    expect(result.passed).toBe(true);
+    expect(result.wordCountValid).toBe(true);
+    expect(result.suspenseValid).toBe(true);
+  });
+
+  it("rejects chapters that exceed the 8000 character upper bound", async () => {
+    mockGenerateText.mockResolvedValue('{ "hasHook": true }');
+    const tooLongText = "字".repeat(8001);
+
+    const result = await validateChapter(tooLongText, 2);
+
+    expect(result.passed).toBe(false);
+    expect(result.wordCountValid).toBe(false);
+    expect(result.suspenseValid).toBe(true);
+    expect(result.diagnosticLog).toContain("8001");
+    expect(result.diagnosticLog).toContain("8000");
+  });
+
+  it("uses the externalized phase4-suspense-check prompt", async () => {
     mockGenerateText.mockResolvedValue('{ "hasHook": true }');
     const longText = "字".repeat(3500);
 

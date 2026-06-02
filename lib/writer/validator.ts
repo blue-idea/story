@@ -1,3 +1,7 @@
+import {
+  CHAPTER_WORD_COUNT_MAX,
+  CHAPTER_WORD_COUNT_MIN,
+} from "../../config/novel";
 import { createDefaultLLMClient } from "../llm";
 import { getSystem, renderInstruction } from "../prompts";
 
@@ -8,7 +12,7 @@ export type ValidationResult = {
   diagnosticLog?: string;
 };
 
-/** 解析 phase4-suspense-check 的 JSON 或兼容纯文本 true/false */
+/** 解析 phase4-suspense-check 的 JSON，兼容纯文本 true/false。 */
 export function parseSuspenseCheckResponse(responseText: string): boolean {
   const trimmed = responseText.trim();
   const jsonMatch = trimmed.match(/\{[\s\S]*\}/);
@@ -30,7 +34,8 @@ export async function validateChapter(
   chapterNumber = 1,
 ): Promise<ValidationResult> {
   const len = text.length;
-  const wordCountValid = len >= 3000 && len <= 5000;
+  const wordCountValid =
+    len >= CHAPTER_WORD_COUNT_MIN && len <= CHAPTER_WORD_COUNT_MAX;
 
   const llm = createDefaultLLMClient();
   const chapterEnding = text.slice(-300);
@@ -54,12 +59,14 @@ export async function validateChapter(
   if (!passed) {
     const logs: string[] = [];
     if (!wordCountValid) {
-      if (len < 3000) {
+      if (len < CHAPTER_WORD_COUNT_MIN) {
         logs.push(
-          `字数 ${len}，少于标准，请在此剧情基础上扩充写 ${3000 - len} 字。`,
+          `字数 ${len}，少于标准，请在此剧情基础上扩充写 ${CHAPTER_WORD_COUNT_MIN - len} 字。`,
         );
       } else {
-        logs.push(`字数 ${len}，超出标准，请精简多余的情节。`);
+        logs.push(
+          `字数 ${len}，超过标准上限 ${CHAPTER_WORD_COUNT_MAX}，请精简多余情节。`,
+        );
       }
     }
     if (!suspenseValid) {
