@@ -1,3 +1,6 @@
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+
 type CharacterCardProps = {
   name: string;
   role: string;
@@ -11,7 +14,9 @@ export function CharacterCard({ name, role, summary }: CharacterCardProps) {
         <span className="plan-chip">{role}</span>
         <h3>{name}</h3>
       </div>
-      <p>{summary}</p>
+      <div className="plan-character-summary-container">
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{summary}</ReactMarkdown>
+      </div>
     </article>
   );
 }

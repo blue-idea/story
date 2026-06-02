@@ -327,10 +327,33 @@ textarea {
   font-size: 1.2rem;
 }
 
-.plan-character-card p {
-  margin: 0;
+.plan-character-summary-container {
   color: var(--page-muted);
   line-height: 1.7;
+  font-size: 0.94rem;
+}
+
+.plan-character-summary-container p {
+  margin: 0 0 0.7rem;
+}
+
+.plan-character-summary-container p:last-child {
+  margin-bottom: 0;
+}
+
+.plan-character-summary-container strong {
+  color: var(--page-ink);
+  font-weight: 700;
+}
+
+.plan-character-summary-container ul,
+.plan-character-summary-container ol {
+  margin: 0 0 0.75rem;
+  padding-left: 1.25rem;
+}
+
+.plan-character-summary-container li {
+  margin-bottom: 0.25rem;
 }
 
 .plan-chip {
