@@ -356,6 +356,61 @@ textarea {
   margin-bottom: 0.25rem;
 }
 
+/* Tab 导航容器 */
+.plan-tabs-container {
+  display: inline-flex;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(15, 23, 42, 0.05);
+  backdrop-filter: blur(8px);
+  width: fit-content;
+  margin-bottom: 1.25rem;
+  box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.03);
+}
+
+/* Tab 触发按钮 */
+.plan-tab-trigger {
+  border: 0;
+  background: transparent;
+  padding: 0.65rem 1.4rem;
+  border-radius: 999px;
+  font-size: 0.94rem;
+  font-weight: 700;
+  color: var(--page-muted);
+  cursor: pointer;
+  outline: none;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.plan-tab-trigger:hover {
+  color: var(--page-ink);
+  transform: translateY(-1px);
+}
+
+.plan-tab-trigger.active {
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+  color: #f8fafc;
+  box-shadow: 0 4px 12px rgba(29, 78, 216, 0.24);
+}
+
+/* 淡入动画 */
+@keyframes plan-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.plan-tab-content.plan-fade-in {
+  animation: plan-fade-in 0.38s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 .plan-chip {
   display: inline-flex;
   width: fit-content;

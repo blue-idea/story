@@ -44,6 +44,7 @@ export function PlanDashboard({
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [activeTab, setActiveTab] = useState<"outline" | "chapters">("outline");
 
   return (
     <main className="plan-page-shell">
@@ -95,55 +96,80 @@ export function PlanDashboard({
         </div>
       </section>
 
-      <section className="plan-main-grid">
-        <article className="plan-outline-panel">
-          <div className="plan-section-heading">
-            <p className="plan-kicker">完整大纲</p>
-            <h2>故事结构</h2>
-          </div>
-          <div className="plan-outline-markdown-container">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{outline}</ReactMarkdown>
-          </div>
-        </article>
+      <div className="plan-tabs-container">
+        <button
+          className={`plan-tab-trigger ${activeTab === "outline" ? "active" : ""}`}
+          onClick={() => setActiveTab("outline")}
+          type="button"
+        >
+          大纲与人设
+        </button>
+        <button
+          className={`plan-tab-trigger ${activeTab === "chapters" ? "active" : ""}`}
+          onClick={() => setActiveTab("chapters")}
+          type="button"
+        >
+          章节剧情概要
+        </button>
+      </div>
 
-        <aside className="plan-side-stack">
-          <section className="plan-side-panel">
+      {activeTab === "outline" ? (
+        <div className="plan-tab-content plan-fade-in" key="outline">
+          <section className="plan-main-grid">
+            <article className="plan-outline-panel">
+              <div className="plan-section-heading">
+                <p className="plan-kicker">完整大纲</p>
+                <h2>故事结构</h2>
+              </div>
+              <div className="plan-outline-markdown-container">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {outline}
+                </ReactMarkdown>
+              </div>
+            </article>
+
+            <aside className="plan-side-stack">
+              <section className="plan-side-panel">
+                <div className="plan-section-heading">
+                  <p className="plan-kicker">登场角色</p>
+                  <h2>人设卡片</h2>
+                </div>
+                <div className="plan-character-grid">
+                  {characterProfiles.map((profile) => (
+                    <CharacterCard
+                      key={`${profile.role}-${profile.name}`}
+                      name={profile.name}
+                      role={profile.role}
+                      summary={profile.summary}
+                    />
+                  ))}
+                </div>
+              </section>
+            </aside>
+          </section>
+        </div>
+      ) : (
+        <div className="plan-tab-content plan-fade-in" key="chapters">
+          <section className="plan-chapter-section">
             <div className="plan-section-heading">
-              <p className="plan-kicker">登场角色</p>
-              <h2>人设卡片</h2>
+              <p className="plan-kicker">章节计划</p>
+              <h2>章节剧情概要</h2>
             </div>
-            <div className="plan-character-grid">
-              {characterProfiles.map((profile) => (
-                <CharacterCard
-                  key={`${profile.role}-${profile.name}`}
-                  name={profile.name}
-                  role={profile.role}
-                  summary={profile.summary}
+            <div className="plan-chapter-grid">
+              {chapters.map((chapter) => (
+                <ChapterOutlineCard
+                  chapterNumber={chapter.chapterNumber}
+                  key={chapter.chapterNumber}
+                  novelId={novelId}
+                  onSaveOutline={onSaveOutline}
+                  outlineSummary={chapter.outlineSummary}
+                  title={chapter.title}
                 />
               ))}
             </div>
           </section>
-        </aside>
-      </section>
-
-      <section className="plan-chapter-section">
-        <div className="plan-section-heading">
-          <p className="plan-kicker">章节计划</p>
-          <h2>章节剧情概要</h2>
         </div>
-        <div className="plan-chapter-grid">
-          {chapters.map((chapter) => (
-            <ChapterOutlineCard
-              chapterNumber={chapter.chapterNumber}
-              key={chapter.chapterNumber}
-              novelId={novelId}
-              onSaveOutline={onSaveOutline}
-              outlineSummary={chapter.outlineSummary}
-              title={chapter.title}
-            />
-          ))}
-        </div>
-      </section>
+      )}
     </main>
   );
 }
