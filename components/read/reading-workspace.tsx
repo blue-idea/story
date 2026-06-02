@@ -735,16 +735,19 @@ export function ReadingWorkspace({
                     value={activeChapter.content}
                     style={{
                       width: "100%",
-                      minHeight: "450px",
-                      padding: "1rem",
-                      borderRadius: "8px",
-                      border: "1px solid rgba(0,0,0,0.15)",
+                      minHeight: "900px",
+                      padding: "1.25rem 1.5rem",
+                      borderRadius: "12px",
+                      border: "1.5px solid rgba(0,0,0,0.12)",
                       fontFamily: "inherit",
                       fontSize: "16px",
-                      lineHeight: "1.6",
-                      backgroundColor: "rgba(255,255,255,0.7)",
+                      lineHeight: "1.8",
+                      backgroundColor: "rgba(255,255,255,0.75)",
                       color: "inherit",
                       outline: "none",
+                      resize: "vertical",
+                      boxShadow: "inset 0 2px 8px rgba(0,0,0,0.04)",
+                      transition: "border-color 0.2s, box-shadow 0.2s",
                     }}
                   />
 
@@ -794,7 +797,7 @@ export function ReadingWorkspace({
                     </button>
 
                     <button
-                      className="read-secondary-button"
+                      className="read-polish-button"
                       disabled={isPolishing}
                       onClick={() => {
                         startPolishTransition(async () => {
@@ -851,8 +854,37 @@ export function ReadingWorkspace({
                         });
                       }}
                       type="button"
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "10px 22px",
+                        borderRadius: "10px",
+                        border: "none",
+                        background: isPolishing
+                          ? "linear-gradient(135deg, #a78bfa 0%, #818cf8 100%)"
+                          : "linear-gradient(135deg, #8b5cf6 0%, #6366f1 50%, #4f46e5 100%)",
+                        color: "#ffffff",
+                        fontWeight: 600,
+                        fontSize: "0.875rem",
+                        letterSpacing: "0.02em",
+                        cursor: isPolishing ? "not-allowed" : "pointer",
+                        opacity: isPolishing ? 0.75 : 1,
+                        boxShadow: isPolishing
+                          ? "none"
+                          : "0 4px 14px rgba(99, 102, 241, 0.45), 0 2px 6px rgba(139, 92, 246, 0.3)",
+                        transition: "all 0.25s ease",
+                      }}
                     >
-                      {isPolishing ? "润色中..." : "润色选中内容"}
+                      <i
+                        className={`fas ${
+                          isPolishing ? "fa-spinner fa-spin" : "fa-magic"
+                        }`}
+                        style={{ fontSize: "0.9rem" }}
+                      />
+                      <span>
+                        {isPolishing ? "AI 润色中..." : "AI 润色选中内容"}
+                      </span>
                     </button>
                   </div>
 
