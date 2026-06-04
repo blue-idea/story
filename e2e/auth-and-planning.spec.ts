@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test.setTimeout(120_000);
+test.setTimeout(240_000);
 
 test("auth-and-planning：登录页到大纲编辑旅程", async ({ page }, testInfo) => {
   await page.goto("/login");
@@ -17,7 +17,9 @@ test("auth-and-planning：登录页到大纲编辑旅程", async ({ page }, test
 
   await page.goto("/qa/task-013");
   await expect(page.getByText("偏好题材")).toBeVisible();
-  await page.getByRole("link", { name: "开始新小说" }).click({ force: true });
+  await page
+    .getByRole("link", { name: "开始创作新小说" })
+    .click({ force: true });
   if (!page.url().includes("/qa/task-014")) {
     await page.goto("/qa/task-014");
   }
@@ -27,41 +29,52 @@ test("auth-and-planning：登录页到大纲编辑旅程", async ({ page }, test
     page.getByRole("heading", { name: "小说创作向导" }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "科幻" }).click();
+  await page.getByRole("button", { name: /科幻未来/ }).click();
+  await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: /男性主角/ }).click();
   await page.getByRole("button", { name: "继续" }).click();
   await page
-    .getByPlaceholder("姓名、角色与身份背景")
+    .getByPlaceholder("自由输入职业或身份")
     .fill("Lin Xia, investigative reporter");
   await page.getByRole("button", { name: "继续" }).click();
-  await page
-    .getByPlaceholder("主要矛盾、危机与利益攸关点")
-    .fill("Trace the missing disaster audio before the next live broadcast.");
+  await page.getByRole("button", { name: /成长逆袭/ }).click();
   await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: /查明真相/ }).click();
+  await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: /责任\/使命/ }).click();
+  await page.getByRole("button", { name: "完成第一层" }).click();
 
-  await page.getByRole("button", { name: "进入深度定制" }).click();
+  await page.getByRole("button", { name: "进入第二层" }).click();
+  await page.getByRole("button", { name: /现实世界/ }).click();
+  await page.getByRole("button", { name: "继续" }).click();
   await page
-    .getByPlaceholder("选填，世界观设定")
+    .getByPlaceholder("简单描述规则、设定要素或留空")
     .fill("Near-future city with legacy broadcast relay towers.");
   await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: /第三人称限制视角/ }).click();
+  await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: /紧张刺激/ }).click();
+  await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: /成长与蜕变/ }).click();
+  await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: /大众读者/ }).click();
+  await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: /15章/ }).click();
+  await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: "继续" }).click();
+  await page.getByRole("button", { name: "确认，开始规划和创作！" }).click();
 
-  await page.getByRole("button", { name: "第一人称" }).click();
-  await page.getByRole("button", { name: "黑色幽暗" }).click();
-  await page.getByRole("button", { name: "继续" }).click();
-
-  await page.getByRole("button", { name: "成长蜕变" }).click();
-  await page.getByRole("button", { name: "继续" }).click();
-  await page.getByRole("button", { name: "大众读者" }).click();
-  await page.getByRole("button", { name: "继续" }).click();
-  await page.getByRole("button", { name: "12 章" }).click();
-  await page.getByRole("button", { name: "继续" }).click();
-  await page.getByRole("button", { name: "确认配置" }).click();
-
-  await expect(page.getByRole("heading", { name: "候选标题" })).toBeVisible();
-  await page.getByRole("button", { name: "霓虹子午线" }).click();
+  await expect(
+    page.getByRole("heading", { name: "第三层：标题生成" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: /霓虹子午线/ }).click();
   await page.getByRole("button", { name: "确认标题" }).click();
 
   await expect(page).toHaveURL(/\/qa\/task-019\/plan$/);
   await expect(page.getByText("故事结构")).toBeVisible();
+  await page.getByRole("button", { name: "章节剧情概要" }).click();
   await page.getByRole("button", { name: "编辑大纲" }).first().click();
   await page
     .getByRole("textbox", { name: "章节大纲概要" })

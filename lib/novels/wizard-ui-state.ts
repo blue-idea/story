@@ -52,6 +52,7 @@ export type Layer2Answers = {
 export type WizardUiState = {
   phase: WizardPhase;
   step: WizardStep;
+  history: WizardStep[];
   coreConfig: CoreConfig;
   customConfig: Partial<CustomConfig>;
   configConfirmed: boolean;
@@ -146,6 +147,26 @@ function nextLayer2Step(step: WizardLayer2Step): WizardLayer2Step {
   return LAYER2_SEQUENCE[currentIndex + 1] ?? "config-review";
 }
 
+function resolvePhaseByStep(step: WizardStep): WizardPhase {
+  if (LAYER1_SEQUENCE.includes(step as WizardLayer1Step)) {
+    return "layer1";
+  }
+
+  if (LAYER2_SEQUENCE.includes(step as WizardLayer2Step)) {
+    return "layer2";
+  }
+
+  return "layer3";
+}
+
+function appendHistory(state: WizardUiState, nextStep: WizardStep) {
+  if (state.step === nextStep) {
+    return state.history;
+  }
+
+  return [...state.history, state.step];
+}
+
 function joinParts(parts: string[], separator: string) {
   return parts
     .map((part) => part.trim())
@@ -229,6 +250,7 @@ export function createWizardUiState(): WizardUiState {
   return {
     phase: "layer1",
     step: "q1",
+    history: [],
     coreConfig: createEmptyCoreConfig(),
     customConfig: {},
     configConfirmed: false,
@@ -285,10 +307,13 @@ export function applyLayer1Answer(
     nextLayer1Answers.q3Drive = normalized;
   }
 
+  const nextStep = nextLayer1Step(questionId);
+
   return {
     ...state,
     phase: "layer1",
-    step: nextLayer1Step(questionId),
+    step: nextStep,
+    history: appendHistory(state, nextStep),
     layer1Answers: nextLayer1Answers,
     coreConfig: buildCoreConfigFromLayer1Answers(nextLayer1Answers),
   };
@@ -303,6 +328,7 @@ export function enterLayer2(state: WizardUiState): WizardUiState {
     ...state,
     phase: "layer2",
     step: "q4-world",
+    history: appendHistory(state, "q4-world"),
   };
 }
 
@@ -357,11 +383,14 @@ export function applyLayer2Answer(
     nextLayer2Answers.q8SpecialRequirements = normalized;
   }
 
+  const nextStep = nextLayer2Step(questionId);
+
   return {
     ...state,
     layer2Answers: nextLayer2Answers,
     customConfig: buildCustomConfigFromLayer2Answers(nextLayer2Answers),
-    step: nextLayer2Step(questionId),
+    step: nextStep,
+    history: appendHistory(state, nextStep),
   };
 }
 
@@ -378,6 +407,7 @@ export function skipLayer2Question(state: WizardUiState): WizardUiState {
   return {
     ...state,
     step: nextLayer2Step(currentStep),
+    history: appendHistory(state, nextLayer2Step(currentStep)),
   };
 }
 
@@ -389,6 +419,7 @@ export function jumpToChapterCount(state: WizardUiState): WizardUiState {
   return {
     ...state,
     step: "q8-chapter-count",
+    history: appendHistory(state, "q8-chapter-count"),
   };
 }
 
@@ -401,7 +432,23 @@ export function markConfigConfirmed(state: WizardUiState): WizardUiState {
     ...state,
     phase: "layer3",
     step: "titles",
+    history: appendHistory(state, "titles"),
     configConfirmed: true,
+  };
+}
+
+export function goBackWizardStep(state: WizardUiState): WizardUiState {
+  const previousStep = state.history[state.history.length - 1];
+  if (!previousStep) {
+    return state;
+  }
+
+  return {
+    ...state,
+    phase: resolvePhaseByStep(previousStep),
+    step: previousStep,
+    history: state.history.slice(0, -1),
+    configConfirmed: previousStep === "titles" ? state.configConfirmed : false,
   };
 }
 

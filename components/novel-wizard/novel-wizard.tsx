@@ -41,6 +41,7 @@ import {
   buildCustomConfigFromLayer2Answers,
   createWizardUiState,
   enterLayer2,
+  goBackWizardStep,
   jumpToChapterCount,
   markConfigConfirmed,
   skipLayer2Question,
@@ -311,6 +312,7 @@ export function NovelWizard({
     () => getStyleReferenceOptionsByGenre(layer1Draft.q1Genre),
     [layer1Draft.q1Genre],
   );
+  const canGoBack = wizardState.history.length > 0;
 
   function updateLayer1Draft<K extends keyof Layer1DraftState>(
     key: K,
@@ -330,6 +332,29 @@ export function NovelWizard({
       ...prev,
       [key]: value,
     }));
+  }
+
+  function handleGoBack() {
+    setError(null);
+    setSuggestion(null);
+    setWizardState((prev) => goBackWizardStep(prev));
+  }
+
+  function renderBackButton() {
+    if (!canGoBack) {
+      return null;
+    }
+
+    return (
+      <button
+        className="wizard-ghost"
+        disabled={isPending}
+        onClick={handleGoBack}
+        type="button"
+      >
+        Back
+      </button>
+    );
   }
 
   function applyRandomAnswer(step: string) {
@@ -1107,13 +1132,16 @@ export function NovelWizard({
                         value={layer1Draft.q2TypeCustom}
                       />
                     ) : null}
-                    <button
-                      className="wizard-primary"
-                      onClick={handleLayer1Submit}
-                      type="button"
-                    >
-                      继续
-                    </button>
+                    <div className="wizard-action-row">
+                      {renderBackButton()}
+                      <button
+                        className="wizard-primary"
+                        onClick={handleLayer1Submit}
+                        type="button"
+                      >
+                        继续
+                      </button>
+                    </div>
                   </>
                 ) : null}
 
@@ -1140,13 +1168,16 @@ export function NovelWizard({
                       placeholder="自由输入职业或身份"
                       value={layer1Draft.q2Profession}
                     />
-                    <button
-                      className="wizard-primary"
-                      onClick={handleLayer1Submit}
-                      type="button"
-                    >
-                      继续
-                    </button>
+                    <div className="wizard-action-row">
+                      {renderBackButton()}
+                      <button
+                        className="wizard-primary"
+                        onClick={handleLayer1Submit}
+                        type="button"
+                      >
+                        继续
+                      </button>
+                    </div>
                   </>
                 ) : null}
 
@@ -1176,13 +1207,16 @@ export function NovelWizard({
                         value={layer1Draft.q2PersonalityCustom}
                       />
                     ) : null}
-                    <button
-                      className="wizard-primary"
-                      onClick={handleLayer1Submit}
-                      type="button"
-                    >
-                      继续
-                    </button>
+                    <div className="wizard-action-row">
+                      {renderBackButton()}
+                      <button
+                        className="wizard-primary"
+                        onClick={handleLayer1Submit}
+                        type="button"
+                      >
+                        继续
+                      </button>
+                    </div>
                   </>
                 ) : null}
 
@@ -1202,6 +1236,7 @@ export function NovelWizard({
                       value={layer1Draft.q2Supporting}
                     />
                     <div className="wizard-action-row">
+                      {renderBackButton()}
                       <button
                         className="wizard-ghost"
                         onClick={() => updateLayer1Draft("q2Supporting", "")}
@@ -1247,13 +1282,16 @@ export function NovelWizard({
                         value={layer1Draft.q3ConflictCustom}
                       />
                     ) : null}
-                    <button
-                      className="wizard-primary"
-                      onClick={handleLayer1Submit}
-                      type="button"
-                    >
-                      继续
-                    </button>
+                    <div className="wizard-action-row">
+                      {renderBackButton()}
+                      <button
+                        className="wizard-primary"
+                        onClick={handleLayer1Submit}
+                        type="button"
+                      >
+                        继续
+                      </button>
+                    </div>
                   </>
                 ) : null}
 
@@ -1283,13 +1321,16 @@ export function NovelWizard({
                         value={layer1Draft.q3DriveCustom}
                       />
                     ) : null}
-                    <button
-                      className="wizard-primary"
-                      onClick={handleLayer1Submit}
-                      type="button"
-                    >
-                      完成第一层
-                    </button>
+                    <div className="wizard-action-row">
+                      {renderBackButton()}
+                      <button
+                        className="wizard-primary"
+                        onClick={handleLayer1Submit}
+                        type="button"
+                      >
+                        完成第一层
+                      </button>
+                    </div>
                   </>
                 ) : null}
 
@@ -1302,14 +1343,17 @@ export function NovelWizard({
                     <p className="wizard-info">
                       核心定位已完成！接下来是深度定制环节（世界观、视角基调、主题、读者定位、章节数量等），每个问题都可以跳过或随机生成。准备好了吗？
                     </p>
-                    <button
-                      className="wizard-primary"
-                      disabled={isPending}
-                      onClick={handleEnterLayer2}
-                      type="button"
-                    >
-                      进入第二层
-                    </button>
+                    <div className="wizard-action-row">
+                      {renderBackButton()}
+                      <button
+                        className="wizard-primary"
+                        disabled={isPending}
+                        onClick={handleEnterLayer2}
+                        type="button"
+                      >
+                        进入第二层
+                      </button>
+                    </div>
                   </>
                 ) : null}
               </section>
@@ -1644,18 +1688,7 @@ export function NovelWizard({
                       )}
                     </pre>
                     <div className="wizard-action-row">
-                      <button
-                        className="wizard-ghost"
-                        onClick={() =>
-                          setWizardState((prev) => ({
-                            ...prev,
-                            step: "q4-world",
-                          }))
-                        }
-                        type="button"
-                      >
-                        我想修改某些设置
-                      </button>
+                      {renderBackButton()}
                       <button
                         className="wizard-primary"
                         disabled={isPending}
@@ -1668,6 +1701,7 @@ export function NovelWizard({
                   </>
                 ) : (
                   <div className="wizard-action-row">
+                    {renderBackButton()}
                     <button
                       className="wizard-ghost"
                       onClick={() =>
@@ -1738,6 +1772,7 @@ export function NovelWizard({
                   value={selectedTitle}
                 />
                 <div className="wizard-action-row">
+                  {renderBackButton()}
                   <button
                     className="wizard-ghost"
                     disabled={isPending}

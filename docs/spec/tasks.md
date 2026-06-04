@@ -448,6 +448,23 @@
   验收标准：REQ-004-AC-003, REQ-004-AC-004
   *测试类型: Unit
 
+- [x] **TASK-022 · 为小说创作向导补充后退重选能力**
+  - [x] 在 `wizard-ui-state` 中增加真实访问历史栈，统一处理 Layer1、Layer2、配置确认页与标题页的回退
+  - [x] 在向导页面各步骤操作区增加 `Back` 按钮，使用户可以返回上一步重新选择
+  - [x] 保留已填写答案，确保从“直接进 Q8”或标题层回退后仍能继续编辑既有内容
+
+  **验证方式：**
+
+  ```bash
+  pnpm test lib/novels/wizard-ui-state.test.ts tests/task-014.spec.ts
+  pnpm exec playwright test e2e/wizard-back-navigation.spec.ts
+  ```
+
+  **验收证据：** 单测断言 `jumpToChapterCount` 后回退会返回最近实际访问步骤；Playwright 在 `/qa/task-014` 中验证跳转到 Q8 后点击 `Back` 会回到 Q4 追问页面并保留已输入内容。
+  *需求: REQ-002
+  验收标准：REQ-002-AC-002d
+  *测试类型: E2E
+
 ---
 
 ## 进度汇总
@@ -478,3 +495,4 @@
 | TASK-018    | 编写 Vitest 单元与 API 接口集成测试                        |   Unit   |          ✅ 已完成          | `test_strategy.md`  |
 | TASK-019    | 编写 Playwright UI 端到端用户旅程测试                      |   E2E    |          ✅ 已完成          | `test_strategy.md`  |
 | TASK-021    | 优化写作上下文一致性链路                                   |   Unit   |          ✅ 已完成          | REQ-004             |
+| TASK-022    | 为小说创作向导补充后退重选能力                             |   E2E    |          ✅ 已完成          | REQ-002             |

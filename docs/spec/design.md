@@ -87,6 +87,12 @@ e:/NextCloud/coding/netx.js/story/
 - 删除交互由首页客户端发起确认后调用 `DELETE /api/novel/[id]`；成功后前端移除对应卡片，并同步处理“最近活跃作品”区域的展示状态。
 - 删除接口必须先校验作品归属，再执行删除，避免跨用户越权访问。
 
+### 向导回退导航设计
+
+- `lib/novels/wizard-ui-state.ts` 中的 `WizardUiState` 维护 `history` 栈，用于记录用户真实访问过的步骤，而不是仅依赖题目顺序推导“上一步”。
+- Layer1、Layer2、配置确认页与标题页统一通过 `goBackWizardStep()` 回退，确保从 “直接进 Q8” 或标题页返回时，仍能回到最近实际访问的步骤。
+- 回退只改变当前 `phase/step` 与导航历史，不清空 `layer1Draft`、`layer2Draft`、`layer1Answers`、`layer2Answers`，从而支持用户回看并重新选择既有答案。
+
 ### 系统架构图
 
 ```mermaid

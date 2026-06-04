@@ -91,6 +91,15 @@
   expected:
     ui_state: "每题可见「跳过」「随机生成」；存在「直接配置章节数」入口"
 
+- id: REQ-002-AC-002d
+  ears: >
+    While the user is in the novel creation wizard on any step other than the first question,
+    when the user clicks the Back button,
+    the system shall return the user to the most recently visited previous step and preserve the already entered answers for reselection or editing.
+  test_type: E2E
+  expected:
+    ui_state: "除首题外均可见 Back；从跳转 Q8、配置确认或标题层返回时，回到最近访问步骤且已填内容保留"
+
 - id: REQ-002-AC-002b
   ears: >
     When the user completes Layer 2 and reaches the full configuration review screen,

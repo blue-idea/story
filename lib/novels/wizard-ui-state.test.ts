@@ -8,6 +8,7 @@ import {
   createWizardUiState,
   enterLayer2,
   getVisibleLayers,
+  goBackWizardStep,
   jumpToChapterCount,
   markConfigConfirmed,
   skipLayer2Question,
@@ -173,6 +174,100 @@ describe("向导状态机", () => {
     expect(confirmed.phase).toBe("layer3");
     expect(confirmed.step).toBe("titles");
     expect(getVisibleLayers(confirmed).showLayer3).toBe(true);
+  });
+
+  it("REQ-002-AC-002d: 后退应按真实访问历史返回上一题，而不是固定题序", () => {
+    const baseState = enterLayer2(
+      applyLayer1Answer(
+        applyLayer1Answer(
+          applyLayer1Answer(
+            applyLayer1Answer(
+              applyLayer1Answer(
+                applyLayer1Answer(
+                  applyLayer1Answer(createWizardUiState(), "q1", "科幻未来"),
+                  "q2-type",
+                  "男性主角（独角戏）",
+                ),
+                "q2-profession",
+                "工程师",
+              ),
+              "q2-personality",
+              "成长逆袭（从弱到强、打脸升级）",
+            ),
+            "q2-supporting",
+            "神秘盟友",
+          ),
+          "q3-conflict",
+          "查明真相（寻找答案、揭露秘密）",
+        ),
+        "q3-drive",
+        "责任/使命（不得不做）",
+      ),
+    );
+
+    const skipped = skipLayer2Question(baseState);
+    const jumped = jumpToChapterCount(skipped);
+
+    expect(jumped.step).toBe("q8-chapter-count");
+
+    const backToVisitedStep = goBackWizardStep(jumped);
+    expect(backToVisitedStep.phase).toBe("layer2");
+    expect(backToVisitedStep.step).toBe("q4-details");
+
+    const backAgain = goBackWizardStep(backToVisitedStep);
+    expect(backAgain.phase).toBe("layer2");
+    expect(backAgain.step).toBe("q4-world");
+  });
+
+  it("REQ-002-AC-002d: 标题层与摘要层都应支持后退重新选择", () => {
+    const summaryState = applyLayer1Answer(
+      applyLayer1Answer(
+        applyLayer1Answer(
+          applyLayer1Answer(
+            applyLayer1Answer(
+              applyLayer1Answer(
+                applyLayer1Answer(createWizardUiState(), "q1", "悬疑推理"),
+                "q2-type",
+                "女性主角（独角戏）",
+              ),
+              "q2-profession",
+              "侦探",
+            ),
+            "q2-personality",
+            "冷静智慧（理性、谋略、高智商）",
+          ),
+          "q2-supporting",
+          "老搭档",
+        ),
+        "q3-conflict",
+        "查明真相（寻找答案、揭露秘密）",
+      ),
+      "q3-drive",
+      "好奇心/求知欲（想知道真相）",
+    );
+
+    const backFromSummary = goBackWizardStep(summaryState);
+    expect(backFromSummary.phase).toBe("layer1");
+    expect(backFromSummary.step).toBe("q3-drive");
+
+    const confirmed = markConfigConfirmed(
+      applyLayer2Answer(
+        applyLayer2Answer(
+          jumpToChapterCount(enterLayer2(summaryState)),
+          "q8-chapter-count",
+          "15章（中短篇，约4.5-7.5万字）",
+        ),
+        "q8-special-requirements",
+        "没有特殊要求，按标准来",
+      ),
+    );
+
+    expect(confirmed.phase).toBe("layer3");
+    expect(confirmed.step).toBe("titles");
+
+    const backFromTitles = goBackWizardStep(confirmed);
+    expect(backFromTitles.phase).toBe("layer2");
+    expect(backFromTitles.step).toBe("config-review");
   });
 
   it("REQ-002-AC-004: 偏好项应置顶并标记 starred", () => {
