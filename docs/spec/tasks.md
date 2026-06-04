@@ -431,6 +431,23 @@
   *需求: `test_strategy.md`
   *测试类型: E2E
 
+- [x] **TASK-021 · 优化写作上下文一致性链路**
+  - [x] 新增 `chapters.chapter_summary` 字段，写作通过校验后自动生成并持久化章节摘要
+  - [x] 从 `outline_summary` 解析“出场人物”，仅向当前章节注入相关角色档案
+  - [x] 根据 `custom_config.perspective` 注入 POV 边界，并同时传递“已完成章节摘要链 + 上一章结尾片段”
+
+  **验证方式：**
+
+  ```bash
+  pnpm vitest run lib/writer/context-memory.test.ts lib/writer/chapter-prompt.test.ts lib/writer/generator.test.ts
+  pnpm exec tsc --noEmit
+  ```
+
+  **验收证据：** `context-memory`、`chapter-prompt` 与 `generator` 单测均通过；`generator.test.ts` 断言成功章节会调用摘要生成并写入 `chapterSummary`；TypeScript 零报错。
+  *需求: REQ-004
+  验收标准：REQ-004-AC-003, REQ-004-AC-004
+  *测试类型: Unit
+
 ---
 
 ## 进度汇总
@@ -460,3 +477,4 @@
 | TASK-017    | 完稿阅读、内容修饰与打包导出页面开发                       |   E2E    |          ✅ 已完成          | REQ-006             |
 | TASK-018    | 编写 Vitest 单元与 API 接口集成测试                        |   Unit   |          ✅ 已完成          | `test_strategy.md`  |
 | TASK-019    | 编写 Playwright UI 端到端用户旅程测试                      |   E2E    |          ✅ 已完成          | `test_strategy.md`  |
+| TASK-021    | 优化写作上下文一致性链路                                   |   Unit   |          ✅ 已完成          | REQ-004             |

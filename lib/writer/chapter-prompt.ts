@@ -6,8 +6,10 @@ export type ChapterPromptContext = {
   chapterTitle: string;
   /** 本章 7 列规划行（来自 chapters.outline_summary） */
   outlineRow: string;
-  characterProfiles: CharacterProfile[];
-  previousChapterSummary: string;
+  selectedProfiles: CharacterProfile[];
+  summaryTimeline: string;
+  previousExcerpt: string;
+  perspectiveBoundary: string;
   diagnosticLog?: string;
 };
 
@@ -31,8 +33,10 @@ export function buildChapterDraftPrompt(ctx: ChapterPromptContext): {
     chapterNumber: String(ctx.chapterNumber),
     chapterTitle: ctx.chapterTitle,
     outlineRow: ctx.outlineRow,
-    characterProfiles: formatCharacterProfiles(ctx.characterProfiles),
-    previousChapterSummary: ctx.previousChapterSummary,
+    characterProfiles: formatCharacterProfiles(ctx.selectedProfiles),
+    summaryTimeline: ctx.summaryTimeline,
+    previousExcerpt: ctx.previousExcerpt,
+    perspectiveBoundary: ctx.perspectiveBoundary,
   });
   return { prompt, systemInstruction: getSystem("author") };
 }
@@ -46,7 +50,30 @@ export function buildChapterRewritePrompt(ctx: ChapterPromptContext): {
     chapterNumber: String(ctx.chapterNumber),
     chapterTitle: ctx.chapterTitle,
     outlineRow: ctx.outlineRow,
+    characterProfiles: formatCharacterProfiles(ctx.selectedProfiles),
+    summaryTimeline: ctx.summaryTimeline,
+    previousExcerpt: ctx.previousExcerpt,
+    perspectiveBoundary: ctx.perspectiveBoundary,
     diagnosticLog: ctx.diagnosticLog ?? "",
   });
   return { prompt, systemInstruction: getSystem("author") };
+}
+
+export function buildChapterSummaryPrompt(input: {
+  chapterNumber: number;
+  chapterTitle: string;
+  outlineRow: string;
+  content: string;
+}): {
+  prompt: string;
+  systemInstruction: string;
+} {
+  const prompt = renderInstruction("phase3-chapter-summary", {
+    chapterNumber: String(input.chapterNumber),
+    chapterTitle: input.chapterTitle,
+    outlineRow: input.outlineRow,
+    content: input.content,
+  });
+
+  return { prompt, systemInstruction: getSystem("editor") };
 }

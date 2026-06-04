@@ -178,6 +178,7 @@ export const chapters = pgTable(
     chapterNumber: integer("chapter_number").notNull(),
     title: varchar("title", { length: 255 }).notNull(),
     outlineSummary: text("outline_summary").notNull(),
+    chapterSummary: text("chapter_summary").default("").notNull(),
     content: text("content").default("").notNull(),
     wordCount: integer("word_count").default(0).notNull(),
     status: varchar("status", { length: 32 })

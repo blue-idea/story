@@ -206,6 +206,26 @@
     throws: null
     side_effects:
       - "在 chapters 表中保存正文，字数，并更新状态为 'validating'"
+
+- id: REQ-004-AC-003
+  ears: >
+    Before drafting a chapter after planning is completed,
+    the system shall build the prompt from the current chapter outline, the filtered cast profiles, the completed chapter summary chain, the previous chapter ending excerpt, and the configured narrative perspective boundary.
+  test_type: Unit
+  expected:
+    side_effects:
+      - "仅注入当前章节出场人物对应的人物档案，避免无关角色噪声"
+      - "Prompt 显式包含 POV 信息边界约束、已完成章节摘要链与上一章结尾片段"
+
+- id: REQ-004-AC-004
+  ears: >
+    When a chapter passes validation,
+    the system shall generate a 300-500 character chapter summary and persist it for subsequent chapter drafting.
+  test_type: Unit
+  expected:
+    side_effects:
+      - "在 chapters 表持久化 chapter_summary 字段"
+      - "后续章节写作读取 chapter_summary 形成滚动前情记忆"
 ```
 
 ---

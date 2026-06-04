@@ -120,7 +120,8 @@
 | `novel_id`         | `uuid`         | REFERENCES novels(id) ON DELETE CASCADE | 关联的小说 ID                                                                                                |
 | `chapter_number`   | `integer`      | NOT NULL                                | 章节序号 (1 至 N)                                                                                            |
 | `title`            | `varchar(255)` | NOT NULL                                | 章节标题                                                                                                     |
-| `outline_summary`  | `text`         | NOT NULL                                | 本章剧情概要                                                                                                 |
+| `outline_summary`  | `text`         | NOT NULL                                | 本章规划行（含核心事件、承接上章、悬念钩子、出场人物等 7 列规范化文本）                                      |
+| `chapter_summary`  | `text`         | NOT NULL, DEFAULT ''                    | 本章写后滚动摘要，供后续章节写作读取的结构化前情记忆                                                         |
 | `content`          | `text`         | DEFAULT ''                              | 生成的正文 Markdown 内容                                                                                     |
 | `word_count`       | `integer`      | NOT NULL, DEFAULT 0                     | 字符数                                                                                                       |
 | `status`           | `varchar(32)`  | NOT NULL, DEFAULT 'pending'             | 状态：`pending` (待生成), `writing` (生成中), `validating` (校验中), `completed` (完成), `failed` (生成失败) |
@@ -247,6 +248,7 @@ export const chapters = pgTable("chapters", {
   chapterNumber: integer("chapter_number").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   outlineSummary: text("outline_summary").notNull(),
+  chapterSummary: text("chapter_summary").default("").notNull(),
   content: text("content").default("").notNull(),
   wordCount: integer("word_count").default(0).notNull(),
   status: varchar("status", { length: 32 }).default("pending").notNull(), // 'pending' | 'writing' | 'validating' | 'completed' | 'failed'
@@ -259,3 +261,9 @@ export const chapters = pgTable("chapters", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 ```
+
+### `chapter_summary` 设计说明
+
+- `outline_summary` 负责保存写前规划，不再承担写后记忆职责。
+- `chapter_summary` 专门保存每章通过校验后的 300-500 字摘要，供后续章节构建滚动记忆链。
+- 当前章节的出场人物名单仍从 `outline_summary` 解析，避免为 `castList` 单独扩表。

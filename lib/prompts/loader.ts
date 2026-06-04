@@ -15,6 +15,7 @@ const INSTRUCTION_IDS: InstructionId[] = [
   "phase2-outline",
   "phase2-characters",
   "phase3-chapter-draft",
+  "phase3-chapter-summary",
   "phase3-chapter-polish",
   "phase3-chapter-rewrite",
   "phase4-suspense-check",

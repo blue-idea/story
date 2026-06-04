@@ -229,14 +229,22 @@ sequenceDiagram
 
 ### Writer 引擎职责边界
 
-| 模块           | Novelist 阶段                                  | 使用的 Prompt ID（规划）                                             |
-| -------------- | ---------------------------------------------- | -------------------------------------------------------------------- |
-| `planner.ts`   | Phase 1 L3 标题 + Phase 2 规划（**两次 LLM**） | `phase1-title` → `phase2-outline` → `phase2-characters`              |
-| `generator.ts` | Phase 3 初稿 + Phase 4 重写                    | `phase3-chapter-draft`, `phase3-chapter-rewrite`（**不含**自动润色） |
-| `polish.ts`    | 用户手动润色选中片段                           | `phase3-chapter-polish`                                              |
-| `validator.ts` | Phase 4 悬念检测                               | `phase4-suspense-check`                                              |
+| 模块           | Novelist 阶段                                  | 使用的 Prompt ID（规划）                                                                       |
+| -------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `planner.ts`   | Phase 1 L3 标题 + Phase 2 规划（**两次 LLM**） | `phase1-title` → `phase2-outline` → `phase2-characters`                                        |
+| `generator.ts` | Phase 3 初稿 + Phase 4 重写                    | `phase3-chapter-draft`, `phase3-chapter-summary`, `phase3-chapter-rewrite`（**不含**自动润色） |
+| `polish.ts`    | 用户手动润色选中片段                           | `phase3-chapter-polish`                                                                        |
+| `validator.ts` | Phase 4 悬念检测                               | `phase4-suspense-check`                                                                        |
 
 ---
+
+## 上下文一致性设计
+
+为避免长篇写作在连续章节中出现人设漂移、视角越界与线索遗忘，写作链路新增以下约束：
+
+1. `generator.ts` 在每章写前通过 `context-memory.ts` 从 `chapters.outline_summary` 解析“出场人物”，只注入当前章节相关的人物档案，减少无关角色干扰。
+2. 系统根据 `novels.custom_config.perspective` 与主角信息生成 POV 边界说明，写入 `phase3-chapter-draft` 与 `phase3-chapter-rewrite` Prompt，限制第一人称 / 限制视角的认知范围，并要求全知视角保持平滑切换。
+3. 每章通过校验后，调用 `phase3-chapter-summary` 生成 300-500 字 `chapter_summary`，在下一章写作时与上一章结尾片段一同注入，替代原先单纯 `slice(-500)` 的脆弱物理截断。
 
 ## 关联设计文档
 

@@ -1,13 +1,18 @@
 import { db } from "../../db";
 import { chapters, novelProfiles, novels } from "../../db/schema";
-import type { CharacterProfile } from "../../db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { createDefaultLLMClient } from "../llm";
+import { getOutlineSummaryLead } from "../novels/outline-summary";
 import { validateChapter, ValidationResult } from "./validator";
 import {
   buildChapterDraftPrompt,
   buildChapterRewritePrompt,
+  buildChapterSummaryPrompt,
 } from "./chapter-prompt";
+import {
+  buildNarrativeContext,
+  type CompletedChapterMemory,
+} from "./context-memory";
 
 export type GeneratorCallbacks = {
   onChapterStart?: (chapterNum: number) => void;
@@ -23,20 +28,62 @@ export type GeneratorCallbacks = {
   onNovelComplete?: () => void;
 };
 
-const FIRST_CHAPTER_SUMMARY = "（首章无上文）";
-
 async function loadNovelProfile(novelId: string): Promise<{
-  characterProfiles: CharacterProfile[];
+  characterProfiles: (typeof novelProfiles.$inferSelect)["characterProfiles"];
+  protagonist: string;
+  perspective: string;
 }> {
-  const rows = await db
+  const profileRows = await db
     .select({ characterProfiles: novelProfiles.characterProfiles })
     .from(novelProfiles)
     .where(eq(novelProfiles.novelId, novelId))
     .limit(1);
 
+  const novelRows = await db
+    .select({
+      coreConfig: novels.coreConfig,
+      customConfig: novels.customConfig,
+    })
+    .from(novels)
+    .where(eq(novels.id, novelId))
+    .limit(1);
+
+  const novelRow = novelRows[0];
+
   return {
-    characterProfiles: rows[0]?.characterProfiles ?? [],
+    characterProfiles: profileRows[0]?.characterProfiles ?? [],
+    protagonist: novelRow?.coreConfig.protagonist ?? "",
+    perspective: novelRow?.customConfig.perspective ?? "",
   };
+}
+
+function normalizeChapterSummary(summary: string, outlineRow: string): string {
+  const normalized = summary.trim();
+  if (normalized.length > 0) {
+    return normalized;
+  }
+
+  return getOutlineSummaryLead(outlineRow);
+}
+
+async function loadCompletedChapterMemories(
+  novelId: string,
+): Promise<CompletedChapterMemory[]> {
+  const completedRows = await db
+    .select()
+    .from(chapters)
+    .where(and(eq(chapters.novelId, novelId), eq(chapters.status, "completed")))
+    .orderBy(asc(chapters.chapterNumber));
+
+  return completedRows.map((chapter) => ({
+    chapterNumber: chapter.chapterNumber,
+    title: chapter.title,
+    chapterSummary: normalizeChapterSummary(
+      chapter.chapterSummary ?? "",
+      chapter.outlineSummary,
+    ),
+    content: chapter.content,
+  }));
 }
 
 export async function generateNovel(
@@ -46,7 +93,8 @@ export async function generateNovel(
   const llm = createDefaultLLMClient();
 
   try {
-    const { characterProfiles } = await loadNovelProfile(novelId);
+    const { characterProfiles, protagonist, perspective } =
+      await loadNovelProfile(novelId);
 
     const pendingChapters = await db
       .select()
@@ -58,7 +106,7 @@ export async function generateNovel(
       ? pendingChapters
       : await Promise.resolve(pendingChapters);
 
-    let previousChapterSummary = FIRST_CHAPTER_SUMMARY;
+    const completedChapters = await loadCompletedChapterMemories(novelId);
 
     for (let i = 0; i < chapterList.length; i++) {
       const chapter = chapterList[i];
@@ -76,13 +124,22 @@ export async function generateNovel(
 
       while (true) {
         let content = "";
+        const narrativeContext = buildNarrativeContext({
+          outlineRow: chapter.outlineSummary,
+          characterProfiles,
+          perspective,
+          protagonist,
+          completedChapters,
+        });
 
         const promptContext = {
           chapterNumber: chapter.chapterNumber,
           chapterTitle: chapter.title,
           outlineRow: chapter.outlineSummary,
-          characterProfiles,
-          previousChapterSummary,
+          selectedProfiles: narrativeContext.selectedProfiles,
+          summaryTimeline: narrativeContext.summaryTimeline,
+          previousExcerpt: narrativeContext.previousExcerpt,
+          perspectiveBoundary: narrativeContext.perspectiveBoundary,
           diagnosticLog: lastDiagnostic,
         };
 
@@ -126,10 +183,28 @@ export async function generateNovel(
         }
 
         if (validation.passed) {
+          const {
+            prompt: summaryPrompt,
+            systemInstruction: summaryInstruction,
+          } = buildChapterSummaryPrompt({
+            chapterNumber: chapter.chapterNumber,
+            chapterTitle: chapter.title,
+            outlineRow: chapter.outlineSummary,
+            content,
+          });
+          const chapterSummary = normalizeChapterSummary(
+            await llm.generateText({
+              prompt: summaryPrompt,
+              systemInstruction: summaryInstruction,
+            }),
+            chapter.outlineSummary,
+          );
+
           await db
             .update(chapters)
             .set({
               content,
+              chapterSummary,
               status: "completed",
               wordCount: content.length,
               wordCountValid: true,
@@ -138,8 +213,12 @@ export async function generateNovel(
             })
             .where(eq(chapters.id, chapter.id));
 
-          previousChapterSummary =
-            content.length > 500 ? content.slice(-500) : content;
+          completedChapters.push({
+            chapterNumber: chapter.chapterNumber,
+            title: chapter.title,
+            chapterSummary,
+            content,
+          });
 
           if (callbacks.onChapterComplete) {
             callbacks.onChapterComplete(chapter.chapterNumber, content);

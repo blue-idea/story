@@ -8,9 +8,17 @@
 
 {{characterProfiles}}
 
-## 上文衔接
+## 叙事视角边界
 
-{{previousChapterSummary}}
+{{perspectiveBoundary}}
+
+## 已完成章节摘要
+
+{{summaryTimeline}}
+
+## 上一章结尾片段
+
+{{previousExcerpt}}
 
 ## 写作要求
 

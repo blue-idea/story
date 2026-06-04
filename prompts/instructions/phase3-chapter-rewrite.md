@@ -8,6 +8,22 @@
 
 {{outlineRow}}
 
+## 出场人物
+
+{{characterProfiles}}
+
+## 叙事视角边界
+
+{{perspectiveBoundary}}
+
+## 已完成章节摘要
+
+{{summaryTimeline}}
+
+## 上一章结尾片段
+
+{{previousExcerpt}}
+
 ## 要求
 
 - 正文达到 **3000-8000 字**
