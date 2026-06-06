@@ -182,7 +182,13 @@ flowchart TD
 3. **悬疑引子（The Hook）**：每卷开篇必有一个不可能的悬疑谜题或核心危机，强力驱动读者兴趣。
 4. **终极暗线咬合（Meta Link）**：卷末破案或危机解决时，吐露出一点点指向整书终极阴谋的碎片，保证卷与卷之间的递进。
 
-#### 3.4.2 多题材映射矩阵
+#### 3.4.2 局部变量与全局不变量的加载隔离
+
+- **不变量存储**：全局不变量（常驻人物）持久化于全局的 `novel_profiles` 表，仅由每章大纲的“出场人物”进行关系过滤并注入 Prompt。
+- **局部变量存储**：各分卷专属角色（如古龙式临时配角）不写入全局 `novel_profiles`，而是以 JSONB 格式隔离存储在当前所属卷的 `novel_arcs.variables` 字段中。
+- **写作时上下文合并**：`lib/writer/context-memory.ts` 在加载该卷对应章节的上下文时，会同时读取 `novel_profiles`（过滤后）与当前卷的 `novel_arcs.variables` 进行合并；进入下一卷后，随着当前所属卷 ID 变更，旧卷专属角色将物理隔离并自然沉淀为小说背景历史，绝不污染后文写作。
+
+#### 3.4.3 多题材映射矩阵
 
 根据用户在 Wizard 阶段选择的题材，系统将通用概念自适应映射为对应的文学修辞：
 
@@ -194,7 +200,7 @@ flowchart TD
 | **都市** | 恶意做空危机 / 核心机密泄露 | 跨国投行 / 科技研发中心 | 霸道总裁 + 天才精算师 / 秘书 | 幽灵操盘手 / 叛逆技术天才        | 多空大战反击 / 商业间谍现形 | 触及“盛天集团”陈年命案   |
 | **言情** | 契约婚约波折 / 假戏真做风波 | 时尚集团 / 豪门社交圈   | 女主 + 傲娇契约丈夫 / 闺蜜   | 白月光情敌 / 桀骜画师 / 偏执长辈 | 误会冰释 / 隐藏身份的曝光   | 揭开“林氏二叔”夺权阴谋   |
 
-#### 3.4.3 分卷提案接口定义（JSON Schema）
+#### 3.4.4 分卷提案接口定义（JSON Schema）
 
 ```typescript
 export interface ArcProposalOption {
@@ -219,7 +225,7 @@ export interface ArcProposalOption {
 }
 ```
 
-#### 3.4.4 分卷提案生成与人机协同工作流
+#### 3.4.5 分卷提案生成与人机协同工作流
 
 ```mermaid
 sequenceDiagram
@@ -247,18 +253,23 @@ sequenceDiagram
 
 #### `novel_arcs` — 分卷/故事弧
 
-| 字段                        | 类型      | 说明                                |
-| --------------------------- | --------- | ----------------------------------- |
-| `id`                        | uuid PK   |                                     |
-| `novel_id`                  | uuid FK   |                                     |
-| `arc_number`                | int       | 卷序号，从 1 开始                   |
-| `title`                     | varchar   | 卷名                                |
-| `chapter_start`             | int       | inclusive                           |
-| `chapter_end`               | int       | inclusive                           |
-| `arc_goal`                  | text      | 本卷核心目标                        |
-| `arc_summary`               | text      | 卷级滚动摘要（写作过程中更新）      |
-| `status`                    | varchar   | `planned` / `writing` / `completed` |
-| `created_at` / `updated_at` | timestamp |                                     |
+| 字段                        | 类型      | 说明                                                          |
+| --------------------------- | --------- | ------------------------------------------------------------- |
+| `id`                        | uuid PK   |                                                               |
+| `novel_id`                  | uuid FK   |                                                               |
+| `arc_number`                | int       | 卷序号，从 1 开始                                             |
+| `title`                     | varchar   | 卷名                                                          |
+| `chapter_start`             | int       | inclusive                                                     |
+| `chapter_end`               | int       | inclusive                                                     |
+| `arc_goal`                  | text      | 本卷核心目标                                                  |
+| `hook`                      | text      | 本卷开篇奇诡引子（自 3.4.5 提案落库）                         |
+| `location`                  | varchar   | 本卷核心故事舞台                                              |
+| `variables`                 | jsonb     | 本卷专属临时人物包（`variablesIntroduced`）                   |
+| `climax_and_twist`          | text      | 本卷核心冲突与反转                                            |
+| `meta_plot_link`            | text      | 终极暗线契合线索                                              |
+| `arc_summary`               | text      | 卷级滚动摘要（写作过程中更新）                                |
+| `status`                    | varchar   | `planned` / `writing` / `completed` / `wait_plan`（等待规划） |
+| `created_at` / `updated_at` | timestamp |                                                               |
 
 #### `story_state` — 结构化故事状态（JSONB）
 
@@ -404,13 +415,14 @@ export const OUTLINE_SIMILARITY_THRESHOLD = 0.75;
 
 ### 6.2 Phase 3 · `lib/writer/context-memory.ts`
 
-| 改动                              | 说明                                              |
-| --------------------------------- | ------------------------------------------------- |
-| 重构 `buildSummaryTimeline()`     | 改为 `buildLayeredNarrativeContext()`             |
-| 新增 `buildRecentSummaryWindow()` | 最近 N 章                                         |
-| 新增 `buildArcSummaryLayer()`     | 当前卷摘要                                        |
-| 新增 `loadStoryStateSnapshot()`   | 读取 L5 状态                                      |
-| 修改数据加载                      | 不再 SELECT 全书 `content`；上章 excerpt 单独查询 |
+| 改动                              | 说明                                                                       |
+| --------------------------------- | -------------------------------------------------------------------------- |
+| 重构 `buildSummaryTimeline()`     | 改为 `buildLayeredNarrativeContext()`                                      |
+| 新增 `buildRecentSummaryWindow()` | 最近 N 章                                                                  |
+| 新增 `buildArcSummaryLayer()`     | 当前卷摘要                                                                 |
+| 新增 `loadStoryStateSnapshot()`   | 读取 L5 状态                                                               |
+| 新增 `loadArcVariables()`         | 读取当前所属 `novel_arcs.variables` 并与全局人物卡合并，本卷结束后自然沉淀 |
+| 修改数据加载                      | 不再 SELECT 全书 `content`；上章 excerpt 单独查询                          |
 
 ### 6.3 Phase 3 · `lib/writer/generator.ts`
 
@@ -426,7 +438,14 @@ export const OUTLINE_SIMILARITY_THRESHOLD = 0.75;
 ```text
 poll writing_jobs WHERE status=pending
 → 加锁 → generateSingleChapter()
-→ 成功: completed + enqueue next chapter
+→ 成功:
+    1. 更新 chapters 状态为 completed
+    2. 判断是否到当前卷末 (chapter_number === arc.chapter_end)
+       - 否: enqueue next chapter (chapter_number + 1) 并入队 pending 任务
+       - 是:
+         - 触发 planNextArcIfNeeded()
+         - 广播 SSE 'planning_required' 事件
+         - 将小说写作状态设为 'wait_plan'，挂起队列等待用户确认新卷提案
 → 失败: attempt++ ，超限则 failed
 ```
 
